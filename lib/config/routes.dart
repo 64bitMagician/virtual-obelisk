@@ -15,13 +15,13 @@ final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/login',
   routes: [
-    // 1. Routes OUTSIDE the navigation shell (Login)
+    // Routes OUTSIDE the navigation shell (Login)
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
 
-    // 2. Routes INSIDE the navigation shell
+    // Routes INSIDE the navigation shell
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
