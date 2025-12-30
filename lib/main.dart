@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
-import 'config/routes.dart'; // Import the router we just made
+import 'package:firebase_core/firebase_core.dart'; // <--- Add this import
+import 'config/routes.dart';
+import 'firebase_options.dart';
 
-void main() {
+// 1. Make main() 'async' so we can wait for Firebase to load
+void main() async {
+  // 2. This line is required when main is async
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 3. Start Firebase using the "Passport" file you just made
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const ArtApp());
 }
 
