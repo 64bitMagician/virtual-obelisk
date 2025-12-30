@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart'; // <--- Using the Real DB
+import '../../data/repositories/auth_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,6 +13,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // 1. Initialize the Real Repository
   final DatabaseRepository _repository = DatabaseRepository();
+  final AuthRepository _authRepo = AuthRepository(); // <--- Init AuthRepo
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +22,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text("My Profile"),
         actions: [
           IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+          // LOGOUT BUTTON
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'Logout',
+            onPressed: () async {
+              // 1. Sign out from Firebase
+              await _authRepo.signOut();
+
+              // 2. That's it!
+              // The AuthGate sees you are logged out and shows the Login Screen.
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(

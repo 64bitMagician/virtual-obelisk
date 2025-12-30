@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../../data/repositories/auth_repository.dart'; // <--- Import the Repo
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,6 +9,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // 1. Initialize the Real Auth Repository
+  final AuthRepository _authRepo = AuthRepository();
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -22,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Simulates the backend call
+  // 2. REAL Backend Call
   Future<void> _handleAuth() async {
     // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -34,14 +37,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Fake Network Delay (1.5 seconds)
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      // Call Firebase
+      if (_isLogin) {
+        await _authRepo.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+      } else {
+        await _authRepo.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+      }
 
-    if (mounted) {
-      // Navigate to the App Shell (Home)
-      // We use 'go' instead of 'push' to clear the history
-      // (so you can't click "Back" to return to login)
-      context.go('/');
+      // SUCCESS!
+      // We don't need to manually navigate (context.go).
+      // The 'AuthGate' in routes.dart is listening to the stream.
+      // As soon as this finishes, the AuthGate sees the user is logged in
+      // and automatically swaps this screen for the Home Screen.
+
+    } catch (e) {
+      // ERROR: Show the message
+      if (mounted) {
+        // Clean up the error message to look nicer
+        final String message = e.toString().replaceAll("Exception: ", "");
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
