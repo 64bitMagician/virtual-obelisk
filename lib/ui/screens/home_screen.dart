@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/art_post.dart';
-import '../../data/repositories/mock_repository.dart';
+import '../../data/repositories/database_repository.dart'; // <--- Use Real Repo
 import '../widgets/art_post_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,20 +11,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final MockRepository _repository = MockRepository();
-  late Future<List<ArtPost>> _postsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _postsFuture = _repository.getFeedPosts();
-  }
+  // 1. Initialize the Real Database Repository
+  final DatabaseRepository _repository = DatabaseRepository();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // We remove the AppBar here if you want the content to flow under a transparent header,
-      // but keeping it is fine.
       appBar: AppBar(
         title: const Text("Discovery"),
         centerTitle: false,
@@ -33,24 +25,40 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
         ],
       ),
-      body: FutureBuilder<List<ArtPost>>(
-        future: _postsFuture,
+      // 2. Switch to StreamBuilder for Real-Time updates
+      body: StreamBuilder<List<ArtPost>>(
+        stream: _repository.getFeedPosts(), // Listen to the stream
         builder: (context, snapshot) {
+          // A. Loading State
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          // B. Error State
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
+
+          // C. Empty State
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text("No art yet. Be the first to post!"),
+                ],
+              ),
+            );
+          }
+
+          // D. Data Loaded
           final posts = snapshot.data!;
 
-          // FIX: The ListView now takes up the FULL width of the screen.
-          // This ensures that scrolling works no matter where your mouse is.
           return ListView.builder(
-            // physics: AlwaysScrollableScrollPhysics(), // Optional: ensures scroll works even if list is short
             itemCount: posts.length,
             itemBuilder: (context, index) {
-              // We constrain the width HERE, item by item.
               return Center(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 700),

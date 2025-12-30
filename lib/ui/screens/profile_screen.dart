@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/mock_repository.dart';
-import '../widgets/profile_header.dart';
+import '../../data/models/art_post.dart';
+import '../../data/repositories/database_repository.dart'; // <--- Using the Real DB
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,18 +10,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final MockRepository _repository = MockRepository();
-
-  // We need two things: Profile Info AND Their Art
-  late Future<Map<String, dynamic>> _profileFuture;
-  late Future<List<String>> _artworksFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _profileFuture = _repository.getUserProfile();
-    _artworksFuture = _repository.getUserArtworks();
-  }
+  // 1. Initialize the Real Repository
+  final DatabaseRepository _repository = DatabaseRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -39,51 +29,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // 1. Load Header
-                FutureBuilder<Map<String, dynamic>>(
-                  future: _profileFuture,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const CircularProgressIndicator();
-                    return ProfileHeader(user: snapshot.data!);
-                  },
+                // 2. HEADER SECTION (Hardcoded for now until Login is built)
+                const CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage("https://i.pravatar.cc/150?u=me"),
+                ),
+                const SizedBox(height: 16),
+                Text("Vlad (Alpha)", style: Theme.of(context).textTheme.headlineSmall),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                  child: Text(
+                    "Digital artist exploring the void. (Bio coming soon)",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
 
                 const SizedBox(height: 32),
                 const Divider(),
                 const SizedBox(height: 16),
 
-                // 2. Tab Selector (Visual only for now)
+                // 3. TAB SELECTOR (Visual only)
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(Icons.grid_on, color: Colors.purple),
+                    Icon(Icons.grid_on, color: Colors.deepPurple),
                     Icon(Icons.bookmark_border, color: Colors.grey),
                   ],
                 ),
                 const SizedBox(height: 16),
 
-                // 3. Art Grid
-                FutureBuilder<List<String>>(
-                  future: _artworksFuture,
+                // 4. REAL ARTWORK GRID
+                StreamBuilder<List<ArtPost>>(
+                  stream: _repository.getFeedPosts(), // Listen to real DB
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const SizedBox();
+                    // A. Loading
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    // B. Empty or Error
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: Text("No art uploaded yet."),
+                      );
+                    }
+
+                    // C. Data Loaded
+                    final posts = snapshot.data!;
 
                     return GridView.builder(
                       shrinkWrap: true, // IMPORTANT for inside SingleChildScrollView
-                      physics: const NeverScrollableScrollPhysics(), // Let the page scroll, not the grid
+                      physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 200, // Responsive grid items
                         childAspectRatio: 1,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
-                      itemCount: snapshot.data!.length,
+                      itemCount: posts.length,
                       itemBuilder: (context, index) {
+                        final post = posts[index];
                         return ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            snapshot.data![index],
+                            post.imageUrl, // <--- Using the Real URL from Firestore
                             fit: BoxFit.cover,
+                            loadingBuilder: (ctx, child, progress) {
+                              if (progress == null) return child;
+                              return Container(color: Colors.grey[900]);
+                            },
+                            errorBuilder: (ctx, err, stack) => const Icon(Icons.broken_image),
                           ),
                         );
                       },

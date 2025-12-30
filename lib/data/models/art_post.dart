@@ -1,23 +1,37 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ArtPost {
   final String id;
-  final String artistName;
-  final String artistRank; // e.g., "Apprentice", "Virtuoso"
-  final String artistAvatarUrl;
-  final String contentUrl; // URL to image/video
+  final String imageUrl;
   final String title;
   final String description;
+  final String authorName;
+  final String authorAvatar; // We will use a placeholder for now
   final int likes;
-  final bool isChain; // Is this part of a collaboration chain?
 
   ArtPost({
     required this.id,
-    required this.artistName,
-    required this.artistRank,
-    required this.artistAvatarUrl,
-    required this.contentUrl,
+    required this.imageUrl,
     required this.title,
     required this.description,
+    required this.authorName,
+    required this.authorAvatar,
     required this.likes,
-    this.isChain = false,
   });
+
+  // FACTORY: Converts Firestore Data -> ArtPost Object
+  factory ArtPost.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    return ArtPost(
+      id: doc.id,
+      imageUrl: data['imageUrl'] ?? '', // Safety check if empty
+      title: data['title'] ?? 'Untitled',
+      description: data['description'] ?? '',
+      authorName: data['authorName'] ?? 'Unknown Artist',
+      // Since we don't save avatars in DB yet, use a random one or placeholder
+      authorAvatar: data['authorAvatar'] ?? 'https://i.pravatar.cc/150?u=${doc.id}',
+      likes: data['likes'] ?? 0,
+    );
+  }
 }

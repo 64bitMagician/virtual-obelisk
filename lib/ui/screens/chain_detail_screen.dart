@@ -1,104 +1,105 @@
 import 'package:flutter/material.dart';
-import '../../data/models/chain.dart';
-import '../../data/repositories/mock_repository.dart';
 
-class ChainDetailScreen extends StatefulWidget {
+class ChainDetailScreen extends StatelessWidget {
   final String chainId;
 
   const ChainDetailScreen({super.key, required this.chainId});
 
   @override
-  State<ChainDetailScreen> createState() => _ChainDetailScreenState();
-}
-
-class _ChainDetailScreenState extends State<ChainDetailScreen> {
-  final MockRepository _repository = MockRepository();
-  late Future<Chain> _chainFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _chainFuture = _repository.getChainById(widget.chainId);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // 1. Static Data Setup (Since backend isn't ready)
+    final String title = chainId == '1' ? "The Red Planet" : "Chain #$chainId";
+    final String status = "Active";
+    final String initiator = "Vlad (Alpha)";
+
     return Scaffold(
       appBar: AppBar(title: const Text("Collaboration Details")),
-      body: FutureBuilder<Chain>(
-        future: _chainFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final chain = snapshot.data!;
-
-          return SingleChildScrollView(
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 800),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 800),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 2. Header Section
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    // 1. Header Section
-                    Text(
-                        chain.title,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const CircleAvatar(radius: 12, child: Icon(Icons.person, size: 12)),
-                        const SizedBox(width: 8),
-                        Text("Initiated by ${chain.initiatorName}", style: Colors.grey.asTextStyle()),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: chain.status == 'Active' ? Colors.green : Colors.grey,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(chain.status.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                        )
-                      ],
-                    ),
-                    const Divider(height: 40),
-
-                    // 2. The Art Steps (The Core Content)
-                    ListView.separated(
-                      shrinkWrap: true, // Important inside SingleChildScrollView
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: chain.steps.length,
-                      separatorBuilder: (ctx, i) => _buildConnector(),
-                      itemBuilder: (context, index) {
-                        return _buildStepDisplay(chain.steps[index], index + 1);
-                      },
-                    ),
-
-                    // 3. Footer / Action
-                    const SizedBox(height: 40),
-                    if (chain.status == 'Active')
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Participation Logic checks rank first..."))
-                            );
-                          },
-                          icon: const Icon(Icons.brush),
-                          label: const Text("Join this Chain"),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-                        ),
+                    const CircleAvatar(radius: 12, child: Icon(Icons.person, size: 12)),
+                    const SizedBox(width: 8),
+                    Text("Initiated by $initiator", style: const TextStyle(color: Colors.grey)),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      child: Text(
+                        status.toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    )
                   ],
                 ),
-              ),
+                const Divider(height: 40),
+
+                // 3. The Art Steps (Static List)
+                ListView(
+                  shrinkWrap: true, // Important inside SingleChildScrollView
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildStepDisplay(
+                      stepNumber: 1,
+                      type: "text",
+                      author: "Vlad",
+                      content: "The year is 2042. The dust storms on Mars never seem to end...",
+                      isCompleted: true,
+                    ),
+                    _buildConnector(),
+                    _buildStepDisplay(
+                      stepNumber: 2,
+                      type: "image",
+                      author: "Elena",
+                      content: "https://images.unsplash.com/photo-1614728853970-c8f2b42332b0?q=80&w=1000&auto=format&fit=crop",
+                      isCompleted: true,
+                    ),
+                    _buildConnector(),
+                    _buildStepDisplay(
+                      stepNumber: 3,
+                      type: "audio",
+                      author: null,
+                      content: "",
+                      isCompleted: false, // Locked step
+                    ),
+                  ],
+                ),
+
+                // 4. Footer / Action
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Participation is coming soon!")),
+                      );
+                    },
+                    icon: const Icon(Icons.brush),
+                    label: const Text("Join this Chain"),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                  ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -116,8 +117,14 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
     );
   }
 
-  Widget _buildStepDisplay(ChainStep step, int stepNumber) {
-    bool isLocked = !step.isCompleted;
+  Widget _buildStepDisplay({
+    required int stepNumber,
+    required String type,
+    required String? author,
+    required String content,
+    required bool isCompleted,
+  }) {
+    bool isLocked = !isCompleted;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,14 +136,14 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: isLocked ? Colors.grey.shade800 : Colors.purple,
+                color: isLocked ? Colors.grey.shade800 : Colors.deepPurple,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white12, width: 2),
               ),
               child: Center(
                 child: isLocked
                     ? const Icon(Icons.lock_outline, color: Colors.white54)
-                    : Icon(_getIconForType(step.type), color: Colors.white),
+                    : Icon(_getIconForType(type), color: Colors.white),
               ),
             ),
           ],
@@ -158,11 +165,11 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Step $stepNumber: ${step.type.toUpperCase()}",
+                        "Step $stepNumber: ${type.toUpperCase()}",
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent),
                       ),
-                      if(step.contributorName != null)
-                        Text("by ${step.contributorName}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      if (author != null)
+                        Text("by $author", style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -170,7 +177,7 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
                   // The actual content render
                   isLocked
                       ? const Text("Waiting for an artist to fill this slot...", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey))
-                      : _renderContent(step),
+                      : _renderContent(type, content),
                 ],
               ),
             ),
@@ -181,7 +188,7 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
   }
 
   IconData _getIconForType(String type) {
-    switch(type) {
+    switch (type) {
       case 'image': return Icons.image;
       case 'audio': return Icons.music_note;
       case 'text': return Icons.article;
@@ -189,14 +196,14 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
     }
   }
 
-  Widget _renderContent(ChainStep step) {
-    if (step.type == 'image') {
+  Widget _renderContent(String type, String content) {
+    if (type == 'image') {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(step.contentUrl!, fit: BoxFit.cover),
+        child: Image.network(content, fit: BoxFit.cover),
       );
-    } else if (step.type == 'text') {
-      return Text(step.contentUrl!, style: const TextStyle(fontSize: 16, height: 1.5, fontFamily: 'serif'));
+    } else if (type == 'text') {
+      return Text(content, style: const TextStyle(fontSize: 16, height: 1.5, fontFamily: 'serif'));
     } else {
       // Audio placeholder
       return Container(
@@ -204,7 +211,7 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
         decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
         child: const Row(
           children: [
-            Icon(Icons.play_circle_fill, size: 32, color: Colors.purple),
+            Icon(Icons.play_circle_fill, size: 32, color: Colors.deepPurple),
             SizedBox(width: 12),
             Expanded(child: LinearProgressIndicator(value: 0.3)),
             SizedBox(width: 12),
@@ -214,8 +221,4 @@ class _ChainDetailScreenState extends State<ChainDetailScreen> {
       );
     }
   }
-}
-
-extension TextStyleExt on Color {
-  TextStyle asTextStyle() => TextStyle(color: this);
 }

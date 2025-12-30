@@ -9,68 +9,97 @@ class ArtPostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      elevation: 4, // Adds a subtle shadow
-      clipBehavior: Clip.antiAlias, // Ensures image doesn't bleed outside corners
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 24),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header: Artist Info
-          ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(post.artistAvatarUrl),
-            ),
-            title: Text(post.artistName, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(post.artistRank, style: TextStyle(color: Colors.purple.shade300)),
-            trailing: post.isChain
-                ? const Chip(label: Text("Chain"), backgroundColor: Colors.teal, labelStyle: TextStyle(fontSize: 10))
-                : const Icon(Icons.more_vert),
-          ),
-
-          // 2. The Art (Image)
-          // We use a constrained box to ensure images don't get too tall on web
-          Container(
-            constraints: const BoxConstraints(maxHeight: 500),
-            width: double.infinity,
-            child: Image.network(
-              post.contentUrl,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 300,
-                  color: Colors.black12,
-                  child: const Center(child: CircularProgressIndicator()),
-                );
-              },
-            ),
-          ),
-
-          // 3. Action Buttons (Like, Comment)
+          // Header: Artist Info
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
-                Text('${post.likes}'),
-                const SizedBox(width: 16),
-                IconButton(icon: const Icon(Icons.comment_outlined), onPressed: () {}),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(post.authorAvatar),
+                  radius: 20,
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.authorName, // Updated from artistName
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const Text(
+                      "Digital Artist", // Hardcoded for now or add to model later
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
                 const Spacer(),
-                IconButton(icon: const Icon(Icons.share), onPressed: () {}),
+                IconButton(
+                  icon: const Icon(Icons.more_horiz),
+                  onPressed: () {},
+                ),
               ],
             ),
           ),
 
-          // 4. Description
+          // Main Content (Image)
+          Container(
+            height: 400,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.black12,
+              image: DecorationImage(
+                image: NetworkImage(post.imageUrl), // Updated from contentUrl
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+
+          // Actions Bar (Like, Comment, Share)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.favorite_border),
+                  onPressed: () {},
+                ),
+                Text("${post.likes}"),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  onPressed: () {},
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.share),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+
+          // Description Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(post.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  post.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 const SizedBox(height: 4),
-                Text(post.description, style: const TextStyle(color: Colors.grey)),
+                Text(
+                  post.description,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
               ],
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/art_post.dart';
 
 class DatabaseRepository {
+
   // Get the database instance
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -29,5 +31,17 @@ class DatabaseRepository {
       print("DATABASE ERROR: $e");
       throw Exception("Failed to save to database");
     }
+  }
+
+  /// Listen to the Real-Time Feed
+  Stream<List<ArtPost>> getFeedPosts() {
+    return _db
+        .collection('artworks')
+        .orderBy('createdAt', descending: true) // Show newest first
+        .snapshots()
+        .map((snapshot) {
+      // Convert every document into an ArtPost
+      return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
+    });
   }
 }
