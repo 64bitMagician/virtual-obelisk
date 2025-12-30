@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart'; // <--- Using the Real DB
 import '../../data/repositories/auth_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,11 +16,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final DatabaseRepository _repository = DatabaseRepository();
   final AuthRepository _authRepo = AuthRepository(); // <--- Init AuthRepo
 
+  // 1. Get the current user from Firebase Auth
+  final User? user = FirebaseAuth.instance.currentUser;
+
+  // 2. Helper function to get the name from email
+  String get displayName {
+    if (user?.email != null) {
+      // Splits "vlad@example.com" into ["vlad", "example.com"] and takes the first part
+      return user!.email!.split('@')[0];
+    }
+    return "Artist";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: Text(displayName),
         actions: [
           IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
           // LOGOUT BUTTON
@@ -44,38 +57,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 // 2. HEADER SECTION (Hardcoded for now until Login is built)
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage("https://i.pravatar.cc/150?u=me"),
-                ),
+                CircleAvatar(radius: 50, backgroundImage: NetworkImage("https://robohash.org/${user?.uid}?set=set4")),
                 const SizedBox(height: 16),
-                Text("Vlad (Alpha)", style: Theme.of(context).textTheme.headlineSmall),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                  child: Text(
-                    "Digital artist exploring the void. (Bio coming soon)",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
+                // 3. Use dynamic name here
+                Text(displayName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 8), child: Text("Digital artist exploring the void. (Bio coming soon)", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey))),
 
                 const SizedBox(height: 32),
                 const Divider(),
                 const SizedBox(height: 16),
 
                 // 3. TAB SELECTOR (Visual only)
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Icon(Icons.grid_on, color: Colors.deepPurple),
-                    Icon(Icons.bookmark_border, color: Colors.grey),
-                  ],
-                ),
+                const Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [Icon(Icons.grid_on, color: Colors.deepPurple), Icon(Icons.bookmark_border, color: Colors.grey)]),
                 const SizedBox(height: 16),
 
                 // 4. REAL ARTWORK GRID
                 StreamBuilder<List<ArtPost>>(
-                  stream: _repository.getFeedPosts(), // Listen to real DB
+                  stream: _repository.getUserPosts('me'),
                   builder: (context, snapshot) {
                     // A. Loading
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -84,10 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // B. Empty or Error
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Text("No art uploaded yet."),
-                      );
+                      return const Padding(padding: EdgeInsets.all(32.0), child: Text("No art uploaded yet."));
                     }
 
                     // C. Data Loaded
