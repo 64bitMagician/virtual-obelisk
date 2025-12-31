@@ -1,3 +1,4 @@
+import 'package:art_platform/ui/widgets/upload_dialog.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
@@ -26,6 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return user!.email!.split('@')[0];
     }
     return "Artist";
+  }
+
+  // Helper to show the dialog
+  void _showUploadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const UploadDialog(), // Import this!
+    );
   }
 
   void _showEditDialog(String currentName, String currentBio) {
@@ -76,6 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add),),
       appBar: AppBar(
         title: const Text("My Profile"),
         actions: [

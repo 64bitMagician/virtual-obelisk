@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'upload_dialog.dart';
 
 class ResponsiveScaffold extends StatelessWidget {
   final Widget child;
@@ -9,14 +8,6 @@ class ResponsiveScaffold extends StatelessWidget {
     required this.child,
     super.key,
   });
-
-  // Helper to show the dialog
-  void _showUploadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const UploadDialog(), // Import this!
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +18,6 @@ class ResponsiveScaffold extends StatelessWidget {
           // Mobile Layout (Bottom Navigation)
           return Scaffold(
             body: child,
-            floatingActionButton: FloatingActionButton(onPressed: () => _showUploadDialog(context), child: const Icon(Icons.add),),
             bottomNavigationBar: NavigationBar(
               selectedIndex: _calculateSelectedIndex(context),
               onDestinationSelected: (index) => _onItemTapped(index, context),
@@ -41,7 +31,6 @@ class ResponsiveScaffold extends StatelessWidget {
         } else {
           // Desktop/Web Layout (Side Navigation Rail)
           return Scaffold(
-            floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add),),
             body: Row(
               children: [
                 NavigationRail(
