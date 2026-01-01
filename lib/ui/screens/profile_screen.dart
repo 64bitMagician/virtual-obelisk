@@ -1,9 +1,14 @@
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
+import 'package:art_platform/ui/widgets/profile_header.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Required for kIsWeb
 import '../../data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'user_gallery_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,28 +22,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthRepository _authRepo = AuthRepository();
   final User? user = FirebaseAuth.instance.currentUser;
 
-  // Controllers for the Edit Dialog
   final _bioController = TextEditingController();
   final _nameController = TextEditingController();
 
-  // Helper for the initial name if the user hasn't set one yet
-  String get defaultName {
-    if (user?.email != null) {
-      return user!.email!.split('@')[0];
+  String get defaultName => user?.email?.split('@')[0] ?? "Artist";
+
+  // Web-compatible Avatar Change Logic
+  Future<void> _changeAvatar() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
+
+    if (image != null && user != null) {
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Updating avatar...")),
+        );
+
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('avatars/${user!.uid}.jpg');
+
+        // FIX: Use putData with bytes instead of putFile for Web compatibility
+        final Uint8List imageData = await image.readAsBytes();
+        await storageRef.putData(
+          imageData,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
+
+        final String downloadUrl = await storageRef.getDownloadURL();
+
+        await _repository.updateUserProfile(
+          uid: user!.uid,
+          avatarUrl: downloadUrl,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Avatar updated successfully!")),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Upload failed: $e")),
+          );
+        }
+      }
     }
-    return "Artist";
   }
 
-  // Helper to show the dialog
   void _showUploadDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const UploadDialog(), // Import this!
+      builder: (context) => const UploadDialog(),
     );
   }
 
   void _showEditDialog(String currentName, String currentBio) {
-    // Fill the text fields with what is currently in Firestore
     _nameController.text = currentName;
     _bioController.text = currentBio;
 
@@ -51,28 +94,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Display Name")
-            ),
+                decoration: const InputDecoration(labelText: "Display Name")),
             const SizedBox(height: 10),
             TextField(
                 controller: _bioController,
                 decoration: const InputDecoration(labelText: "Bio"),
-                maxLines: 3
-            ),
+                maxLines: 3),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")
-          ),
+              child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () async {
               await _repository.updateUserProfile(
                   uid: user!.uid,
                   displayName: _nameController.text,
-                  bio: _bioController.text
-              );
+                  bio: _bioController.text);
               if (mounted) Navigator.pop(context);
             },
             child: const Text("Save"),
@@ -85,7 +124,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add),),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showUploadDialog(context),
+        label: const Text("Create"),
+        icon: const Icon(Icons.add),
+      ),
       appBar: AppBar(
         title: const Text("My Profile"),
         actions: [
@@ -103,59 +146,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // --- 1. HEADER SECTION (Wrapped in StreamBuilder for Persistence) ---
                 StreamBuilder<Map<String, dynamic>?>(
                     stream: _repository.getProfileStream(user!.uid),
                     builder: (context, snapshot) {
-                      // Extract data from Firestore or use defaults
                       final data = snapshot.data;
-                      final currentName = data?['displayName'] ?? defaultName;
-                      final currentBio = data?['bio'] ?? "No bio yet...";
 
-                      return Column(
-                        children: [
-                          CircleAvatar(
-                              radius: 50,
-                              backgroundImage: NetworkImage("https://robohash.org/${user?.uid}?set=set4")
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                              currentName,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)
-                          ),
-                          Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-                              child: Text(
-                                  currentBio,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.grey)
-                              )
-                          ),
-                          OutlinedButton.icon(
-                              onPressed: () => _showEditDialog(currentName, currentBio),
-                              icon: const Icon(Icons.edit, size: 16),
-                              label: const Text("Edit Profile")
-                          ),
-                        ],
+                      final Map<String, dynamic> headerMap = {
+                        'uid': user!.uid,
+                        'name': data?['displayName'] ?? defaultName,
+                        'bio': data?['bio'] ?? "No bio yet...",
+                        'avatarUrl': data?['avatarUrl'] ?? "https://robohash.org/${user?.uid}?set=set4",
+                        'rank': data?['rank'] ?? 'Beginner',
+                        'followers': data?['followers'] ?? 0,
+                        'following': data?['following'] ?? 0,
+                        'likes': data?['likes'] ?? 0,
+                      };
+
+                      return ProfileHeader(
+                        userData: headerMap, // Fixed parameter name
+                        onAvatarTap: _changeAvatar,
+                        onEditProfile: () => _showEditDialog(
+                            headerMap['name'],
+                            headerMap['bio']
+                        ),
                       );
-                    }
-                ),
+                    }),
 
                 const SizedBox(height: 32),
                 const Divider(),
                 const SizedBox(height: 16),
 
-                // --- 2. TAB SELECTOR ---
                 const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Icon(Icons.grid_on, color: Colors.deepPurple),
                       Icon(Icons.bookmark_border, color: Colors.grey)
-                    ]
-                ),
+                    ]),
                 const SizedBox(height: 16),
 
-                // --- 3. ARTWORK GRID ---
                 StreamBuilder<List<ArtPost>>(
                   stream: _repository.getUserPosts('me'),
                   builder: (context, snapshot) {
@@ -165,8 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Padding(
                           padding: EdgeInsets.all(32.0),
-                          child: Text("No art uploaded yet.")
-                      );
+                          child: Text("No art uploaded yet."));
                     }
 
                     final posts = snapshot.data!;
@@ -182,16 +209,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
                         final post = posts[index];
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            post.imageUrl,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (ctx, child, progress) {
-                              if (progress == null) return child;
-                              return Container(color: Colors.grey[900]);
-                            },
-                            errorBuilder: (ctx, err, stack) => const Icon(Icons.broken_image),
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserGalleryScreen(
+                                  posts: posts,
+                                  initialIndex: index,
+                                ),
+                              ),
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              post.imageUrl,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (ctx, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  color: Colors.grey[900],
+                                  child: const Center(
+                                      child: CircularProgressIndicator()),
+                                );
+                              },
+                              errorBuilder: (ctx, err, stack) =>
+                              const Icon(Icons.broken_image),
+                            ),
                           ),
                         );
                       },

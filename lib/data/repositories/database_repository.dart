@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <--- Import Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/art_post.dart';
 
 class DatabaseRepository {
-  // Get the instances
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -13,33 +12,28 @@ class DatabaseRepository {
     required String description,
     required String imageUrl,
   }) async {
-    // 1. Get the current logged-in user
     final user = _auth.currentUser;
     if (user == null) {
       throw Exception("You must be logged in to post art.");
     }
 
     try {
-      // 1. Fetch the latest profile data to get the custom Display Name
       final profile = await getUserProfile(user.uid);
       final String authorName = profile?['displayName'] ?? user.email!.split('@')[0];
+      final String avatarUrl = profile?['avatarUrl'] ?? 'https://robohash.org/${user.uid}?set=set4';
 
-      // 3. Create a reference to the 'artworks' collection
       final CollectionReference artworksRef = _db.collection('artworks');
 
-      // 4. Add the data with REAL User ID
       await artworksRef.add({
         'title': title,
         'description': description,
         'imageUrl': imageUrl,
         'userId': user.uid,
         'authorName': authorName,
-        // Generate a consistent avatar based on their ID
-        'authorAvatar': 'https://robohash.org/${user.uid}?set=set4',
+        'authorAvatar': avatarUrl, // Uses the real avatar URL if it exists
         'createdAt': FieldValue.serverTimestamp(),
         'likes': 0,
       });
-
     } catch (e) {
       print("DATABASE ERROR: $e");
       throw Exception("Failed to save to database");
@@ -50,7 +44,7 @@ class DatabaseRepository {
   Stream<List<ArtPost>> getFeedPosts() {
     return _db
         .collection('artworks')
-        .orderBy('createdAt', descending: true) // Show newest first
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
@@ -59,17 +53,13 @@ class DatabaseRepository {
 
   /// Listen to ONLY a specific user's posts (For Profile)
   Stream<List<ArtPost>> getUserPosts(String userId) {
-    // If we pass 'me', automatically use the current user's ID
     final String? targetId = (userId == 'me') ? _auth.currentUser?.uid : userId;
 
-    if (targetId == null) {
-      // If not logged in, return empty list
-      return const Stream.empty();
-    }
+    if (targetId == null) return const Stream.empty();
 
     return _db
         .collection('artworks')
-        .where('userId', isEqualTo: targetId) // <--- FILTER by ID
+        .where('userId', isEqualTo: targetId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -77,7 +67,7 @@ class DatabaseRepository {
     });
   }
 
-  // 1. Fetch user profile data
+  /// Fetch user profile data
   Future<Map<String, dynamic>?> getUserProfile(String uid) async {
     try {
       final doc = await _db.collection('users').doc(uid).get();
@@ -88,38 +78,48 @@ class DatabaseRepository {
     }
   }
 
+  /// Updated: Flexible profile update that handles name, bio, and avatar.
+  /// It also syncs the name and avatar to all previous posts.
   Future<void> updateUserProfile({
     required String uid,
-    required String displayName,
-    required String bio,
+    String? displayName,
+    String? bio,
+    String? avatarUrl,
   }) async {
     try {
-      // 1. Update the User Profile Document
-      await _db.collection('users').doc(uid).set({
-        'displayName': displayName,
-        'bio': bio,
+      // 1. Prepare map of updates
+      final Map<String, dynamic> updates = {
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      if (displayName != null) updates['displayName'] = displayName;
+      if (bio != null) updates['bio'] = bio;
+      if (avatarUrl != null) updates['avatarUrl'] = avatarUrl;
 
-      // 2. Sync: Find all artworks posted by this user
-      final userPostsQuery = await _db.collection('artworks')
-          .where('userId', isEqualTo: uid)
-          .get();
+      // 2. Update the User Profile Document
+      await _db.collection('users').doc(uid).set(updates, SetOptions(merge: true));
 
-      // 3. Use a WriteBatch to update all posts efficiently
-      WriteBatch batch = _db.batch();
+      // 3. Sync: Find all artworks posted by this user to update their "snapshot" data
+      // Only sync if name or avatar changed
+      if (displayName != null || avatarUrl != null) {
+        final userPostsQuery = await _db
+            .collection('artworks')
+            .where('userId', isEqualTo: uid)
+            .get();
 
-      for (var doc in userPostsQuery.docs) {
-        batch.update(doc.reference, {
-          'authorName': displayName,
-        });
+        WriteBatch batch = _db.batch();
+
+        for (var doc in userPostsQuery.docs) {
+          final Map<String, dynamic> postUpdates = {};
+          if (displayName != null) postUpdates['authorName'] = displayName;
+          if (avatarUrl != null) postUpdates['authorAvatar'] = avatarUrl;
+
+          batch.update(doc.reference, postUpdates);
+        }
+
+        await batch.commit();
       }
 
-      // 4. Commit the batch to Firestore
-      await batch.commit();
-
-      print("Profile and ${userPostsQuery.docs.length} posts updated successfully.");
-
+      print("Profile updated successfully.");
     } catch (e) {
       print("Error during profile update/sync: $e");
       throw Exception("Failed to update profile and synchronize posts.");
@@ -127,7 +127,6 @@ class DatabaseRepository {
   }
 
   /// Listens to a specific user's profile document in real-time.
-  /// This ensures changes persist and update instantly across the app.
   Stream<Map<String, dynamic>?> getProfileStream(String uid) {
     return _db.collection('users').doc(uid).snapshots().map((doc) => doc.data());
   }

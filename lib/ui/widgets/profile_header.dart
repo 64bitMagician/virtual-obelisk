@@ -1,74 +1,85 @@
+// lib/ui/widgets/profile_header.dart
+
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final Map<String, dynamic> user;
+  final Map<String, dynamic> userData;
+  final VoidCallback onAvatarTap;
+  final VoidCallback onEditProfile;
 
-  const ProfileHeader({super.key, required this.user});
+  const ProfileHeader({
+    super.key,
+    required this.userData,
+    required this.onAvatarTap,
+    required this.onEditProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Safely parse values from the Map
+    final String rank = userData['rank'] ?? 'Beginner';
+    final String avatarUrl = userData['avatarUrl'] ?? "https://robohash.org/${userData['uid']}?set=set4";
+
     return Column(
       children: [
-        // Avatar with Rank Border
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: _getRankColor(user['rank']),
-                width: 3
-            ),
-          ),
-          child: CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage(user['avatarUrl']),
+        // Avatar with Edit Overlay
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _getRankColor(rank), width: 3),
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(avatarUrl),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: CircleAvatar(
+                  radius: 15,
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
 
-        // Name and Rank Badge
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              user['name'],
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _getRankColor(user['rank']),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                user['rank'].toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        Text(
+          userData['displayName'] ?? 'Artist',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(userData['bio'] ?? "No bio yet...", style: const TextStyle(color: Colors.grey)),
+
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: onEditProfile,
+          icon: const Icon(Icons.edit, size: 16),
+          label: const Text("Edit Profile"),
         ),
 
-        const SizedBox(height: 8),
-        Text(user['bio'], style: Colors.grey.shade400.asTextStyle()),
         const SizedBox(height: 24),
-
-        // Stats Row
+        // Stats (using placeholders since we'll build the system later)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildStat("Followers", user['followers']),
+            _buildStat("Followers", userData['followers'] ?? 0),
             _buildDivider(),
-            _buildStat("Following", user['following']),
-            _buildDivider(),
-            _buildStat("Likes", user['likes']),
+            _buildStat("Following", userData['following'] ?? 0),
           ],
         ),
       ],
     );
   }
 
-  // Helper to color-code ranks
   Color _getRankColor(String rank) {
     switch (rank) {
       case 'Legend': return Colors.amber;
@@ -88,14 +99,6 @@ class ProfileHeader extends StatelessWidget {
   }
 
   Widget _buildDivider() => Container(
-      height: 30,
-      width: 1,
-      color: Colors.grey.shade700,
-      margin: const EdgeInsets.symmetric(horizontal: 24)
+      height: 30, width: 1, color: Colors.grey.shade700, margin: const EdgeInsets.symmetric(horizontal: 24)
   );
-}
-
-// Extension to safely use text styles
-extension TextStyleExt on Color {
-  TextStyle asTextStyle() => TextStyle(color: this);
 }
