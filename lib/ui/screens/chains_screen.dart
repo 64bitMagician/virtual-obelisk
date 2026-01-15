@@ -13,7 +13,6 @@ class ChainsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Static Placeholder Data
           _buildChainCard(
             context,
             id: '1',
@@ -40,7 +39,6 @@ class ChainsScreen extends StatelessWidget {
     );
   }
 
-  // Helper widget to draw the card (No external dependencies needed)
   Widget _buildChainCard(
       BuildContext context, {
         required String id,
@@ -87,7 +85,6 @@ class ChainsScreen extends StatelessWidget {
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // Navigate to the detail screen
               context.push('/chain/$id');
             },
           ),

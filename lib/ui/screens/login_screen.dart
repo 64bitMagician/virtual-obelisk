@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data/repositories/auth_repository.dart'; // <--- Import the Repo
+import '../../data/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,14 +9,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // 1. Initialize the Real Auth Repository
   final AuthRepository _authRepo = AuthRepository();
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isLogin = true; // Toggle between "Login" and "Sign Up" views
+  bool _isLogin = true;
 
   @override
   void dispose() {
@@ -25,9 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // 2. REAL Backend Call
   Future<void> _handleAuth() async {
-    // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill in all fields")),
@@ -38,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Call Firebase
       if (_isLogin) {
         await _authRepo.signIn(
           email: _emailController.text.trim(),
@@ -51,16 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      // SUCCESS!
-      // We don't need to manually navigate (context.go).
-      // The 'AuthGate' in routes.dart is listening to the stream.
-      // As soon as this finishes, the AuthGate sees the user is logged in
-      // and automatically swaps this screen for the Home Screen.
-
     } catch (e) {
-      // ERROR: Show the message
       if (mounted) {
-        // Clean up the error message to look nicer
         final String message = e.toString().replaceAll("Exception: ", "");
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,12 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // We use LayoutBuilder to detect if we are on Desktop or Mobile
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 800) {
-            // DESKTOP LAYOUT: Split Screen
             return Row(
               children: [
                 // Left Side: The Art
@@ -93,14 +79,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        // Background Image
                         Image.network(
                           'https://picsum.photos/id/1015/1000/1000',
                           fit: BoxFit.cover,
                           color: Colors.black.withOpacity(0.6), // Darken it slightly
                           colorBlendMode: BlendMode.darken,
                         ),
-                        // Overlay Text
                         const Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -141,7 +125,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             );
           } else {
-            // MOBILE LAYOUT: Simple Centered Form
             return Center(
               child: SingleChildScrollView(
                 child: Padding(
@@ -183,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 32),
 
-        // Email Input
         TextFormField(
           controller: _emailController,
           decoration: const InputDecoration(
@@ -194,7 +176,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Password Input
         TextFormField(
           controller: _passwordController,
           obscureText: true,
@@ -206,7 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Main Action Button
         ElevatedButton(
           onPressed: _isLoading ? null : _handleAuth,
           style: ElevatedButton.styleFrom(
@@ -220,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Toggle Login/Signup
         TextButton(
           onPressed: () {
             setState(() {

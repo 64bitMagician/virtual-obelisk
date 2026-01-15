@@ -1,8 +1,8 @@
 class Chain {
   final String id;
   final String title;
-  final String initiatorName; // Who started it
-  final String status; // "Active", "Completed"
+  final String initiatorName;
+  final String status;
   final List<ChainStep> steps;
 
   Chain({
@@ -16,10 +16,10 @@ class Chain {
 
 class ChainStep {
   final String id;
-  final String type; // 'image', 'audio', 'text'
+  final String type;
   final bool isCompleted;
   final String? contributorName;
-  final String? contentUrl; // URL to the image/audio or the actual text
+  final String? contentUrl;
 
   ChainStep({
     required this.id,

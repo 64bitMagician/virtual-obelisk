@@ -7,7 +7,6 @@ class ChainDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Static Data Setup (Since backend isn't ready)
     final String title = chainId == '1' ? "The Red Planet" : "Chain #$chainId";
     final String status = "Active";
     final String initiator = "Vlad (Alpha)";
@@ -22,7 +21,6 @@ class ChainDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 2. Header Section
                 Text(
                   title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -49,9 +47,8 @@ class ChainDetailScreen extends StatelessWidget {
                 ),
                 const Divider(height: 40),
 
-                // 3. The Art Steps (Static List)
                 ListView(
-                  shrinkWrap: true, // Important inside SingleChildScrollView
+                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
                     _buildStepDisplay(
@@ -75,12 +72,11 @@ class ChainDetailScreen extends StatelessWidget {
                       type: "audio",
                       author: null,
                       content: "",
-                      isCompleted: false, // Locked step
+                      isCompleted: false,
                     ),
                   ],
                 ),
 
-                // 4. Footer / Action
                 const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
@@ -104,12 +100,11 @@ class ChainDetailScreen extends StatelessWidget {
     );
   }
 
-  // Visual line connecting the art pieces
   Widget _buildConnector() {
     return Container(
       height: 40,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 24), // Align with the circle
+      padding: const EdgeInsets.only(left: 24),
       child: Container(
         width: 2,
         color: Colors.grey.withOpacity(0.5),
@@ -129,7 +124,6 @@ class ChainDetailScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // A. Number Badge
         Column(
           children: [
             Container(
@@ -150,7 +144,6 @@ class ChainDetailScreen extends StatelessWidget {
         ),
         const SizedBox(width: 20),
 
-        // B. Content Card
         Expanded(
           child: Card(
             elevation: isLocked ? 0 : 4,
@@ -174,7 +167,6 @@ class ChainDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // The actual content render
                   isLocked
                       ? const Text("Waiting for an artist to fill this slot...", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey))
                       : _renderContent(type, content),
@@ -205,7 +197,6 @@ class ChainDetailScreen extends StatelessWidget {
     } else if (type == 'text') {
       return Text(content, style: const TextStyle(fontSize: 16, height: 1.5, fontFamily: 'serif'));
     } else {
-      // Audio placeholder
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),

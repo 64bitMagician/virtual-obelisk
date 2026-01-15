@@ -1,5 +1,3 @@
-// lib/ui/widgets/profile_header.dart
-
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -16,13 +14,11 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Safely parse values from the Map
     final String rank = userData['rank'] ?? 'Beginner';
     final String avatarUrl = userData['avatarUrl'] ?? "https://robohash.org/${userData['uid']}?set=set4";
 
     return Column(
       children: [
-        // Avatar with Edit Overlay
         GestureDetector(
           onTap: onAvatarTap,
           child: Stack(
@@ -67,7 +63,6 @@ class ProfileHeader extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-        // Stats (using placeholders since we'll build the system later)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -10,7 +10,6 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    // COPY THESE VALUES FROM YOUR BROWSER TAB:
     apiKey: 'AIzaSyDPeyntRftDs3CZw-ZD6FbqJHYojaW-pLs',
     authDomain: 'art-platform-878d0.firebaseapp.com',
     projectId: 'art-platform-878d0',

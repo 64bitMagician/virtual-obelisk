@@ -11,11 +11,9 @@ class ResponsiveScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We use LayoutBuilder to read the screen width
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
-          // Mobile Layout (Bottom Navigation)
           return Scaffold(
             body: child,
             bottomNavigationBar: NavigationBar(
@@ -29,7 +27,6 @@ class ResponsiveScaffold extends StatelessWidget {
             ),
           );
         } else {
-          // Desktop/Web Layout (Side Navigation Rail)
           return Scaffold(
             body: Row(
               children: [
@@ -44,7 +41,6 @@ class ResponsiveScaffold extends StatelessWidget {
                   ],
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                // "Expanded" makes the child take up the rest of the screen
                 Expanded(child: child),
               ],
             ),
@@ -54,7 +50,6 @@ class ResponsiveScaffold extends StatelessWidget {
     );
   }
 
-  // Helper to determine the index based on the URL path
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/chains')) return 1;
@@ -62,7 +57,6 @@ class ResponsiveScaffold extends StatelessWidget {
     return 0; // Default to Home
   }
 
-  // Helper to handle navigation clicks
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:

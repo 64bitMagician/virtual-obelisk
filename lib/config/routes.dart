@@ -5,27 +5,19 @@ import '../ui/screens/chains_screen.dart';
 import '../ui/screens/chain_detail_screen.dart';
 import '../ui/screens/profile_screen.dart';
 import '../ui/widgets/responsive_scaffold.dart';
-import '../ui/auth_gate.dart'; // Ensure this file exists
+import '../ui/auth_gate.dart';
 
-// Keys to maintain state during navigation
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/', // Always start at root, AuthGate decides where to go
+  initialLocation: '/',
   routes: [
-    // We do NOT need a separate '/login' route here anymore.
-    // The AuthGate handles showing the LoginScreen automatically.
 
-    // SHELL ROUTE (The Main App)
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
-        // WRAPPER MAGIC:
-        // 1. AuthGate checks if user is logged in.
-        // 2. If NO -> It returns LoginScreen (and ignores the child).
-        // 3. If YES -> It returns ResponsiveScaffold (Sidebar) containing the child.
         return AuthGate(
           child: ResponsiveScaffold(child: child),
         );

@@ -6,7 +6,6 @@ class DatabaseRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Saves the art metadata to the 'artworks' collection
   Future<void> saveArt({
     required String title,
     required String description,
@@ -40,7 +39,6 @@ class DatabaseRepository {
     }
   }
 
-  /// Listen to the Real-Time Feed (All Users)
   Stream<List<ArtPost>> getFeedPosts() {
     return _db
         .collection('artworks')
@@ -51,7 +49,6 @@ class DatabaseRepository {
     });
   }
 
-  /// Listen to ONLY a specific user's posts (For Profile)
   Stream<List<ArtPost>> getUserPosts(String userId) {
     final String? targetId = (userId == 'me') ? _auth.currentUser?.uid : userId;
 
@@ -67,7 +64,6 @@ class DatabaseRepository {
     });
   }
 
-  /// Fetch user profile data
   Future<Map<String, dynamic>?> getUserProfile(String uid) async {
     try {
       final doc = await _db.collection('users').doc(uid).get();
@@ -78,8 +74,6 @@ class DatabaseRepository {
     }
   }
 
-  /// Updated: Flexible profile update that handles name, bio, and avatar.
-  /// It also syncs the name and avatar to all previous posts.
   Future<void> updateUserProfile({
     required String uid,
     String? displayName,
@@ -87,7 +81,6 @@ class DatabaseRepository {
     String? avatarUrl,
   }) async {
     try {
-      // 1. Prepare map of updates
       final Map<String, dynamic> updates = {
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -95,11 +88,8 @@ class DatabaseRepository {
       if (bio != null) updates['bio'] = bio;
       if (avatarUrl != null) updates['avatarUrl'] = avatarUrl;
 
-      // 2. Update the User Profile Document
       await _db.collection('users').doc(uid).set(updates, SetOptions(merge: true));
 
-      // 3. Sync: Find all artworks posted by this user to update their "snapshot" data
-      // Only sync if name or avatar changed
       if (displayName != null || avatarUrl != null) {
         final userPostsQuery = await _db
             .collection('artworks')
@@ -126,7 +116,6 @@ class DatabaseRepository {
     }
   }
 
-  /// Listens to a specific user's profile document in real-time.
   Stream<Map<String, dynamic>?> getProfileStream(String uid) {
     return _db.collection('users').doc(uid).snapshots().map((doc) => doc.data());
   }

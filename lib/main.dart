@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // <--- Add this import
+import 'package:firebase_core/firebase_core.dart';
 import 'config/routes.dart';
 import 'firebase_options.dart';
 
-// 1. Make main() 'async' so we can wait for Firebase to load
 void main() async {
-  // 2. This line is required when main is async
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 3. Start Firebase using the "Passport" file you just made
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -24,18 +21,16 @@ class ArtApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Art Platform',
       debugShowCheckedModeBanner: false,
-      // Theme Configuration
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark, // Art apps look better in dark mode
+        brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
           brightness: Brightness.dark,
         ),
       ),
 
-      // Router Configuration
-      routerConfig: router, // Connects to our routes.dart
+      routerConfig: router,
     );
   }
 }

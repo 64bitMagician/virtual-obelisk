@@ -3,7 +3,7 @@ import 'package:art_platform/ui/widgets/profile_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // Required for kIsWeb
+import 'package:flutter/foundation.dart';
 import '../../data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -27,7 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String get defaultName => user?.email?.split('@')[0] ?? "Artist";
 
-  // Web-compatible Avatar Change Logic
   Future<void> _changeAvatar() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -45,7 +44,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .ref()
             .child('avatars/${user!.uid}.jpg');
 
-        // FIX: Use putData with bytes instead of putFile for Web compatibility
         final Uint8List imageData = await image.readAsBytes();
         await storageRef.putData(
           imageData,

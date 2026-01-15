@@ -12,10 +12,8 @@ class ChainCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       elevation: 3,
-      // We clip the card so the InkWell ripple effect doesn't overflow corners
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        // This is the navigation trigger
         onTap: () {
           context.go('/chains/${chain.id}');
         },
@@ -40,7 +38,6 @@ class ChainCard extends StatelessWidget {
               Text("Started by ${chain.initiatorName}", style: Theme.of(context).textTheme.bodySmall),
               const Divider(height: 20),
 
-              // The Chain Steps (Timeline)
               ...chain.steps.asMap().entries.map((entry) {
                 final int index = entry.key;
                 final ChainStep step = entry.value;
@@ -49,10 +46,6 @@ class ChainCard extends StatelessWidget {
                 return _buildStepRow(context, step, isLast);
               }),
 
-              // "Join" Button (Only if active)
-              // Note: We wrap this in a IgnorePointer or handle logic carefully
-              // if you want the button to do something different than the card click.
-              // For now, clicking the button or card both go to details, which is fine.
               if (chain.status == 'Active')
                 Padding(
                   padding: const EdgeInsets.only(top: 16.0),
@@ -60,7 +53,6 @@ class ChainCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Navigate to detail view to join
                         context.go('/chains/${chain.id}');
                       },
                       icon: const Icon(Icons.add_link),
@@ -76,7 +68,6 @@ class ChainCard extends StatelessWidget {
   }
 
   Widget _buildStepRow(BuildContext context, ChainStep step, bool isLast) {
-    // Icons based on type
     IconData icon;
     if (step.type == 'image') {
       icon = Icons.image;
@@ -92,7 +83,6 @@ class ChainCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // The Timeline Column
           Column(
             children: [
               Container(
@@ -110,7 +100,6 @@ class ChainCard extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // The Content Column
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24.0, top: 8.0),
@@ -124,7 +113,7 @@ class ChainCard extends StatelessWidget {
                   if (step.isCompleted) ...[
                     Text("By ${step.contributorName}", style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 4),
-                    _buildPreview(step), // Helper to show a mini-preview
+                    _buildPreview(step),
                   ] else
                     const Text("Waiting for contribution...", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
                 ],
@@ -136,7 +125,6 @@ class ChainCard extends StatelessWidget {
     );
   }
 
-  // Simple preview based on type
   Widget _buildPreview(ChainStep step) {
     if (step.type == 'image') {
       return ClipRRect(

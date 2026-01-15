@@ -17,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late final PageController _pageController;
 
-  // This variable holds the stream so it stays "alive" during rebuilds
   late final Stream<List<ArtPost>> _postsStream;
 
   bool _isUiVisible = true;
@@ -28,8 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _pageController = PageController();
 
-    // Initialize the stream here once.
-    // Calling this in 'build' is what caused the reset.
     _postsStream = _repository.getFeedPosts();
 
     _startHideTimer();
@@ -66,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
         onHover: _handleMouseMove,
         onEnter: (_) => _handleMouseMove(const PointerHoverEvent()),
         child: StreamBuilder<List<ArtPost>>(
-          // Use the stable stream variable
           stream: _postsStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -85,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return Stack(
               children: [
-                // 1. THE ARTWORK LAYER
                 PageView.builder(
                   controller: _pageController,
                   itemCount: posts.length,
@@ -97,7 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
 
-                // 2. LEFT NAVIGATION ARROW
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 600),
                   left: _isUiVisible ? 20 : -100, // Slides out of view
@@ -118,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // 3. RIGHT NAVIGATION ARROW
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 600),
                   right: _isUiVisible ? 20 : -100, // Slides out of view

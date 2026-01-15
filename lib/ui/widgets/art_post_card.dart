@@ -3,7 +3,7 @@ import '../../data/models/art_post.dart';
 
 class ArtPostCard extends StatelessWidget {
   final ArtPost post;
-  final bool isUiVisible; // Receive visibility state
+  final bool isUiVisible;
 
   const ArtPostCard({super.key, required this.post, required this.isUiVisible});
 
@@ -24,7 +24,6 @@ class ArtPostCard extends StatelessWidget {
             ),
           ),
 
-          // Info Overlay with Animation
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500),
             bottom: isUiVisible ? 0 : -150, // Slides down

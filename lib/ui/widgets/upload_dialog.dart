@@ -1,9 +1,9 @@
-import 'dart:typed_data'; // Needed for Uint8List
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../data/repositories/storage_repository.dart';
-import '../../data/repositories/database_repository.dart'; // <--- Ensure this is imported
+import '../../data/repositories/database_repository.dart';
 
 class UploadDialog extends StatefulWidget {
   const UploadDialog({super.key});
@@ -13,17 +13,15 @@ class UploadDialog extends StatefulWidget {
 }
 
 class _UploadDialogState extends State<UploadDialog> {
-  // Repositories
-  final StorageRepository _storageRepo = StorageRepository();
-  final DatabaseRepository _dbRepo = DatabaseRepository(); // <--- 1. Initialize DB Repo
 
-  // File State
+  final StorageRepository _storageRepo = StorageRepository();
+  final DatabaseRepository _dbRepo = DatabaseRepository();
+
   final ImagePicker _picker = ImagePicker();
   String? _selectedFileName;
   Uint8List? _fileBytes;
   bool _isUploading = false;
 
-  // Text Controllers
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -34,7 +32,6 @@ class _UploadDialogState extends State<UploadDialog> {
     super.dispose();
   }
 
-  // 1. Pick Image Function
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
@@ -47,9 +44,7 @@ class _UploadDialogState extends State<UploadDialog> {
     }
   }
 
-  // 2. Upload & Save Function
   Future<void> _handleUpload() async {
-    // Validation
     if (_titleController.text.isEmpty || _fileBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an image and enter a title")),
@@ -60,15 +55,11 @@ class _UploadDialogState extends State<UploadDialog> {
     setState(() => _isUploading = true);
 
     try {
-      // Step A: Upload Image to Storage Bucket
       final String uniqueName = '${DateTime.now().millisecondsSinceEpoch}_$_selectedFileName';
 
-      // (This uses your storage_repository.dart)
       final String downloadUrl = await _storageRepo.uploadArt(_fileBytes!, uniqueName);
       print("Step 1 Complete: Image uploaded to $downloadUrl");
 
-      // Step B: Save Metadata to Firestore Database
-      // (This uses your new database_repository.dart)
       await _dbRepo.saveArt(
         title: _titleController.text,
         description: _descriptionController.text,
@@ -76,7 +67,6 @@ class _UploadDialogState extends State<UploadDialog> {
       );
       print("Step 2 Complete: Data saved to Firestore");
 
-      // Step C: Success & Close
       if (mounted) {
         context.pop(); // Close the dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +77,6 @@ class _UploadDialogState extends State<UploadDialog> {
         );
       }
     } catch (e) {
-      // Error Handling
       if (mounted) {
         print("UPLOAD ERROR: $e");
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,14 +102,12 @@ class _UploadDialogState extends State<UploadDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Text(
               "Upload Masterpiece",
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
 
-            // Drop Zone (Clickable Area)
             InkWell(
               onTap: _pickImage,
               child: Container(
@@ -143,7 +130,6 @@ class _UploadDialogState extends State<UploadDialog> {
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Show Image Preview
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -180,7 +166,6 @@ class _UploadDialogState extends State<UploadDialog> {
             ),
             const SizedBox(height: 24),
 
-            // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

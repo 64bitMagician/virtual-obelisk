@@ -62,7 +62,6 @@ class _UserGalleryScreenState extends State<UserGalleryScreen> {
           onTap: _handleInteraction,
           child: Stack(
             children: [
-              // Immersive Page View without Hero
               PageView.builder(
                 controller: _pageController,
                 itemCount: widget.posts.length,
@@ -74,7 +73,6 @@ class _UserGalleryScreenState extends State<UserGalleryScreen> {
                 },
               ),
 
-              // UI Overlay: Back Button
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 500),
                 top: _isUiVisible ? 40 : -60,
@@ -92,7 +90,6 @@ class _UserGalleryScreenState extends State<UserGalleryScreen> {
                 ),
               ),
 
-              // Navigation Arrows
               _buildArrow(
                 isLeft: true,
                 onTap: () => _pageController.previousPage(
