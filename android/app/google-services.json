@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "435347637026",
+    "project_id": "art-platform-878d0",
+    "storage_bucket": "art-platform-878d0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435347637026:android:f3e7be515476c111aa1b7b",
+        "android_client_info": {
+          "package_name": "com.example.art_platform"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQq0F6m7kGnr-s1n_7GJiFzh0yW-ZfcIo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
