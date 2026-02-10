@@ -17,11 +17,7 @@ final GoRouter router = GoRouter(
 
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) {
-        return AuthGate(
-          child: ResponsiveScaffold(child: child),
-        );
-      },
+      builder: (context, state, child) => AuthGate(child: ResponsiveScaffold(child: child),),
       routes: [
         GoRoute(
           path: '/',
