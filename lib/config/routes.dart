@@ -4,6 +4,7 @@ import '../ui/screens/home_screen.dart';
 import '../ui/screens/chains_screen.dart';
 import '../ui/screens/chain_detail_screen.dart';
 import '../ui/screens/profile_screen.dart';
+import '../ui/screens/settings_screen.dart';
 import '../ui/widgets/responsive_scaffold.dart';
 import '../ui/auth_gate.dart';
 
@@ -82,6 +83,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),
