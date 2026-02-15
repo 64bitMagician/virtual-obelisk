@@ -37,10 +37,30 @@ final GoRouter router = GoRouter(
       //    up til the insertion of the "child" widget in the widget tree.
       //    In our case, the Shell Wrapper will be the nested AuthGate(child: ResponsiveScaffold) widgets
       //    And since the ResponsiveScaffold(child: child) widget nests the given "child" from the lambda function
-      //    within its child property, it means that from this level down in the widget tree, all widget will
+      //    within its child property, it means that from this level down in the widget tree, all widgets will
       //    be part as the inside content of the Shell Wrapper, that can change, while the Shell Wrapper stays
       //    the same.
+      // AuthGate requires a "child" which is of type Widget, to know wether to return (and display)
+      // the given "child" Widget ResponsiveScaffold() (but only in the case where the User
+      // is in the Authenticated State). Otherwiser, it will either return/display the LoginScreen (in case
+      // User is not authenticated (User is null). ), or a loading screen (when it waits for the authentication
+      // status of the User)
+      // Because AuthGate represents part of the ShellWrapper, it means that the AuthGate will always determine
+      // what User can see...
+      // If User is indeed logged in, then AuthGate will return/display the ResponsiveScaffold, which is also part
+      // of the ShellWrapper. And only now, the child Widget given within ResponsiveScaffold will represent the
+      // content that the Shell Wrapper encapsulates. The content that can shift while the ShellWrapper (AuthGate
+      // and ResponsiveScaffold) stay the same. This is because this is the moment we use the child parameter
+      // received through the lamba Widget Function.
       builder: (context, state, child) => AuthGate(child: ResponsiveScaffold(child: child),),
+      // But who is the child Widget passed to the lambda function?
+      // Well, it is the returned Widget of the route (from the list of routes: bellow) that is
+      // currently being processed.
+      // EX: If current route processed is '/', then HomeScreen() is be the child Widget inside the ShellWrapper
+      //     If current route processed is '/chains', then ChainsScreen() is be the child
+      //  Widget inside the ShellWrapper.
+      //     For '/chains/123', it will be ChainDetailScreen(chainId: 123)
+      // So that's how go_routing decides what to display within the ShellWrapper based on the current route
       routes: [
         GoRoute(
           path: '/',
