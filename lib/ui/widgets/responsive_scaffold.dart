@@ -22,7 +22,7 @@ class ResponsiveScaffold extends StatelessWidget {
   // We store the Widget received from the constructor within this 'child' variable
   final Widget child;
 
-  // Constructor requires a Widget object
+  /// Constructor requires a [Widget] object
   const ResponsiveScaffold({required this.child, super.key,});
 
   @override

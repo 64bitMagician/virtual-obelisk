@@ -19,6 +19,7 @@ class ArtPost {
     required this.likes,
   });
 
+  ///
   factory ArtPost.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 

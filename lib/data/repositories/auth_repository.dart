@@ -1,7 +1,8 @@
 import 'package:art_platform/ui/auth_gate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-///
+/// A static class. It can check for current state of users (logged in or not).
+/// Responsible for backend logic of Signing Up/In/Out a User.
 class AuthRepository {
   // _auth represents the handle to the Firebase Authentication SDK.
   // This is the only class meant to define the communication with the Firebase Authentication SDK.

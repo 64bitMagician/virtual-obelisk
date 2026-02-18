@@ -60,7 +60,7 @@ class _UploadDialogState extends State<UploadDialog> {
       final String downloadUrl = await _storageRepo.uploadArt(_fileBytes!, uniqueName);
       print("Step 1 Complete: Image uploaded to $downloadUrl");
 
-      await _dbRepo.saveArt(
+      await _dbRepo.uploadArt(
         title: _titleController.text,
         description: _descriptionController.text,
         imageUrl: downloadUrl,
