@@ -4,7 +4,7 @@ import '../../data/models/art_post.dart';
 class ArtPostCard extends StatelessWidget {
   // Data which defines the ArtPostCard object
   final ArtPost post; // contains all data related to the ArtPost
-  final bool isUiVisible; // ? state variable for ...
+  final bool isUiVisible; // state variable for the fading and position effects of the post information widgets
 
   /// Constructor requires a [ArtPost] and [bool] to be passed to the [post] and [isUiVisible] parameters.
   const ArtPostCard({super.key, required this.post, required this.isUiVisible});

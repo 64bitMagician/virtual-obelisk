@@ -69,8 +69,9 @@ class DatabaseRepository {
     return _db
         .collection('artworks') // We select the 'artworks' collection from Firestore
         .orderBy('createdAt', descending: true) // we order the documents/posts within the collection by the time of upload, in descending order
-        .snapshots() // ??? Configure a Stream that returns the full list of documents (QuerySnapshot<Map<String, dymaic>>), anytime changes within the list of document (not the documents themselves) occur.
-        .map((snapshot) { // ??? Given the list of documents (snapshot.docs), make a new list, where each document is replaced with a ArtPost object containing the document's data
+        .snapshots() // Configure a Stream that returns the full list of documents (QuerySnapshot<Map<String, dymaic>>), anytime changes within the list of documents occur.
+        .map((snapshot) { // Given the list of documents (snapshot.docs), make a new list, where each document is replaced with a ArtPost object containing the document's data
+          //After that, return the Stream made out of this List
       return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
     });
   }
