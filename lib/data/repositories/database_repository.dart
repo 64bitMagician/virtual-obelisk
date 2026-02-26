@@ -131,7 +131,7 @@ class DatabaseRepository {
   ///
   /// Since the user's data has changed, so has to happen to the posts uploaded by the user.
   /// The posts/documents connected to the user (uid) have to be updated with the user's new data.
-  Future<void> updateUserProfile({
+  Future<void> updateUserData({
     required String uid,
     String? displayName,
     String? bio,
