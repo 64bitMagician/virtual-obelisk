@@ -4,10 +4,10 @@ import '../../data/models/art_post.dart';
 class ArtPostCard extends StatelessWidget {
   // Data which defines the ArtPostCard object
   final ArtPost post; // contains all data related to the ArtPost
-  final bool isUiVisible; // state variable for the fading and position effects of the post information widgets
+  final bool postInformationVisible; // state variable for the fading and position effects of the post information widgets
 
-  /// Constructor requires a [ArtPost] and [bool] to be passed to the [post] and [isUiVisible] parameters.
-  const ArtPostCard({super.key, required this.post, required this.isUiVisible});
+  /// Constructor requires a [ArtPost] and [bool] to be passed to the [post] and [postInformationVisible] parameters.
+  const ArtPostCard({super.key, required this.post, required this.postInformationVisible});
 
   // The visual representation of the ArtPostCard
   @override
@@ -31,12 +31,12 @@ class ArtPostCard extends StatelessWidget {
           // AnimatedPositioned is what creates the smooth sliding motion of your bottom information overlay when isUiVisible changes.
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500), // how much time it takes for the animation to complete
-            bottom: isUiVisible ? 0 : -150, // ? 0 if Ui is visible, -150 otherwise
+            bottom: postInformationVisible ? 0 : -150, // ? 0 if Ui is visible, -150 otherwise
             left: 0,
             right: 0,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 500),
-              opacity: isUiVisible ? 1.0 : 0.0,
+              opacity: postInformationVisible ? 1.0 : 0.0,
               child: Container(
                 padding: const EdgeInsets.all(40),
                 decoration: const BoxDecoration(

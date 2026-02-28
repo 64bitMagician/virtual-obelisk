@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // This Stream represents the Feed Posts
   late final Stream<List<ArtPost>> _postsStream;
 
-  bool _isUiVisible = true; // starts of true
+  bool _postInformationVisible = true; // starts of true
   Timer? _hideTimer;
 
   // the initial state of the HomeScreen Widget
@@ -36,14 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _startHideTimer();
   }
 
-  // used to set state of _isUiVisible
+  // used to set state of _postInformationVisible
   // When timer runs out, the fading transition effect takes place for data appearing above the content
   // Timer resets everytime this method is called. It also lasts 3 seconds.
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted && _isUiVisible) { // if data visible, and also exists in the tree
-        setState(() => _isUiVisible = false); // rebuild the HomeScreen widget with new state (ui==false)
+      if (mounted && _postInformationVisible) { // if data visible, and also exists in the tree
+        setState(() => _postInformationVisible = false); // rebuild the HomeScreen widget with new state (ui==false)
       }
     });
   }
@@ -51,10 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // This method gets called when mouse has been moved within the HomeScreen Widget Area
   // If the UI info above the content of the post is invisible, we rebuild the widget with the new state,
   // making the UI info above content visible again
-  // This method, resets the "mouse has been moved" timer, regardless of the state of the _isUiVisible
+  // This method, resets the "mouse has been moved" timer, regardless of the state of the _postInformationVisible
   void _handleMouseMove(PointerEvent details) {
-    if (!_isUiVisible) {
-      setState(() => _isUiVisible = true);
+    if (!_postInformationVisible) {
+      setState(() => _postInformationVisible = true);
     }
     // Mouse has been moved, so start timer again
     _startHideTimer();
@@ -76,8 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: MouseRegion( // used to detect mouse activity within the region of it's child
         // The region is the whole region where the post is visible
         onHover: _handleMouseMove, // when mouse is moved within the region (not counted if stationary)
-        // called when mouse enters the widget area (not called again if mouse moves within the region)
-        onEnter: (_) => _handleMouseMove(const PointerHoverEvent()),
         child: StreamBuilder<List<ArtPost>>(
           stream: _postsStream, // the stream representing the feed posts
           builder: (context, snapshot) { // this retriggers everytime a new post arrives from stream
@@ -110,48 +108,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) { // ? index sure is passed by the controller...?
                     return ArtPostCard(
                       post: posts[index], // shows the post at the determined index
-                      isUiVisible: _isUiVisible, // ArtPostCard also has it's own implementation with _isUiVisible for animating the Post information Overlay
+                      postInformationVisible: _postInformationVisible, // ArtPostCard also has it's own implementation with _isUiVisible for animating the Post information Overlay
                     );
                   },
                 ),
 
-                // Retracting Animation
+                // Retracting Animation (For the arrow left)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 600), // retraction animation duration
-                  left: _isUiVisible ? 20 : -100, // on the left edge, from 20px right goes out of view -100px
+                  left: _postInformationVisible ? 20 : -100, // on the left edge, from 20px right goes out of view -100px
                   top: 0,
                   bottom: 0,
                   child: AnimatedOpacity( // Fading Animation
                     duration: const Duration(milliseconds: 600), // fading animation duration
-                    opacity: _isUiVisible ? 0.6 : 0.0, // the fading goes to 0 when ui is no longer visible
+                    opacity: _postInformationVisible ? 0.6 : 0.0, // the fading goes to 0 when ui is no longer visible
                     child: Center(
                       child: _buildNavButton( // method that creates the arrow button and it's function
                         Icons.chevron_left, // left arrow icon
-                            () => _pageController.previousPage(
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.easeInOut,
-                        ),
+                            ()  {
+                              _startHideTimer();
+                              _pageController.previousPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut,);
+                            }
                       ),
                     ),
                   ),
                 ),
 
-                // Retracting Animation
+                // Retracting Animation (For the arrow right)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 600), // retraction animation duration
-                  right: _isUiVisible ? 20 : -100, // on the right edge, from 20px left goes out of view -100px
+                  right: _postInformationVisible ? 20 : -100, // on the right edge, from 20px left goes out of view -100px
                   top: 0,
                   bottom: 0,
                   child: AnimatedOpacity( // Fading animation
                     duration: const Duration(milliseconds: 600), // fading animation duration
-                    opacity: _isUiVisible ? 0.6 : 0.0, // the fading goes to 0 when ui is no longer visible
+                    opacity: _postInformationVisible ? 0.6 : 0.0, // the fading goes to 0 when ui is no longer visible
                     child: Center(
                       child: _buildNavButton( // method that creates the arrow button and it's function
                         Icons.chevron_right, // right arrow icon
-                            () => _pageController.nextPage(
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.easeInOut,
-                        ),
+                            () {
+                              _startHideTimer();
+                              _pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut,);
+                            }
                       ),
                     ),
                   ),
