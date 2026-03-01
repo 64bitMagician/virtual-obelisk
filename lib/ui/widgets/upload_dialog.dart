@@ -14,9 +14,11 @@ class UploadDialog extends StatefulWidget {
 
 class _UploadDialogState extends State<UploadDialog> {
 
+  // Connections to Storage and Firestore Firebase
   final StorageRepository _storageRepo = StorageRepository();
   final DatabaseRepository _dbRepo = DatabaseRepository();
 
+  // Image Picker for picking image from local machine
   final ImagePicker _picker = ImagePicker();
   String? _selectedFileName;
   Uint8List? _fileBytes;
@@ -32,11 +34,17 @@ class _UploadDialogState extends State<UploadDialog> {
     super.dispose();
   }
 
+  // picks an image from local machine and stores the byte data and name of that image
+  // within the state variables of our UploadDialogState object
   Future<void> _pickImage() async {
+    // Picks image from local machine gallery
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
+    // if we managed to get an image
     if (image != null) {
+      // conevrt it to bytes
       final Uint8List bytes = await image.readAsBytes();
+      // new state data: selected image name, and the binary data of the image
       setState(() {
         _selectedFileName = image.name;
         _fileBytes = bytes;
@@ -44,7 +52,10 @@ class _UploadDialogState extends State<UploadDialog> {
     }
   }
 
+
   Future<void> _handleUpload() async {
+    // if there is no text in the post name field or no data for the post (image)
+    // we display image and return
     if (_titleController.text.isEmpty || _fileBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an image and enter a title")),
@@ -52,14 +63,25 @@ class _UploadDialogState extends State<UploadDialog> {
       return;
     }
 
+    // if image is provided and name as well
+    // set state to is uploading and rebuild
     setState(() => _isUploading = true);
 
     try {
+      // A unique name for the Post Document on Firebase Storage must be provided
+      // Because we need to differentiate between posts...
       final String uniqueName = '${DateTime.now().millisecondsSinceEpoch}_$_selectedFileName';
 
+      // We upload the Post through our storageRepo method which requires the post as byte object
+      // We also provide a unique name for differentiation between Post Documents
       final String downloadUrl = await _storageRepo.uploadArt(_fileBytes!, uniqueName);
       print("Step 1 Complete: Image uploaded to $downloadUrl");
 
+      // So far we uploaded the raw content of the post
+      // We also need to upload to Firestore the Document which represents the Post.
+      // This Document contains all the information related to the Post.
+      // We provide the title and description of the post from the text fields of the Dialog
+      // And the imageUrl that we just fetched
       await _dbRepo.uploadArt(
         title: _titleController.text,
         description: _descriptionController.text,
@@ -67,6 +89,7 @@ class _UploadDialogState extends State<UploadDialog> {
       );
       print("Step 2 Complete: Data saved to Firestore");
 
+      // Display SnackBar Message
       if (mounted) {
         context.pop(); // Close the dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,10 +110,13 @@ class _UploadDialogState extends State<UploadDialog> {
         );
       }
     } finally {
+      // wether the upload has completed succesfully or not, it has completed either way
+      // so we set the state of _isUploading back to false, since we are not uploading anymore
       if (mounted) setState(() => _isUploading = false);
     }
   }
 
+  // The Visual Dialog
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -108,9 +134,13 @@ class _UploadDialogState extends State<UploadDialog> {
             ),
             const SizedBox(height: 24),
 
+            // InkWell is like a button configured to change it's state (usually color), and add
+            // add some animation effects upon different behaviours of pressing (hold, tap, double tap etc...)
             InkWell(
-              onTap: _pickImage,
-              child: Container(
+              onTap: _pickImage, // it will pick an image from local machine
+              // it changes the state variable such that we have the image object as byte object
+              // and the name of the uploaded image aswell
+              child: Container( // the area of the InkWell
                 height: 150,
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -118,7 +148,9 @@ class _UploadDialogState extends State<UploadDialog> {
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: _fileBytes == null
+                child: _fileBytes == null // if no file has been provided
+                // we will display an icon with text to suggest to click on the InkWell
+                // such that we trigger the _pickImage method
                     ? const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -127,16 +159,19 @@ class _UploadDialogState extends State<UploadDialog> {
                     Text("Click to select Art"),
                   ],
                 )
+                // If image has been provided, we will display the image + it's local machine name (if it has one)
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Image.memory(_fileBytes!),
+                        child: Image.memory(_fileBytes!), // displays image based on Byte data Uint8List (list of Bytes)
                       ),
                     ),
                     Text(
+                      // displays the name of the image (the name fetched from the local machine)
+                      // if it does not have a name, the text will be replaced with "Image" word.
                       _selectedFileName ?? "Image",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
@@ -147,7 +182,7 @@ class _UploadDialogState extends State<UploadDialog> {
 
             const SizedBox(height: 16),
 
-            // Inputs
+            // Text Fields for providing Title and Description for Posts
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -166,6 +201,7 @@ class _UploadDialogState extends State<UploadDialog> {
             ),
             const SizedBox(height: 24),
 
+            // Cancel Button and Uploading Button
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -176,14 +212,17 @@ class _UploadDialogState extends State<UploadDialog> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   // Disable button while uploading
+                  // We don't want to trigger _handleUpload multiple times
                   onPressed: _isUploading ? null : _handleUpload,
+                  // customize button, to indicate the post is uploading and the user does not need
+                  // to press on it again
                   child: _isUploading
                       ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                      : const Text("Post Art"),
+                      : const Text("Post Art"), // Uploading Button
                 ),
               ],
             ),
