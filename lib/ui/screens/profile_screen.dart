@@ -144,13 +144,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       appBar: AppBar(
         title: const Text("My Profile"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            tooltip: 'Logout',
-            onPressed: () async => await _authRepo.signOut(),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.logout, color: Colors.redAccent),
+        //     tooltip: 'Logout',
+        //     onPressed: () async => await _authRepo.signOut(),
+        //   ),
+        // ],
       ),
       body: SingleChildScrollView(
         child: Center(
