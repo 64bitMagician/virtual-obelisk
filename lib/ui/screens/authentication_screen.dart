@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../data/repositories/auth_repository.dart';
 
 /// The Login Screen
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class AuthenticationScreen extends StatefulWidget {
+  const AuthenticationScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<AuthenticationScreen> createState() => _AuthenticationScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _AuthenticationScreenState extends State<AuthenticationScreen> {
   // Our tool of communicating with the Authentication SDK of Firebase
   final AuthRepository _authRepo = AuthRepository();
 
