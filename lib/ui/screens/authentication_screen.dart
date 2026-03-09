@@ -13,9 +13,11 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   // Our tool of communicating with the Authentication SDK of Firebase
   final AuthRepository _authRepo = AuthRepository();
 
- // Text controllers for the two authentication text fields
+  // Text controllers for the two authentication text fields
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _profileNameController = TextEditingController();
 
   // _isLoading is indicating the time period from when we process and check the authentication credentials with
   // Firebase, up until a conclusion is reached (authentication succesful, or error)
@@ -33,22 +35,20 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _usernameController.dispose();
+    _profileNameController.dispose();
     super.dispose();
   }
 
   Future<void> _handleAuth() async {
     // This method gets called whenever the authenticate button gets pressed
 
-    // In case the user hasn't written anything within the text fields
-    // we display a message to him...
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
-      );
+    // text fields are not completed, so we display a message to user and return nothing
+    if(_checkCompletionOfAllTextFields()==false)
       return;
-    }
 
-    // ?we rebuild the screen while indicating that we are loading
+    // we rebuild the screen with a new state that will make the UI indicate that the process of
+    // Authentication is undergoing...
     setState(() => _isLoading = true);
 
     // we attempt to log in/sign in
@@ -67,9 +67,10 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           // will be created
           email: _emailController.text.trim(), // the text from email text field
           password: _passwordController.text.trim(), // the text from password text field
+          username: _usernameController.text.trim(),
+          profileName: _profileNameController.text.trim()
         );
       }
-
     } catch (e) {
       if (mounted) { // if the LoginScreen and it's state is still within the tree, we can use it's context
         // to reach the ScaffoldMessenger class
@@ -91,6 +92,32 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
       // so we rebuild the screen anyway (if we had not already passed to the realm of the platform)
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  // this method checks if all text fields (for either logging in or signing up) are filled
+  bool _checkCompletionOfAllTextFields()
+  {
+    if (_isLogin) // user is logging in ...
+        {
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please fill in all fields")),
+        );
+        return false;
+      }
+    }
+    else // user is signing up ...
+        {
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty
+          || _usernameController.text.isEmpty || _profileNameController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please fill in all fields")),
+        );
+        return false;
+      }
+    }
+    // By this point, all text fields are filled
+    return true;
   }
 
   // The visual part
@@ -150,7 +177,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 400),
                       padding: const EdgeInsets.all(32),
-                      child: _buildForm(), // this will return the Form Widget
+                      child: _buildAuthenticationForm(), // this will return the Form Widget
                     ),
                   ),
                 ),
@@ -170,14 +197,18 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                       const SizedBox(height: 16),
                       Text( // App Name + style
                         "LibArt",
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontFamily: 'serif',
                         ),
                       ),
                       const SizedBox(height: 48),
                       // The method that returns the Form Widget
-                      _buildForm(),
+                      _buildAuthenticationForm(),
                     ],
                   ),
                 ),
@@ -189,21 +220,26 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     );
   }
 
-  // This method returns the Form Widget
-  // This includes text fields, authentication buttons, switch to sign up or in...
-  Widget _buildForm() {
+  // This method returns either the LogIn or SignUp Form Widget
+  // This includes text fields, authentication buttons, switch to sign up or in text buttons etc...
+  Widget _buildAuthenticationForm() {
+    return _isLogin ? _returnLogInForm() : _returnSignUpForm();
+  }
+
+  Widget _returnLogInForm()
+  {
     return Column(
       mainAxisSize: MainAxisSize.min, // minimize the ammount of free space
       crossAxisAlignment: CrossAxisAlignment.stretch, // the widgets will resize horizontally
       children: [
-        Text( // text defers on wether you are logging in / signing up
-          _isLogin ? "Welcome Back" : "Join the Community",
+        Text(
+          "Welcome Back",
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
 
-        // email text form field, we pas the email controller
+        // email text form field, we pass the email controller
         TextFormField(
           controller: _emailController,
           decoration: const InputDecoration(
@@ -216,7 +252,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
 
         TextFormField(
           controller: _passwordController,
-          obscureText: true,
+          obscureText: true, // password is not visible at typing
           decoration: const InputDecoration(
             labelText: "Password", // what is shown when text field is empty
             prefixIcon: Icon(Icons.lock_outline),
@@ -241,7 +277,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           // press the button whenever he wants
           child: _isLoading
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text(_isLogin ? "Login" : "Create Account"), // displays according to login state
+              : Text("Login"), // displays according to login state
         ),
         const SizedBox(height: 16),
         // A text button that switches from login state to sign up state.
@@ -252,11 +288,97 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
               _isLogin = !_isLogin;
             });
           },
-          child: Text(
-            _isLogin
-                ? "Don't have an account? Sign Up"
-                : "Already have an account? Login",
+          child: Text("Don't have an account? Sign Up")
+        ),
+      ],
+    );
+  }
+
+  Widget _returnSignUpForm()
+  {
+    return Column(
+      mainAxisSize: MainAxisSize.min, // minimize the ammount of free space
+      crossAxisAlignment: CrossAxisAlignment.stretch, // the widgets will resize horizontally
+      children: [
+        Text(
+          "Create a new account",
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+
+        // UniqueUsername text form field
+        TextFormField(
+          controller: _usernameController,
+          decoration: const InputDecoration(
+            labelText: "Username", // what is shown when text field is empty
+            prefixIcon: Icon(Icons.email_outlined),
+            border: OutlineInputBorder(),
           ),
+        ),
+        const SizedBox(height: 16),
+
+        // Profile Name
+        TextFormField(
+          controller: _profileNameController,
+          decoration: const InputDecoration(
+            labelText: "Profile Name", // what is shown when text field is empty
+            prefixIcon: Icon(Icons.email_outlined),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // email text form field, we pass the email controller
+        TextFormField(
+          controller: _emailController,
+          decoration: const InputDecoration(
+            labelText: "Email", // what is shown when text field is empty
+            prefixIcon: Icon(Icons.email_outlined),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _passwordController,
+          obscureText: true, // password is not visible at typing
+          decoration: const InputDecoration(
+            labelText: "Password", // what is shown when text field is empty
+            prefixIcon: Icon(Icons.lock_outline),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        ElevatedButton(
+          // if we are already loading (process and check authentication credentials with Firebase)
+          // we get null, meaning nothing will happen (we don't to reexecute authentication if it ongoing)
+          // otherwise, we can call the method to try authentication with the given credentials in the
+          // text fields
+          onPressed: _isLoading ? null : _handleAuth,
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            backgroundColor: Colors.deepPurple,
+            foregroundColor: Colors.white,
+          ),
+          // If we are loading, we display a circular process indicator, inplying that authentication is in the works
+          // if we are not loading, we are displaying the authentication text, to suggest to the user that he can
+          // press the button whenever he wants
+          child: _isLoading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : Text("SignUp"), // displays according to login state
+        ),
+        const SizedBox(height: 16),
+        // A text button that switches from login state to sign up state.
+        // calls set state to retrigger the building of the screen...
+        TextButton(
+            onPressed: () {
+              setState(() {
+                _isLogin = !_isLogin;
+              });
+            },
+            child: Text("Already have an account? Log In")
         ),
       ],
     );

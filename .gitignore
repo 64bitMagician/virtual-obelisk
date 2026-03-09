@@ -46,8 +46,3 @@ app.*.map.json
 
 # Security
 .env
-/commits.txt
-/todoList.txt
-/testers.txt
-/assetsContribuitors.txt
-/addedFeatures.txt

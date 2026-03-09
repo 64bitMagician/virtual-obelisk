@@ -171,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         'uid': user!.uid,
                         'name': data?['displayName'] ?? defaultName,
                         'bio': data?['bio'] ?? "No bio yet...",
-                        'avatarUrl': data?['avatarUrl'] ?? "https://robohash.org/${user?.uid}?set=set4",
+                        'avatarUrl': data?['avatarUrl'] ?? "default",
                         'rank': data?['rank'] ?? 'Beginner',
                         'followers': data?['followers'] ?? 0,
                         'following': data?['following'] ?? 0,

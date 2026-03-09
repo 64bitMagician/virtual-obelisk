@@ -24,7 +24,7 @@ class ProfileHeader extends StatelessWidget {
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
     final String rank = userData['rank'] ?? 'No rank';
     // store the avatarUrl of user in a variable, otherwise get a unique avatar url from robohash.org
-    final String avatarUrl = userData['avatarUrl'] ?? "https://robohash.org/${userData['uid']}?set=set4";
+    final String avatarUrl = userData['avatarUrl'] ?? "default";
 
     return Column(
       children: [
@@ -44,7 +44,8 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 child: CircleAvatar( // the circle with usser's avatar image
                   radius: 100,
-                  backgroundImage: NetworkImage(avatarUrl), // fetch image form URL
+                  backgroundImage: avatarUrl=="default" ? 
+                  AssetImage('assets/icons/user-profile-icon.png') : NetworkImage(avatarUrl), // fetch image form URL
                 ),
               ),
               // Positioned() will control where it's child Widget (Camera Icon) will be positioned

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../data/repositories/auth_repository.dart';
-import 'screens/login_screen.dart';
+import 'screens/authentication_screen.dart';
 
 /// This [AuthGate] widget acts like a Security Guard (or Bouncer) for our application.
 /// It sits between the user and the screens they want to access.
@@ -36,7 +36,7 @@ class AuthGate extends StatelessWidget {
 
         if (!snapshot.hasData) { // if the output of the stream is a null value, it means user is signed out
           // so we redirect the user to the LoginScreen (Display the LoginScreen() Wiget)
-          return const LoginScreen();
+          return const AuthenticationScreen();
         }
 
         // At this point, we are neither waiting, and we have value data coming out of the stream
