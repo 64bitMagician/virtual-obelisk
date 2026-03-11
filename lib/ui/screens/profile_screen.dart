@@ -169,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // and store it in our own variable: headerMap
                       final Map<String, dynamic> headerMap = {
                         'uid': user!.uid,
-                        'name': data?['displayName'] ?? defaultName,
+                        'profileName': data?['profileName'] ?? defaultName,
                         'bio': data?['bio'] ?? "No bio yet...",
                         'avatarUrl': data?['avatarUrl'] ?? "default",
                         'rank': data?['rank'] ?? 'Beginner',

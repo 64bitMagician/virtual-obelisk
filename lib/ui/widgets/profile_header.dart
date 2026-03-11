@@ -44,7 +44,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 child: CircleAvatar( // the circle with usser's avatar image
                   radius: 100,
-                  backgroundImage: avatarUrl=="default" ? 
+                  backgroundImage: avatarUrl=="default" ?
                   AssetImage('assets/icons/user-profile-icon.png') : NetworkImage(avatarUrl), // fetch image form URL
                 ),
               ),
@@ -68,7 +68,7 @@ class ProfileHeader extends StatelessWidget {
 
         // Display the name of User. If user does not have a name, display the word "Arist"
         Text(
-          userData['displayName'] ?? 'Artist',
+          userData['profileName'] ?? 'Artist',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),

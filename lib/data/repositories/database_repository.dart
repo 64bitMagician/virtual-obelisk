@@ -142,7 +142,7 @@ class DatabaseRepository {
       // A timestamp of the moment this method is called
       final Map<String, dynamic> updates = {'updatedAt': FieldValue.serverTimestamp()};
       // set displayName
-      if (displayName != null) updates['displayName'] = displayName;
+      if (displayName != null) updates['profileName'] = displayName;
       // set bio
       if (bio != null) updates['bio'] = bio;
       // set avatarUrl

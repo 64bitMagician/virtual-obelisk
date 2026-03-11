@@ -68,10 +68,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           "uid": uid,
         });
 
-        // Overwrite (or probably create as new) the Document representing the data of the Authenticated User
+        // Create new Document representing the data of the Authenticated User
         transaction.set(userRef, {
           "username": username,
           "profileName": profileName,
+          "bio": "No bio yet...",
+          "avatarUrl": "default",
           "createdAt": FieldValue.serverTimestamp(),
         });
       });
