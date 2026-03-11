@@ -202,4 +202,16 @@ class DatabaseRepository {
     // The document data is returned...
     return _db.collection('users').doc(uid).snapshots().map((doc) => doc.data());
   }
+
+  /// This method simply checks if the user has it's profile set up.
+  /// We use this method to decide wether to redirect the user to ProfileSetupScreen,
+  /// or, if his profile is already configured, let him enter the app
+  Future<bool> hasProfile(String uid) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    return doc.exists;
+  }
 }

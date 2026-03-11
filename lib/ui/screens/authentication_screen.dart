@@ -16,8 +16,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   // Text controllers for the two authentication text fields
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _profileNameController = TextEditingController();
 
   // _isLoading is indicating the time period from when we process and check the authentication credentials with
   // Firebase, up until a conclusion is reached (authentication succesful, or error)
@@ -28,6 +26,10 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   // bool if the user is currently logging in (signing in), or signing up
   bool _isLogin = true;
 
+  // bool for after the user manages to signUp, we want to use this to create logic for
+  // displaying the widgets required for the user to enter profile data
+  bool _userHasSignedUp = false;
+
   // custom dispose method, for when the object is removed from the tree
   // the object will be removed as default
   // but we also make sure that the two instanced controllers are disposed too
@@ -35,8 +37,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _usernameController.dispose();
-    _profileNameController.dispose();
     super.dispose();
   }
 
@@ -67,8 +67,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           // will be created
           email: _emailController.text.trim(), // the text from email text field
           password: _passwordController.text.trim(), // the text from password text field
-          username: _usernameController.text.trim(),
-          profileName: _profileNameController.text.trim()
         );
       }
     } catch (e) {
@@ -108,8 +106,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     }
     else // user is signing up ...
         {
-      if (_emailController.text.isEmpty || _passwordController.text.isEmpty
-          || _usernameController.text.isEmpty || _profileNameController.text.isEmpty) {
+      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Please fill in all fields")),
         );
@@ -220,8 +217,9 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     );
   }
 
-  // This method returns either the LogIn or SignUp Form Widget
+  // This method returns either the LogIn, SignUp or ProfileData Form Widget
   // This includes text fields, authentication buttons, switch to sign up or in text buttons etc...
+  // Or in case of the ProfileData Form, we have text fields and...
   Widget _buildAuthenticationForm() {
     return _isLogin ? _returnLogInForm() : _returnSignUpForm();
   }
@@ -306,28 +304,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-
-        // UniqueUsername text form field
-        TextFormField(
-          controller: _usernameController,
-          decoration: const InputDecoration(
-            labelText: "Username", // what is shown when text field is empty
-            prefixIcon: Icon(Icons.email_outlined),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Profile Name
-        TextFormField(
-          controller: _profileNameController,
-          decoration: const InputDecoration(
-            labelText: "Profile Name", // what is shown when text field is empty
-            prefixIcon: Icon(Icons.email_outlined),
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 16),
 
         // email text form field, we pass the email controller
         TextFormField(
