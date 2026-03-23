@@ -19,6 +19,7 @@ class DatabaseRepository {
     required String title,
     required String description,
     required String imageUrl,
+    required String category,
   }) async {
     final user = _auth.currentUser; // we fetch the current User, if any (can also be null)
     if (user == null) { // Exception Error. User is not logged in, therfore cannot upload
@@ -50,6 +51,7 @@ class DatabaseRepository {
       await artworksRef.add({
         'title': title, // received as method parameter
         'description': description, // received as method parameter
+        'category': category,
         'imageUrl': imageUrl, // received as method parameter
         'userId': user.uid, // the user id of the authenticated user
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore

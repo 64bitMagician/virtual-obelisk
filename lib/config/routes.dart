@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:art_platform/ui/screens/categories_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/screens/home_screen.dart';
@@ -85,6 +85,7 @@ final GoRouter router = GoRouter(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
         ),
+        GoRoute(path: '/categories', builder: (context, state) => CategoriesScreen()),
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsScreen(),

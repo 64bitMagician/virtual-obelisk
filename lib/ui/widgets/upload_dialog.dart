@@ -24,6 +24,16 @@ class _UploadDialogState extends State<UploadDialog> {
   Uint8List? _fileBytes;
   bool _isUploading = false;
 
+  // Added state variables for category selection
+  String? _selectedCategory;
+  final List<String> _categories = [
+    'Graffiti',
+    'Painting',
+    'Drawing',
+    'Music',
+    'Poems'
+  ];
+
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -55,10 +65,10 @@ class _UploadDialogState extends State<UploadDialog> {
 
   Future<void> _handleUpload() async {
     // if there is no text in the post name field or no data for the post (image)
-    // we display image and return
-    if (_titleController.text.isEmpty || _fileBytes == null) {
+    // OR if no category is selected, we display a message and return
+    if (_titleController.text.isEmpty || _fileBytes == null || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an image and enter a title")),
+        const SnackBar(content: Text("Please select an image, enter a title, and choose a category")),
       );
       return;
     }
@@ -85,6 +95,7 @@ class _UploadDialogState extends State<UploadDialog> {
       await _dbRepo.uploadArt(
         title: _titleController.text,
         description: _descriptionController.text,
+        category: _selectedCategory!,
         imageUrl: downloadUrl,
       );
       print("Step 2 Complete: Data saved to Firestore");
@@ -124,109 +135,145 @@ class _UploadDialogState extends State<UploadDialog> {
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Upload Masterpiece",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 24),
-
-            // InkWell is like a button configured to change it's state (usually color), and add
-            // add some animation effects upon different behaviours of pressing (hold, tap, double tap etc...)
-            InkWell(
-              onTap: _pickImage, // it will pick an image from local machine
-              // it changes the state variable such that we have the image object as byte object
-              // and the name of the uploaded image aswell
-              child: Container( // the area of the InkWell
-                height: 150,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _fileBytes == null // if no file has been provided
-                // we will display an icon with text to suggest to click on the InkWell
-                // such that we trigger the _pickImage method
-                    ? const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.cloud_upload, size: 48, color: Colors.deepPurple),
-                    SizedBox(height: 8),
-                    Text("Click to select Art"),
-                  ],
-                )
-                // If image has been provided, we will display the image + it's local machine name (if it has one)
-                    : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.memory(_fileBytes!), // displays image based on Byte data Uint8List (list of Bytes)
-                      ),
-                    ),
-                    Text(
-                      // displays the name of the image (the name fetched from the local machine)
-                      // if it does not have a name, the text will be replaced with "Image" word.
-                      _selectedFileName ?? "Image",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+        child: SingleChildScrollView( // Added scroll view to prevent overflow on smaller screens
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Upload Masterpiece",
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-            ),
+              const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
-
-            // Text Fields for providing Title and Description for Posts
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: "Title",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: "Description",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Cancel Button and Uploading Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text("Cancel"),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  // Disable button while uploading
-                  // We don't want to trigger _handleUpload multiple times
-                  onPressed: _isUploading ? null : _handleUpload,
-                  // customize button, to indicate the post is uploading and the user does not need
-                  // to press on it again
-                  child: _isUploading
-                      ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+              // InkWell is like a button configured to change it's state (usually color), and add
+              // add some animation effects upon different behaviours of pressing (hold, tap, double tap etc...)
+              InkWell(
+                onTap: _pickImage, // it will pick an image from local machine
+                // it changes the state variable such that we have the image object as byte object
+                // and the name of the uploaded image aswell
+                child: Container( // the area of the InkWell
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _fileBytes == null // if no file has been provided
+                  // we will display an icon with text to suggest to click on the InkWell
+                  // such that we trigger the _pickImage method
+                      ? const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.cloud_upload, size: 48, color: Colors.deepPurple),
+                      SizedBox(height: 8),
+                      Text("Click to select Art"),
+                    ],
                   )
-                      : const Text("Post Art"), // Uploading Button
+                  // If image has been provided, we will display the image + it's local machine name (if it has one)
+                      : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.memory(_fileBytes!), // displays image based on Byte data Uint8List (list of Bytes)
+                        ),
+                      ),
+                      Text(
+                        // displays the name of the image (the name fetched from the local machine)
+                        // if it does not have a name, the text will be replaced with "Image" word.
+                        _selectedFileName ?? "Image",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Text Fields for providing Title and Description for Posts
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: "Title",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: "Description",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // --- NEW CATEGORY SELECTION UI ---
+              const Text(
+                "Select Category",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              DropdownMenu<String>(
+                initialSelection: _selectedCategory,
+                // text to show when nothing is selected
+                hintText: 'Select a category',
+                expandedInsets: EdgeInsets.zero,
+                enableSearch: true,
+                dropdownMenuEntries: _categories.map<DropdownMenuEntry<String>>((String category) {
+                  return DropdownMenuEntry<String>(
+                    value: category,
+                    label: category,
+                  );
+                }).toList(), // from Iterable -> List
+                // The 'newSelectedCategory' is received from the 'value:' property of a DropdownMenuEntry
+                // Everytime you click on a DropdownMenuEntry, flutter checks to see the value: of that
+                // And if you have an 'onSelected:' property for the DropdownMenu, it
+                // will pass the value of 'value:' to the parameter of onSelected:'s function.
+                // And since the 'value:' requires the Generics 'T' of the DropdownMenu class
+                // (which is 'String' in our case), we are receiving a String value
+                // So in a way, Each DropdownMenuEntry represents a String...
+                onSelected: (String? newSelectedCategory) {
+                  setState(() {
+                    _selectedCategory = newSelectedCategory;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // Cancel Button and Uploading Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text("Cancel"),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    // Disable button while uploading
+                    // We don't want to trigger _handleUpload multiple times
+                    onPressed: _isUploading ? null : _handleUpload,
+                    // customize button, to indicate the post is uploading and the user does not need
+                    // to press on it again
+                    child: _isUploading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : const Text("Post Art"), // Uploading Button
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

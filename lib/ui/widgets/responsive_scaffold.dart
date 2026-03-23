@@ -43,6 +43,7 @@ class ResponsiveScaffold extends StatelessWidget {
               selectedIndex: _calculateSelectedIndex(context),
               destinations: const [
                 NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+                NavigationDestination(icon: Icon(Icons.category), label: 'Categories'),
                 NavigationDestination(icon: Icon(Icons.link), label: 'Chains'),
                 NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
                 NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
@@ -66,6 +67,7 @@ class ResponsiveScaffold extends StatelessWidget {
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
                     NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
+                    NavigationRailDestination(icon: Icon(Icons.category), label: Text('Categories')),
                     NavigationRailDestination(icon: Icon(Icons.link), label: Text('Chains')),
                     NavigationRailDestination(icon: Icon(Icons.person), label: Text('Profile')),
                     NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
@@ -93,9 +95,10 @@ class ResponsiveScaffold extends StatelessWidget {
     // in simple terms, we get the uri we are currently on
     final String location = GoRouterState.of(context).uri.toString();
     // And now we return the index based on what uri we are in
-    if (location.startsWith('/chains')) return 1; // return 1 because chains button is the 2nd on NavigationBar
-    if (location.startsWith('/profile')) return 2; // return 2 because profile button is 3rd on NavigationBar
-    if (location.startsWith('/settings')) return 3; // return 3 because settings button is 4th on NavigationBar
+    if(location.startsWith('/categories')) return 1;
+    if (location.startsWith('/chains')) return 2; // return 1 because chains button is the 2nd on NavigationBar
+    if (location.startsWith('/profile')) return 3; // return 2 because profile button is 3rd on NavigationBar
+    if (location.startsWith('/settings')) return 4; // return 3 because settings button is 4th on NavigationBar
     return 0; // return 0 because the home button is 1st on NavigationBar
   }
 
@@ -111,12 +114,14 @@ class ResponsiveScaffold extends StatelessWidget {
         context.go('/');
         break;
       case 1:
+        context.go('/categories');
+      case 2:
         context.go('/chains');
         break;
-      case 2:
+      case 3:
         context.go('/profile');
         break;
-      case 3:
+      case 4:
         context.go('/settings');
         break;
     }
