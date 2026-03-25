@@ -64,7 +64,8 @@ class ArtPostCard extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 14,
-                          backgroundImage: NetworkImage(post.authorAvatar),
+                          backgroundImage: post.authorAvatar=="default" ?
+                          AssetImage('assets/icons/user-profile-icon.png') : NetworkImage(post.authorAvatar),
                         ),
                         const SizedBox(width: 12),
                         Text(

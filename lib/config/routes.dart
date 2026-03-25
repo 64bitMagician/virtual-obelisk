@@ -1,3 +1,4 @@
+import 'package:art_platform/ui/screens/category_feed_screen.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -85,7 +86,24 @@ final GoRouter router = GoRouter(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
         ),
-        GoRoute(path: '/categories', builder: (context, state) => CategoriesScreen()),
+        GoRoute(
+          path: '/categories',
+          builder: (context, state) => CategoriesScreen(),
+          routes: [
+            GoRoute(
+              // NO leading slash here!
+              // By nesting it, go_router automatically prepends '/categories/' to it.
+              // So the full absolute URL becomes: /categories/feed/:categoryName
+              path: 'feed/:categoryName',
+              builder: (context, state) {
+                // Extract the variable from the URL path
+                final String categoryName = state.pathParameters['categoryName']!;
+                // Pass it to the screen
+                return CategoryFeedScreen(category: categoryName);
+              },
+            )
+          ],
+        ),
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsScreen(),

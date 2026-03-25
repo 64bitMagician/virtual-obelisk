@@ -64,12 +64,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
         // Document does not exist, so we create it. The name of Document is the actual username
         // it only contains the user id (unique hash value) associated with it
-        transaction.set(usernameRef, {
+        await transaction.set(usernameRef, {
           "uid": uid,
         });
 
         // Create new Document representing the data of the Authenticated User
-        transaction.set(userRef, {
+        await transaction.set(userRef, {
           "username": username,
           "profileName": profileName,
           "bio": "No bio yet...",
@@ -78,11 +78,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         });
       });
 
+      // If reached this point, everything is good we can navigate to home screen
+      // we navigate the user to home screen, thus marking his entry to the application
+      context.go("/");
+
       // we return if state widget is out of the tree
       if (!mounted) return;
-
-      // otherwise, we navigate the user to home screen, thus marking his entry to the application
-      context.go("/");
     } catch (e) {
       print("TRANSACTION ERROR: $e");
 

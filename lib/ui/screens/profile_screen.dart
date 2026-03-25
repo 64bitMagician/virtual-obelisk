@@ -104,6 +104,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StreamBuilder<Map<String, dynamic>?>(
       stream: _repository.getProfileStream(user!.uid),
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) { // Loading Animation while fetching post list
+          return const Center(child: CircularProgressIndicator());
+        }
+
         final data = snapshot.data;
         // we take the snaphot data (user data document data)
         // and store it in our own variable: headerMap

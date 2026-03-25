@@ -41,7 +41,7 @@ class DatabaseRepository {
       // the set=set4 query parameter points the website to generate a cat image
       // so this is used to generate unique random images for users that do not have a
       // profile avatar on their profile set
-      final String avatarUrl = profile?['avatarUrl'] ?? 'https://robohash.org/${user.uid}?set=set4';
+      final String avatarUrl = profile?['avatarUrl'];
 
       // Initialize a variable to reference the artworks collection on Firestore
       final CollectionReference artworksRef = _db.collection('artworks');
@@ -65,15 +65,33 @@ class DatabaseRepository {
     }
   }
 
+  /// The feed which contains the posts that appear on the HomeScreen
+  ///
   /// Fetch a List of ArtPost objects [List<ArtPost>], where each ArtPost object is an instantiation
   /// containing the data of it's corresponding document from the 'artworks' collection on Firestore.
-  Stream<List<ArtPost>> getFeedPosts() {
+  Stream<List<ArtPost>> getHomeFeedPosts() {
     return _db
         .collection('artworks') // We select the 'artworks' collection from Firestore
         .orderBy('createdAt', descending: true) // we order the documents/posts within the collection by the time of upload, in descending order
         .snapshots() // Configure a Stream that returns the full list of documents (QuerySnapshot<Map<String, dymaic>>), anytime changes within the list of documents occur.
         .map((snapshot) { // Given the list of documents (snapshot.docs), make a new list, where each document is replaced with a ArtPost object containing the document's data
           //After that, return the Stream made out of this List
+      return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
+    });
+  }
+
+  /// The feed which contains the posts that appear on the CategoryFeedScreen. Must provide [category]
+  /// such that the app knows the category type of ArtPosts that is to be displayed.
+  ///
+  /// Fetch a List of ArtPost objects [List<ArtPost>], where each ArtPost object is an instantiation
+  /// containing the data of it's corresponding document from the 'artworks' collection on Firestore.
+  Stream<List<ArtPost>> getCategoryFeedPosts({required String category}) {
+    return _db
+        .collection('artworks') // Always target the main collection
+        .where('category', isEqualTo: category) // Filter the documents by category
+        .orderBy('createdAt', descending: true) // Order the filtered results
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
     });
   }

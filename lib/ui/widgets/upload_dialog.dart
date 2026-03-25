@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:art_platform/core/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,13 +27,9 @@ class _UploadDialogState extends State<UploadDialog> {
 
   // Added state variables for category selection
   String? _selectedCategory;
-  final List<String> _categories = [
-    'Graffiti',
-    'Painting',
-    'Drawing',
-    'Music',
-    'Poems'
-  ];
+  // list passed by reference to 'artCategories' constant from "constants.dart"
+  final List<String> _categories = artCategories;
+  final Map<String, String> _categoryDisplayNames = artCategoriesDisplayName;
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -228,7 +225,7 @@ class _UploadDialogState extends State<UploadDialog> {
                 dropdownMenuEntries: _categories.map<DropdownMenuEntry<String>>((String category) {
                   return DropdownMenuEntry<String>(
                     value: category,
-                    label: category,
+                    label: _categoryDisplayNames["$category"]!,
                   );
                 }).toList(), // from Iterable -> List
                 // The 'newSelectedCategory' is received from the 'value:' property of a DropdownMenuEntry

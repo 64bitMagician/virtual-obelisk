@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _pageController = PageController();
 
-    _postsStream = _repository.getFeedPosts();
+    _postsStream = _repository.getHomeFeedPosts();
 
     _startHideTimer();
   }
