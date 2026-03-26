@@ -1,4 +1,8 @@
+import 'package:art_platform/data/repositories/database_repository.dart';
+import 'package:art_platform/ui/screens/authentication_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:art_platform/data/repositories/auth_repository.dart';
 
 /// The [ProfileHeader] represents a visual representation of the user that displays:
 /// - The rank
@@ -8,10 +12,12 @@ class ProfileHeader extends StatelessWidget {
   final Map<String, dynamic> userData;
   final VoidCallback onAvatarTap;
   final VoidCallback onEditProfile;
+  DatabaseRepository _db = DatabaseRepository();
+  AuthRepository _authRepository = AuthRepository();
 
   /// You need to pass the [userData] that defines the header, as well as callback functions for when you
   /// tap on the avatar picture, and when you press on edit profile button.
-  const ProfileHeader({
+  ProfileHeader({
     super.key,
     required this.userData,
     required this.onAvatarTap,
@@ -91,7 +97,15 @@ class ProfileHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Posts Stats
-            _buildStat("Posts", userData['numberOfPosts'] ?? 0),
+            FutureBuilder<int>(
+              future: _fetchNumberOfPosts(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return _buildStat("Posts", 0);
+                }
+                return _buildStat("Posts", snapshot.data!);
+              },
+            ),
             _buildDivider(),
             // Followers Stats
             _buildStat("Followers", userData['followers'] ?? 0),
@@ -130,4 +144,19 @@ class ProfileHeader extends StatelessWidget {
   Widget _buildDivider() => Container(
       height: 30, width: 1, color: Colors.grey.shade700, margin: const EdgeInsets.symmetric(horizontal: 24)
   );
+
+  // fetch number of user profile posts
+  Future<int> _fetchNumberOfPosts() async{
+    int? numberOfPosts = 0;
+    final user = _authRepository.currentUser;
+    if (user != null) {
+      numberOfPosts = await _db.fetchNumberOfUserPosts(user.uid);
+    }
+    else {
+      throw Exception("ERROR: User is not authenticated!!!");
+    }
+
+    return numberOfPosts;
+  }
+
 }

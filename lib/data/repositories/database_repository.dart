@@ -234,4 +234,18 @@ class DatabaseRepository {
 
     return doc.exists;
   }
+
+  Future<int> fetchNumberOfUserPosts(String userId) async{
+    // in case of argument userId == 'me', the targetID becomes the Current User's ID
+    // otherwise, targetId becomes userId passed as argument
+    final String? targetId = (userId == 'me') ? _auth.currentUser?.uid : userId;
+
+    // Computing the number of posts based on how many posts with the given userId are present in the
+    // artworks collection
+
+    AggregateQuerySnapshot snapshot = await _db.collection('artworks').where('userId', isEqualTo: targetId).count().get();
+    int numberOfPosts = snapshot.count!;
+
+    return numberOfPosts;
+    }
 }
