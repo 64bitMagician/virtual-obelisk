@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'package:art_platform/core/constants.dart';
+import 'package:art_platform/data/models/art_post.dart';
+import 'package:art_platform/tools/mimeFileDetector.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,8 +24,9 @@ class _UploadDialogState extends State<UploadDialog> {
   // Image Picker for picking image from local machine
   final ImagePicker _picker = ImagePicker();
   String? _selectedFileName;
-  Uint8List? _fileBytes;
   bool _isUploading = false;
+  XFile? _fileInstance;
+  Uint8List? _fileAsBytes;
 
   // Added state variables for category selection
   String? _selectedCategory;
@@ -44,17 +47,18 @@ class _UploadDialogState extends State<UploadDialog> {
   // picks an image from local machine and stores the byte data and name of that image
   // within the state variables of our UploadDialogState object
   Future<void> _pickImage() async {
-    // Picks image from local machine gallery
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    // Picks file from local machine gallery
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
 
-    // if we managed to get an image
-    if (image != null) {
-      // conevrt it to bytes
-      final Uint8List bytes = await image.readAsBytes();
-      // new state data: selected image name, and the binary data of the image
+    // if we managed to get a file
+    if (file != null) {
+      // get file as bytes
+      Uint8List bytesContent = await file.readAsBytes();
+      // new state data: selected file name, and the binary data of the file
       setState(() {
-        _selectedFileName = image.name;
-        _fileBytes = bytes;
+        _fileInstance = file;
+        _selectedFileName = file.name; // set name of file
+        _fileAsBytes = bytesContent;
       });
     }
   }
@@ -63,7 +67,7 @@ class _UploadDialogState extends State<UploadDialog> {
   Future<void> _handleUpload() async {
     // if there is no text in the post name field or no data for the post (image)
     // OR if no category is selected, we display a message and return
-    if (_titleController.text.isEmpty || _fileBytes == null || _selectedCategory == null) {
+    if (_titleController.text.isEmpty || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an image, enter a title, and choose a category")),
       );
@@ -75,14 +79,17 @@ class _UploadDialogState extends State<UploadDialog> {
     setState(() => _isUploading = true);
 
     try {
-      // A unique name for the Post Document on Firebase Storage must be provided
-      // Because we need to differentiate between posts...
-      final String uniqueName = '${DateTime.now().millisecondsSinceEpoch}_$_selectedFileName';
+      print("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
 
       // We upload the Post through our storageRepo method which requires the post as byte object
       // We also provide a unique name for differentiation between Post Documents
-      final String downloadUrl = await _storageRepo.uploadArt(_fileBytes!, uniqueName);
-      print("Step 1 Complete: Image uploaded to $downloadUrl");
+
+      final String downloadUrl = await _storageRepo.uploadArt(_fileInstance);
+
+      print("Step 1 Complete: File uploaded to $downloadUrl");
+
+      // get MediaType of file
+      MediaType fileType = determineMediaTypeFromFile(_selectedFileName);
 
       // So far we uploaded the raw content of the post
       // We also need to upload to Firestore the Document which represents the Post.
@@ -90,10 +97,11 @@ class _UploadDialogState extends State<UploadDialog> {
       // We provide the title and description of the post from the text fields of the Dialog
       // And the imageUrl that we just fetched
       await _dbRepo.uploadArt(
+        fileType: fileType.name,
         title: _titleController.text,
         description: _descriptionController.text,
         category: _selectedCategory!,
-        imageUrl: downloadUrl,
+        mediaUrl: downloadUrl,
       );
       print("Step 2 Complete: Data saved to Firestore");
 
@@ -157,7 +165,7 @@ class _UploadDialogState extends State<UploadDialog> {
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _fileBytes == null // if no file has been provided
+                  child: _fileInstance == null // if no file has been provided
                   // we will display an icon with text to suggest to click on the InkWell
                   // such that we trigger the _pickImage method
                       ? const Column(
@@ -175,7 +183,7 @@ class _UploadDialogState extends State<UploadDialog> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Image.memory(_fileBytes!), // displays image based on Byte data Uint8List (list of Bytes)
+                          child: Image.memory(_fileAsBytes!), // displays image based on Byte data Uint8List (list of Bytes)
                         ),
                       ),
                       Text(

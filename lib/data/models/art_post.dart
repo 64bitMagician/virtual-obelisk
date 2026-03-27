@@ -1,12 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Define the types of posts
+enum MediaType { image, audio, video, text }
+
 /// A [Widget] that represents the data of an uploaded post on the platform.
 ///
 /// !THIS IS NOT THE VISUAL REPRESENTATION OF THE POST!
 /// !FOR THAT, CHECK art_post_card.dart
 class ArtPost {
   final String id;
-  final String imageUrl;
+  final MediaType type;
+  final String mediaUrl;
+  final String? thumbnailUrl; // cover art for audio, or thumbnail for videos
   final String title;
   final String description;
   final String authorName;
@@ -16,7 +21,9 @@ class ArtPost {
   /// Contructs the [ArtPost] object, based on required parameters...
   ArtPost({
     required this.id,
-    required this.imageUrl,
+    required this.type,
+    required this.mediaUrl,
+    this.thumbnailUrl,
     required this.title,
     required this.description,
     required this.authorName,
@@ -35,10 +42,23 @@ class ArtPost {
     // Fetch document's data (with according format Map<String, dynamic>)
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
+    // Helper logic to convert the string from Firestore back into an Enum
+    MediaType determineType(String? typeString) {
+      switch (typeString) {
+        case 'audio': return MediaType.audio;
+        case 'video': return MediaType.video;
+        case 'text': return MediaType.text;
+        case 'image': return MediaType.image;
+        default: return MediaType.image;
+      }
+    }
+
     // Return a ArtPost object defined by data from the received document
     return ArtPost(
       id: doc.id,
-      imageUrl: data['imageUrl'] ?? '', // Image Url will be empty string if no imageUrl provided
+      type: determineType(data['mediaType']),
+      mediaUrl: data['mediaUrl'] ?? '', // Image Url will be empty string if no imageUrl provided
+      thumbnailUrl: data['thumbnailUrl'],
       title: data['title'] ?? 'Untitled', //  Title name will be "Untitled" if no title provided
       description: data['description'] ?? '', // Empty description if non provided
       authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided

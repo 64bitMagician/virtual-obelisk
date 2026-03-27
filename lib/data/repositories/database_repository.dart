@@ -14,11 +14,12 @@ class DatabaseRepository {
 
   /// This method is responsible for saving the uploaded content (the posts) unto the Firestore
   /// It is not the content itself, rather the information related to the post (document).
-  /// The method requires a [title], [description] and [imageUrl] (all Strings) in order to be called.
+  /// The method requires a [title], [description] and [mediaUrl] (all Strings) in order to be called.
   Future<void> uploadArt({
+    required String fileType,
     required String title,
     required String description,
-    required String imageUrl,
+    required String mediaUrl,
     required String category,
   }) async {
     final user = _auth.currentUser; // we fetch the current User, if any (can also be null)
@@ -27,6 +28,7 @@ class DatabaseRepository {
     }
 
     try {
+      print("IT TRIES TO UPLOAD!!!!!!!");
       final profile = await getUserProfileData(user.uid); // fetch data of the current user Map<String, dynamic>
       // profile? can return null if profile is null (we user ? cause otherwise it would crash)
       // if not null, we return value of the displayName key
@@ -49,10 +51,11 @@ class DatabaseRepository {
       // we add a new document to the artworks collection | Data type: Map<String, dynamic>
       // this document represents the post we are uploading
       await artworksRef.add({
-        'title': title, // received as method parameter
+        'fileType' : fileType,
+        'title' : title, // received as method parameter
         'description': description, // received as method parameter
         'category': category,
-        'imageUrl': imageUrl, // received as method parameter
+        'mediaUrl': mediaUrl, // received as method parameter
         'userId': user.uid, // the user id of the authenticated user
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
         'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore

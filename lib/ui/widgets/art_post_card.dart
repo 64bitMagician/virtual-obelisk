@@ -21,7 +21,7 @@ class ArtPostCard extends StatelessWidget {
         children: [ // ? the stack, order being the first is to the bottom
           Center( // we center the image
             child: Image.network( // we fetch the image over the network
-              post.imageUrl, // the link to the image
+              post.mediaUrl, // the link to the image
               fit: BoxFit.contain, // this makes the image as large as possible and entirely visible
               width: double.infinity, // max stretch
               height: double.infinity, // max stretch

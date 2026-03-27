@@ -196,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 borderRadius: BorderRadius.circular(8), // the roundness
                                 child: Image.network(
                                   // the wrapped Widget, the Image
-                                  post.imageUrl, // Pass the URL to the image
+                                  post.mediaUrl, // Pass the URL to the image
                                   // the way the image is inscribed within the available space
                                   // cover makes sure of no blank edges
                                   // but may give up on parts of the image if the right ratio is not met

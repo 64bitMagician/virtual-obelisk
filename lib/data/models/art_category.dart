@@ -23,11 +23,12 @@ class ArtCategory {
 
 // Data Source
 List<ArtCategory> appCategories = [
-  ArtCategory(title: 'Drawing', categoryName: artCategories[0], icon: Icons.edit, themeColor: Colors.blueAccent),
-  ArtCategory(title: 'Painting', categoryName: artCategories[1], icon: Icons.palette, themeColor: Colors.redAccent),
-  ArtCategory(title: 'Pixel Art', categoryName: artCategories[2], icon: Icons.gamepad_outlined, themeColor: Colors.green),
-  ArtCategory(title: 'Graffiti', categoryName: artCategories[3], icon: Icons.format_paint, themeColor: Colors.orangeAccent),
-  ArtCategory(title: 'Photography', categoryName: artCategories[4], icon: Icons.format_paint, themeColor: Colors.orangeAccent),
-  ArtCategory(title: 'Music', categoryName: artCategories[5], icon: Icons.music_note, themeColor: Colors.purpleAccent),
-  ArtCategory(title: 'Poetry', categoryName: artCategories[6], icon: Icons.history_edu, themeColor: Colors.teal),
+  ArtCategory(title: artCategoriesDisplayName["drawing"]!, categoryName: artCategories[0], icon: Icons.edit, themeColor: Colors.blueAccent),
+  ArtCategory(title: artCategoriesDisplayName["painting"]!, categoryName: artCategories[1], icon: Icons.palette, themeColor: Colors.redAccent),
+  ArtCategory(title: artCategoriesDisplayName["digitalart"]!, categoryName: artCategories[2], icon: Icons.tablet_mac_outlined, themeColor: Colors.blueGrey),
+  ArtCategory(title: artCategoriesDisplayName["pixelart"]!, categoryName: artCategories[3], icon: Icons.gamepad_outlined, themeColor: Colors.green),
+  ArtCategory(title: artCategoriesDisplayName["graffiti"]!, categoryName: artCategories[4], icon: Icons.format_paint, themeColor: Colors.orangeAccent),
+  ArtCategory(title: artCategoriesDisplayName["photography"]!, categoryName: artCategories[5], icon: Icons.camera_outlined, themeColor: Colors.orangeAccent),
+  ArtCategory(title: artCategoriesDisplayName["music"]!, categoryName: artCategories[6], icon: Icons.music_note, themeColor: Colors.purpleAccent),
+  ArtCategory(title: artCategoriesDisplayName["poetry"]!, categoryName: artCategories[7], icon: Icons.history_edu, themeColor: Colors.teal),
 ];
