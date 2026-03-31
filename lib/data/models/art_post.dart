@@ -11,7 +11,7 @@ class ArtPost {
   final String id;
   final MediaType type;
   final String mediaUrl;
-  final String? thumbnailUrl; // cover art for audio, or thumbnail for videos
+  final String thumbnailUrl; // cover art for audio, or thumbnail for videos
   final String title;
   final String description;
   final String authorName;
@@ -23,7 +23,7 @@ class ArtPost {
     required this.id,
     required this.type,
     required this.mediaUrl,
-    this.thumbnailUrl,
+    required this.thumbnailUrl,
     required this.title,
     required this.description,
     required this.authorName,

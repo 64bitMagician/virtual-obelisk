@@ -4,7 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import '../../data/models/art_post.dart';
+import 'package:art_platform/data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';

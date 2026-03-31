@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/art_post.dart';
-import '../widgets/art_post_card.dart';
+import 'package:art_platform/data/models/art_post.dart';
 
 /// The image viewer within the Profile of a User (sligthly different from the one at HomePage)
 /// Click on one of the images of one's User Profile to instantiate the [UserGalleryScreen]
@@ -89,7 +89,7 @@ class _UserGalleryScreenState extends State<UserGalleryScreen> {
                 controller: _pageController,
                 itemCount: widget.posts.length,
                 itemBuilder: (context, index) {
-                  return ArtPostCard(
+                  return ArtPostRepresentation(
                     post: widget.posts[index], // the index determines which post is visible
                     postInformationVisible: _postInformationVisible, // bool that will display or not the post information
                   );

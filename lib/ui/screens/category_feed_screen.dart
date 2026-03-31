@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/art_post.dart';
+import 'package:art_platform/data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
-import '../widgets/art_post_card.dart';
 
 class CategoryFeedScreen extends StatefulWidget {
   final String category;
@@ -118,7 +118,7 @@ class _CategoryFeedScreenState extends State<CategoryFeedScreen> {
                   // itemBuilder rebuilds itself when the controller calls the methods to go back or forth from the current Page
                   // it only does this for pages that have not already been built
                   itemBuilder: (context, index) { // ? index sure is passed by the controller...?
-                    return ArtPostCard(
+                    return ArtPostRepresentation(
                       post: posts[index], // shows the post at the determined index
                       postInformationVisible: _postInformationVisible, // ArtPostCard also has it's own implementation with _isUiVisible for animating the Post information Overlay
                     );

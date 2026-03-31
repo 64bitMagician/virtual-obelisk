@@ -1,6 +1,4 @@
 import 'package:art_platform/data/repositories/database_repository.dart';
-import 'package:art_platform/ui/screens/authentication_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/repositories/auth_repository.dart';
 
