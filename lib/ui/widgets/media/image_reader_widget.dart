@@ -1,13 +1,13 @@
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:flutter/material.dart';
 
-class ImageFeedWidget extends StatelessWidget {
+class ImageReaderWidget extends StatelessWidget {
   // Data which defines the ArtPostCard object
   final ArtPost post; // contains all data related to the ArtPost
   final bool postInformationVisible; // state variable for the fading and position effects of the post information widgets
 
   /// Constructor requires a [ArtPost] and [bool] to be passed to the [post] and [postInformationVisible] parameters.
-  const ImageFeedWidget({super.key, required this.post, required this.postInformationVisible});
+  const ImageReaderWidget({super.key, required this.post, required this.postInformationVisible});
 
   @override
   Widget build(BuildContext context) {

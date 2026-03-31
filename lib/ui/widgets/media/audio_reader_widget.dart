@@ -2,11 +2,11 @@ import 'package:art_platform/data/models/art_post.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
-class AudioFeedWidget extends StatefulWidget {
+class AudioReaderWidget extends StatefulWidget {
   final ArtPost post;
   final bool postInformationVisible;
 
-  const AudioFeedWidget({
+  const AudioReaderWidget({
     super.key,
     required this.post,
     required this.postInformationVisible,
@@ -16,10 +16,10 @@ class AudioFeedWidget extends StatefulWidget {
   String get coverUrl => post.thumbnailUrl;
 
   @override
-  State<AudioFeedWidget> createState() => _AudioFeedWidgetState();
+  State<AudioReaderWidget> createState() => _AudioReaderWidgetState();
 }
 
-class _AudioFeedWidgetState extends State<AudioFeedWidget> {
+class _AudioReaderWidgetState extends State<AudioReaderWidget> {
   late AudioPlayer _audioPlayer;
   bool _isError = false;
 
