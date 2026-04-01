@@ -27,6 +27,7 @@ class _UploadDialogState extends State<UploadDialog> {
   bool _isUploading = false;
   XFile? _fileInstance;
   Uint8List? _fileAsBytes;
+  MediaType? _mediaType;
 
   // Added state variables for category selection
   String? _selectedCategory;
@@ -59,6 +60,8 @@ class _UploadDialogState extends State<UploadDialog> {
         _fileInstance = file;
         _selectedFileName = file.name; // set name of file
         _fileAsBytes = bytesContent;
+        // get MediaType of file
+        _mediaType = determineMediaTypeFromFile(_selectedFileName);
       });
     }
   }
@@ -88,16 +91,13 @@ class _UploadDialogState extends State<UploadDialog> {
 
       print("Step 1 Complete: File uploaded to $downloadUrl");
 
-      // get MediaType of file
-      MediaType fileType = determineMediaTypeFromFile(_selectedFileName);
-
       // So far we uploaded the raw content of the post
       // We also need to upload to Firestore the Document which represents the Post.
       // This Document contains all the information related to the Post.
       // We provide the title and description of the post from the text fields of the Dialog
       // And the imageUrl that we just fetched
       await _dbRepo.uploadArt(
-        fileType: fileType.name,
+        mediaType: _mediaType!.name,
         title: _titleController.text,
         description: _descriptionController.text,
         category: _selectedCategory!,
@@ -183,7 +183,7 @@ class _UploadDialogState extends State<UploadDialog> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Image.memory(_fileAsBytes!), // displays image based on Byte data Uint8List (list of Bytes)
+                          child: _mediaType==MediaType.image ? Image.memory(_fileAsBytes!) : Icon(Icons.file_copy), // displays image based on Byte data Uint8List (list of Bytes)
                         ),
                       ),
                       Text(

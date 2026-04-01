@@ -9,7 +9,7 @@ enum MediaType { image, audio, video, text }
 /// !FOR THAT, CHECK art_post_card.dart
 class ArtPost {
   final String id;
-  final MediaType type;
+  final MediaType mediaType;
   final String mediaUrl;
   final String thumbnailUrl; // cover art for audio, or thumbnail for videos
   final String title;
@@ -21,7 +21,7 @@ class ArtPost {
   /// Contructs the [ArtPost] object, based on required parameters...
   ArtPost({
     required this.id,
-    required this.type,
+    required this.mediaType,
     required this.mediaUrl,
     required this.thumbnailUrl,
     required this.title,
@@ -56,7 +56,7 @@ class ArtPost {
     // Return a ArtPost object defined by data from the received document
     return ArtPost(
       id: doc.id,
-      type: determineType(data['mediaType']),
+      mediaType: determineType(data['mediaType']),
       mediaUrl: data['mediaUrl'] ?? '', // Image Url will be empty string if no imageUrl provided
       thumbnailUrl: data['thumbnailUrl'],
       title: data['title'] ?? 'Untitled', //  Title name will be "Untitled" if no title provided

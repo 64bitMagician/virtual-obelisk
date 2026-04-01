@@ -18,7 +18,7 @@ class ArtPostRepresentation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget innerWidget;
-    switch (post.type) {
+    switch (post.mediaType) {
       case MediaType.image:
         innerWidget =  ImageReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.video:

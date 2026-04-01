@@ -16,7 +16,7 @@ class DatabaseRepository {
   /// It is not the content itself, rather the information related to the post (document).
   /// The method requires a [title], [description] and [mediaUrl] (all Strings) in order to be called.
   Future<void> uploadArt({
-    required String fileType,
+    required String mediaType,
     required String title,
     required String description,
     required String mediaUrl,
@@ -52,7 +52,7 @@ class DatabaseRepository {
       // we add a new document to the artworks collection | Data type: Map<String, dynamic>
       // this document represents the post we are uploading
       await artworksRef.add({
-        'fileType' : fileType,
+        'mediaType' : mediaType,
         'title' : title, // received as method parameter
         'description': description, // received as method parameter
         'category': category,
