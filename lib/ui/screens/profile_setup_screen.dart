@@ -119,6 +119,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Create your profile"),
+        actions: [IconButton(onPressed: () async => await _auth.signOut(), icon: Icon(Icons.close))],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
