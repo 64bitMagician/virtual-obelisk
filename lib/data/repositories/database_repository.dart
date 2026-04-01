@@ -15,7 +15,7 @@ class DatabaseRepository {
   /// This method is responsible for saving the uploaded content (the posts) unto the Firestore
   /// It is not the content itself, rather the information related to the post (document).
   /// The method requires a [title], [description] and [mediaUrl] (all Strings) in order to be called.
-  Future<void> uploadArt({
+  Future<void> uploadMedia({
     required String mediaType,
     required String title,
     required String description,
@@ -167,7 +167,7 @@ class DatabaseRepository {
       // A timestamp of the moment this method is called
       final Map<String, dynamic> updates = {'updatedAt': FieldValue.serverTimestamp()};
       // set displayName
-      if (displayName != null) updates['profileName'] = displayName;
+      if (displayName != null) updates['displayName'] = displayName;
       // set bio
       if (bio != null) updates['bio'] = bio;
       // set avatarUrl

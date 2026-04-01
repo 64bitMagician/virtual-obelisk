@@ -38,7 +38,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       final username = _usernameController.text.trim().toLowerCase();
       final profileName = _profileNameController.text.trim();
 
+      if (!RegExp(r'^[a-z0-9_]+$').hasMatch(username)) {
+        setState(() {
+          _usernameError = "Only lowercase letters, numbers, and _ allowed";
+          _loading = false;
+        });
+        return;
+      }
+
       // fetches reference to usernames and users documents corresponding to authenticated user
+      // ? here probably also the /usernames and /users collections are created, because we call ".collection(...)"
       // ? probably they do not exist...
       final usernameRef = _db.collection('usernames').doc(username);
       final userRef = _db.collection('users').doc(uid);
@@ -59,7 +68,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
         // If it exists it throwh error
         if (usernameDoc.exists) {
-          throw Exception("Username already taken");
+          setState(() {
+            _usernameError = "Username already exists";
+            _loading = false;
+          });
+          return;
         }
 
         // Document does not exist, so we create it. The name of Document is the actual username
@@ -70,33 +83,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
         // Create new Document representing the data of the Authenticated User
         await transaction.set(userRef, {
+          "uid": uid,
           "username": username,
-          "profileName": profileName,
+          "displayName": profileName,
           "bio": "No bio yet...",
           "avatarUrl": "default",
           "createdAt": FieldValue.serverTimestamp(),
         });
       });
 
+      // if this point reached, account has been configured with the Corresponding Firestore Documents
+      setState(() {
+        _loading = false;
+      });
+
       // If reached this point, everything is good we can navigate to home screen
       // we navigate the user to home screen, thus marking his entry to the application
       context.go("/");
-
-      // we return if state widget is out of the tree
-      if (!mounted) return;
+      return;
     } catch (e) {
       print("TRANSACTION ERROR: $e");
-
-      setState(() {
-        _usernameError = "Username already taken";
-      });
     }
-
-    // after the succesful or failing attempt to create the profile, we rebuild the screen
-    // changing _loading to false, because we finished our attempt
-    setState(() {
-      _loading = false;
-    });
   }
 
   // we always need to dispose controllers...

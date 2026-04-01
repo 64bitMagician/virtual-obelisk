@@ -42,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // variable a certain document within Firebase Storage
         // the document represents the image data for the avatar image of the currently
         // authenticated user
+        // ? if none document, it probably creates one
         final storageRef = FirebaseStorage.instance.ref().child('avatars/${user!.uid}.jpg');
 
         // convert picked local image to raw binary data, to store it in the document file

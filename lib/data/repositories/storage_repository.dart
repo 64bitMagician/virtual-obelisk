@@ -24,7 +24,7 @@ class StorageRepository {
   /// with an "Out of Memory" error.
   ///
   /// So to prevent this, we will use [kIsWeb] to check wether we are on web or not.
-  Future<String> uploadArt(XFile? file) async {
+  Future<String> uploadMedia(XFile? file) async {
     if(file == null)
       throw Exception("'file' is null...");
 

@@ -29,6 +29,11 @@ class _UploadDialogState extends State<UploadDialog> {
   Uint8List? _fileAsBytes;
   MediaType? _mediaType;
 
+  // --- THUMBNAIL STATE VARIABLES ---
+  XFile? _thumbnailInstance;
+  Uint8List? _thumbnailBytes;
+  String? _thumbnailFileName;
+
   // Added state variables for category selection
   String? _selectedCategory;
   // list passed by reference to 'artCategories' constant from "constants.dart"
@@ -45,6 +50,19 @@ class _UploadDialogState extends State<UploadDialog> {
     super.dispose();
   }
 
+  Future<void> _pickThumbnail() async {
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (file != null) {
+      Uint8List bytesContent = await file.readAsBytes();
+      setState(() {
+        _thumbnailInstance = file;
+        _thumbnailFileName = file.name;
+        _thumbnailBytes = bytesContent;
+      });
+    }
+  }
+
   // picks an image from local machine and stores the byte data and name of that image
   // within the state variables of our UploadDialogState object
   Future<void> _pickImage() async {
@@ -53,6 +71,13 @@ class _UploadDialogState extends State<UploadDialog> {
 
     // if we managed to get a file
     if (file != null) {
+      // Reset Thumbnail data
+      if (_mediaType == MediaType.image) {
+        _thumbnailInstance = null;
+        _thumbnailFileName = null;
+        _thumbnailBytes = null;
+      }
+
       // get file as bytes
       Uint8List bytesContent = await file.readAsBytes();
       // new state data: selected file name, and the binary data of the file
@@ -87,7 +112,14 @@ class _UploadDialogState extends State<UploadDialog> {
       // We upload the Post through our storageRepo method which requires the post as byte object
       // We also provide a unique name for differentiation between Post Documents
 
-      final String downloadUrl = await _storageRepo.uploadArt(_fileInstance);
+      final String downloadUrl = await _storageRepo.uploadMedia(_fileInstance);
+
+      // NEW: UPLOAD THUMBNAIL IF IT EXISTS
+      String? thumbnailDownloadUrl;
+      if (_thumbnailInstance != null) {
+        print("ATTEMPTING TO UPLOAD THUMBNAIL...");
+        thumbnailDownloadUrl = await _storageRepo.uploadMedia(_thumbnailInstance);
+      }
 
       print("Step 1 Complete: File uploaded to $downloadUrl");
 
@@ -96,7 +128,7 @@ class _UploadDialogState extends State<UploadDialog> {
       // This Document contains all the information related to the Post.
       // We provide the title and description of the post from the text fields of the Dialog
       // And the imageUrl that we just fetched
-      await _dbRepo.uploadArt(
+      await _dbRepo.uploadMedia(
         mediaType: _mediaType!.name,
         title: _titleController.text,
         description: _descriptionController.text,
