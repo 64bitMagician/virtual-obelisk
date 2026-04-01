@@ -1,6 +1,9 @@
+import 'package:art_platform/core/constants.dart';
+import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -8,7 +11,6 @@ import 'package:art_platform/data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'user_gallery_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -86,11 +88,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: const Text("Edit Profile"),
             content: Column(mainAxisSize: MainAxisSize.min, children: [TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Display Name")), const SizedBox(height: 10), TextField(controller: _bioController, decoration: const InputDecoration(labelText: "Bio"), maxLines: 3)]),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+              TextButton(onPressed: () => context.pop(), child: const Text("Cancel")),
               ElevatedButton(
                 onPressed: () async {
                   await _repository.updateUserData(uid: user!.uid, displayName: _nameController.text, bio: _bioController.text);
-                  if (mounted) Navigator.pop(context);
+                  if (mounted) context.pop();
                 },
                 child: const Text("Save"),
               ),
@@ -179,18 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return GestureDetector(
                               // child: will be the area of the onTap Detection
                               // push the UserGalleryScreen on to the stack, indexed on the selected image
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => UserGalleryScreen(
-                                          posts: posts, // Feed it the List of ArtPosts
-                                          initialIndex: index, // index at which to display the corresponding image
-                                        ),
-                                  ),
-                                );
-                              },
+                              onTap: () => context.go("/profile/media_reader/$index"),
                               child: ClipRRect(
                                 // ClipRRect rounds corners of the wrapped Widget
                                 borderRadius: BorderRadius.circular(8), // the roundness

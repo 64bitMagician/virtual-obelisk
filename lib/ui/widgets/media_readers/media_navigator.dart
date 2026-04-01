@@ -1,7 +1,9 @@
+import 'package:art_platform/ui/widgets/simple_stuff/exit_reader_button.dart';
 import 'package:flutter/material.dart';
 
 class MediaNavigator extends StatelessWidget {
   final bool isVisible;
+  final bool? exitButton;
   final PageController pageController;
   final VoidCallback callStartHideTimer; // we pass it the _startHideTimer()
 
@@ -10,12 +12,18 @@ class MediaNavigator extends StatelessWidget {
     required this.isVisible,
     required this.pageController,
     required this.callStartHideTimer,
+    this.exitButton,
 });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
+      // must expand, otherwise, if exitButton==false, all widgets in stack become non-existent (or not available on the screen at least)
+      fit: StackFit.expand,
       children: [
+        // Exit button, or nothing at all, based on reader configuration
+        exitButton==true ? ExitReaderButton(isVisible: isVisible) : SizedBox.shrink(),
+
         // Retracting Animation (For the arrow left)
         AnimatedPositioned(
           duration: const Duration(milliseconds: 600), // retraction animation duration

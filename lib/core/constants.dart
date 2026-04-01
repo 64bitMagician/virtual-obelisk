@@ -2,6 +2,8 @@ import 'dart:core';
 
 enum Ranks {novice, apprentice, artisan, master, virtuoso, visionary, legend}
 
+enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED}
+
 // ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION
 // ! IF YOU WANT TO ADD A NEW ART CATEGORY, YOU MUST ALSO PROVIDE THE DISPLAY NAME IN THE MAP OBJECT TYPE BELLOW
 const List<String> artCategories =  [

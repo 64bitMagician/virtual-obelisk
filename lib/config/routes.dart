@@ -1,5 +1,6 @@
-import 'package:art_platform/ui/screens/category_feed_screen.dart';
+import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
+import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/screens/home_screen.dart';
@@ -55,7 +56,7 @@ final GoRouter router = GoRouter(
       // content that the Shell Wrapper encapsulates. The content that can shift while the ShellWrapper (AuthGate
       // and ResponsiveScaffold) stay the same. This is because this is the moment we use the child parameter
       // received through the lamba Widget Function.
-      builder: (context, state, child) => AuthGate(child: ResponsiveScaffold(child: child),),
+      builder: (context, state, child) => AuthGate(child: ResponsiveScaffold(child: child)),
       // But who is the child Widget passed to the lambda function?
       // Well, it is the returned Widget of the route (from the list of routes: bellow) that is
       // currently being processed.
@@ -85,6 +86,17 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+          routes: [
+            GoRoute(
+              path: 'media_reader/:post_index',
+              builder: (context, state) {
+                // Extract the variable from the URL path
+                final int postIndex = int.parse(state.pathParameters['post_index']!);
+                // Pass it to the screen
+                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true);
+              }
+            )
+          ]
         ),
         GoRoute(
           path: '/categories',
@@ -94,12 +106,12 @@ final GoRouter router = GoRouter(
               // NO leading slash here!
               // By nesting it, go_router automatically prepends '/categories/' to it.
               // So the full absolute URL becomes: /categories/feed/:categoryName
-              path: 'feed/:categoryName',
+              path: 'feed/:category_name',
               builder: (context, state) {
                 // Extract the variable from the URL path
-                final String categoryName = state.pathParameters['categoryName']!;
+                final String categoryName = state.pathParameters['category_name']!;
                 // Pass it to the screen
-                return CategoryFeedScreen(category: categoryName);
+                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.CATEGORY_FEED, category: categoryName, exitButton: true);
               },
             )
           ],

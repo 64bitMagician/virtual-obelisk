@@ -1,15 +1,43 @@
 import 'dart:async';
+import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/widgets/media_readers/media_navigator.dart';
 import 'package:art_platform/ui/widgets/media_readers/post_info.dart';
-import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
 
-/// HomeScreen of the Platform
+/// [MediaReader] is required to have one of the three configurations available:
+/// [MediaReaderConfiguration.HOME_FEED],[MediaReaderConfiguration.PROFILE_FEED] or [MediaReaderConfiguration.CATEGORY_FEED].
+/// They are passed to the required [mediaReaderConfiguration] parameter...
+///
+/// Since it is an enum, only one configuration is possible at the time.
+/// Depending on which Configuration you choose, there are additional parameters you need to fill.
+/// Here is a list with each Configuration and what additional parameters in requires.
+/// HOME_FEED: no additional parameters required.
+/// PROFILE_FEED: [profilePostIndex] - determines the art asset that will be initially displayed. Very useful
+/// when used in conjunction with a GridView, that can detect the index of objects interacted with user gestures.
+/// This combination creates the behaviour of "you see what you clicked on..."
+/// CATEGORY_FEED: [category] - it will configure [MediaReader] to fetch only ArtPost of the passed category.
+///
+/// There is also an optional parameter [exitButton]. If set to true, it will add an exit button that will redirect
+/// the user to the previous page. If set to false or not set at all, the button simply won't show up.
 class MediaReader extends StatefulWidget {
-  const MediaReader({super.key});
+  final MediaReaderConfiguration mediaReaderConfiguration;
+  final int profilePostIndex;
+  final String? category;
+  final bool? exitButton;
+
+  const MediaReader({
+    super.key,
+    required this.mediaReaderConfiguration,
+    this.exitButton,
+    // the first post in the streamed list. Special case for Profile Screen, where you select the index through
+    // tapping on a post from the Gallery of the Profile
+    this.profilePostIndex = 0,
+    this.category,
+  });
 
   @override
   State<MediaReader> createState() => _ParentMediaReader();
@@ -24,16 +52,30 @@ class _ParentMediaReader extends State<MediaReader> {
   // This Stream represents the Feed Posts
   late final Stream<List<ArtPost>> _postsStream;
 
-  bool _postInformationVisible = true; // starts of true
+  // determines visibilty for widgets on top of the post (Post Info, Navigation)
+  bool _isVisible = true;
   Timer? _hideTimer;
 
   // the initial state of the HomeScreen Widget
   // We use it to configure stuff...
   void initState() {
     super.initState();
-    _pageController = PageController();
+    // Configure it to start at received index from constructor
+    _pageController = PageController(initialPage: widget.profilePostIndex);
 
-    _postsStream = _repository.getHomeFeedPosts();
+    // Assign the right stream depending on MediaReader Configuration
+    if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED)
+      _postsStream = _repository.getHomeFeedPosts();
+    else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+      if (widget.category == null) throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader no value has been passed for category parameter...");
+
+      _postsStream = _repository.getCategoryFeedPosts(category: widget.category!);
+    } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
+      // if user is not signed-in, tough at this step I believe it is impossible
+      if (FirebaseAuth.instance.currentUser == null) throw Exception("Cannot fetch the Profile Gallery Posts of Current User because there is none authenticated...");
+
+      _postsStream = _repository.getUserPosts('me');
+    }
 
     _startHideTimer();
   }
@@ -44,8 +86,9 @@ class _ParentMediaReader extends State<MediaReader> {
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted && _postInformationVisible) { // if data visible, and also exists in the tree
-        setState(() => _postInformationVisible = false); // rebuild the HomeScreen widget with new state (ui==false)
+      if (mounted && _isVisible) {
+        // if data visible, and also exists in the tree
+        setState(() => _isVisible = false); // rebuild the HomeScreen widget with new state (ui==false)
       }
     });
   }
@@ -55,8 +98,8 @@ class _ParentMediaReader extends State<MediaReader> {
   // making the UI info above content visible again
   // This method, resets the "mouse has been moved" timer, regardless of the state of the _postInformationVisible
   void _handleMouseMove(PointerEvent details) {
-    if (!_postInformationVisible) {
-      setState(() => _postInformationVisible = true);
+    if (!_isVisible) {
+      setState(() => _isVisible = true);
     }
     // Mouse has been moved, so start timer again
     _startHideTimer();
@@ -75,22 +118,21 @@ class _ParentMediaReader extends State<MediaReader> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: MouseRegion( // used to detect mouse activity within the region of it's child
+      body: MouseRegion(
+        // used to detect mouse activity within the region of it's child
         // The region is the whole region where the post is visible
         onHover: _handleMouseMove, // when mouse is moved within the region (not counted if stationary)
         child: StreamBuilder<List<ArtPost>>(
           stream: _postsStream, // the stream representing the feed posts
-          builder: (context, snapshot) { // this retriggers everytime a new post arrives from stream
-            if (snapshot.connectionState == ConnectionState.waiting) { // Loading Animation while fetching post list
+          builder: (context, snapshot) {
+            // this retriggers everytime a new post arrives from stream
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Loading Animation while fetching post list
               return const Center(child: CircularProgressIndicator());
             }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) { // if we have a list containing null, or empty list
-              return const Center(
-                child: Text(
-                  "No art found.",
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              // if we have a list containing null, or empty list
+              return const Center(child: Text("No art found.", style: TextStyle(color: Colors.white)));
             }
 
             // if it's not fetching post, and we do actually retreived the list of posts,
@@ -100,31 +142,32 @@ class _ParentMediaReader extends State<MediaReader> {
             // Now we return (rebuild) with the new post fetched
             return Stack(
               children: [
-                PageView.builder( // the tool that acts as a viewable collection of Widgets (ArtPostRepresentation Widgets in our case)
+                PageView.builder(
+                  // the tool that acts as a viewable collection of Widgets (ArtPostRepresentation Widgets in our case)
                   controller: _pageController, // the controller which controls the PageView Widget. Responsible for Page Navigation
                   // ammount of posts (does not build all of them, only the current one and maybe previous and next pages to prevent loading times)
                   // it also keeps previously loaded pages built (maybe there is a limit...)
                   itemCount: posts.length, // determine, the size of the
                   // itemBuilder rebuilds itself when the controller calls the methods to go back or forth from the current Page
                   // it only does this for pages that have not already been built
-                  itemBuilder: (context, index) { // ? index sure is passed by the controller...?
+                  itemBuilder: (context, index) {
+                    // ? index sure is passed by the controller...?
                     return Stack(
                       children: [
                         // WIDGET: The actual Media Content
                         ArtPostRepresentation(
                           post: posts[index], // shows the post at the determined index
-                          postInformationVisible: _postInformationVisible, // ArtPostRepresentation also has it's own implementation with _isUiVisible for animating the Post information Overlay
+                          postInformationVisible: _isVisible, // ArtPostRepresentation also has it's own implementation with _isUiVisible for animating the Post information Overlay
                         ),
                         // WIDGET: Information that sits on top of the post. Info about post...
-                        PostInfo(post: posts[index], postInformationVisible: _postInformationVisible),
-                      ]
-
+                        PostInfo(post: posts[index], postInformationVisible: _isVisible),
+                      ],
                     );
                   },
                 ),
 
-                // WDIGET: Arrows that control navigation of PageView Widget
-                MediaNavigator(isVisible: _postInformationVisible, pageController: _pageController, callStartHideTimer: _startHideTimer,)
+                // WIDGET: Arrows that control navigation of PageView Widget + optional exit button
+                MediaNavigator(isVisible: _isVisible, pageController: _pageController, callStartHideTimer: _startHideTimer, exitButton: widget.exitButton),
               ],
             );
           },
@@ -132,6 +175,4 @@ class _ParentMediaReader extends State<MediaReader> {
       ),
     );
   }
-
-
 }

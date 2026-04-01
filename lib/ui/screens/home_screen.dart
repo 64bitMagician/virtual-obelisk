@@ -1,3 +1,4 @@
+import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MediaReader();
+    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.HOME_FEED);
   }
 }
