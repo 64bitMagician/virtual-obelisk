@@ -30,9 +30,9 @@ class _UploadDialogState extends State<UploadDialog> {
   MediaType? _mediaType;
 
   // --- THUMBNAIL STATE VARIABLES ---
-  XFile? _thumbnailInstance;
-  Uint8List? _thumbnailBytes;
-  String? _thumbnailFileName;
+  XFile? _additionalMedialInstance;
+  Uint8List? _additionalMediaBytes;
+  String? _additionalMediaFileName;
 
   // Added state variables for category selection
   String? _selectedCategory;
@@ -56,9 +56,9 @@ class _UploadDialogState extends State<UploadDialog> {
     if (file != null) {
       Uint8List bytesContent = await file.readAsBytes();
       setState(() {
-        _thumbnailInstance = file;
-        _thumbnailFileName = file.name;
-        _thumbnailBytes = bytesContent;
+        _additionalMedialInstance = file;
+        _additionalMediaFileName = file.name;
+        _additionalMediaBytes = bytesContent;
       });
     }
   }
@@ -73,9 +73,9 @@ class _UploadDialogState extends State<UploadDialog> {
     if (file != null) {
       // Reset Thumbnail data
       if (_mediaType == MediaType.image) {
-        _thumbnailInstance = null;
-        _thumbnailFileName = null;
-        _thumbnailBytes = null;
+        _additionalMedialInstance = null;
+        _additionalMediaFileName = null;
+        _additionalMediaBytes = null;
       }
 
       // get file as bytes
@@ -93,11 +93,11 @@ class _UploadDialogState extends State<UploadDialog> {
 
 
   Future<void> _handleUpload() async {
-    // if there is no text in the post name field or no data for the post (image)
-    // OR if no category is selected, we display a message and return
-    if (_titleController.text.isEmpty || _selectedCategory == null) {
+    // if there is no text in the post name field OR if no category is selected, we display a message and return
+    // OR no data for the main art post upload
+    if (_titleController.text.isEmpty || _selectedCategory == null || _fileInstance == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an image, enter a title, and choose a category")),
+        const SnackBar(content: Text("Please upload your art, enter a title, and choose a category")),
       );
       return;
     }
@@ -112,17 +112,17 @@ class _UploadDialogState extends State<UploadDialog> {
       // We upload the Post through our storageRepo method which requires the post as byte object
       // We also provide a unique name for differentiation between Post Documents
 
-      final String downloadUrl = await _storageRepo.uploadMedia(_fileInstance);
+      final String mainFileDownloadUrl = await _storageRepo.uploadMedia(_fileInstance, folderPath: FolderPathEnum.artworks);
+      print("Main File uploaded to $mainFileDownloadUrl");
 
-      // NEW: UPLOAD THUMBNAIL IF IT EXISTS
-      String? thumbnailDownloadUrl;
-      if (_thumbnailInstance != null) {
-        print("ATTEMPTING TO UPLOAD THUMBNAIL...");
-        thumbnailDownloadUrl = await _storageRepo.uploadMedia(_thumbnailInstance);
-      }
+      // If there is additional media to be uploaded, [additionalMediaDownloadUrl] will hold the
+      // string Url to that Media.
+      // If there is no additional media to be uploaded, [additionalMediaDownloadUrl] will be null
+      String? additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
 
-      print("Step 1 Complete: File uploaded to $downloadUrl");
 
+
+      print("Attempting to upload Data of Main Uploaded File to Firestore...");
       // So far we uploaded the raw content of the post
       // We also need to upload to Firestore the Document which represents the Post.
       // This Document contains all the information related to the Post.
@@ -133,9 +133,10 @@ class _UploadDialogState extends State<UploadDialog> {
         title: _titleController.text,
         description: _descriptionController.text,
         category: _selectedCategory!,
-        mediaUrl: downloadUrl,
+        mediaUrl: mainFileDownloadUrl,
+        additionalMediaUrl: additionalMediaDownloadUrl,
       );
-      print("Step 2 Complete: Data saved to Firestore");
+      print("Main File Data saved to Firestore");
 
       // Display SnackBar Message
       if (mounted) {
@@ -157,10 +158,35 @@ class _UploadDialogState extends State<UploadDialog> {
           ),
         );
       }
-    } finally {
+    } finally { // finally executes whatever the case
       // wether the upload has completed succesfully or not, it has completed either way
       // so we set the state of _isUploading back to false, since we are not uploading anymore
       if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  Future<String?> uploadAdditionalMediaIfItIsTheCase() async
+  {
+    // If additionalMedia has been imported in the dialog for upload:
+    if (_additionalMedialInstance != null) {
+      String? additionalMediaDownloadUrl;
+      // check to see to which directory to upload additionalMedia based on main file type
+      FolderPathEnum? folderPath;
+      if(_mediaType == MediaType.video)
+        folderPath = FolderPathEnum.thumbnail;
+      else if (_mediaType == MediaType.audio)
+        folderPath = FolderPathEnum.coverart;
+      else if (folderPath == null)
+        throw Exception("Additional Media has been provided, but it is not suited for the main art uploaded, OR, _mediaType may be null");
+
+      print("---- ATTEMPTING TO UPLOAD ADDITIONAL MEDIA...");
+      additionalMediaDownloadUrl = await _storageRepo.uploadMedia(_additionalMedialInstance, folderPath: FolderPathEnum.coverart);
+      print("---- ADDITIONAL MEDIA UPLOADED SUCCESFULLY");
+      return additionalMediaDownloadUrl;
+    }
+    else {
+      print("INFO: No Additional Media has been picked for uploading...");
+      return null;
     }
   }
 
@@ -208,7 +234,7 @@ class _UploadDialogState extends State<UploadDialog> {
                       Text("Click to select Art"),
                     ],
                   )
-                  // If image has been provided, we will display the image + it's local machine name (if it has one)
+                  // If main art has been provided, we will display the image + it's local machine name (if it has one)
                       : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -228,6 +254,50 @@ class _UploadDialogState extends State<UploadDialog> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // --- DYNAMIC THUMBNAIL PICKER ---
+              if (_mediaType == MediaType.audio || _mediaType == MediaType.video) ...[
+                _mediaType==MediaType.audio ? const Text("Add Cover Art (Optional)", style: TextStyle(fontWeight: FontWeight.bold)) : const Text("Add Thumbnail (Optional)", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: _pickThumbnail,
+                  child: Container(
+                    height: 100, // Smaller than the main picker
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      border: Border.all(color: Colors.grey, style: BorderStyle.none),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _additionalMedialInstance == null
+                        ? const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image, size: 32, color: Colors.grey),
+                        SizedBox(height: 4),
+                        Text("Click to select image", style: TextStyle(color: Colors.grey)),
+                      ],
+                    )
+                        : Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.memory(_additionalMediaBytes!, width: 80, height: 80, fit: BoxFit.cover),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _additionalMediaFileName ?? (_mediaType == MediaType.audio ? "Cover Art Image" : "Thumbnail Image"),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 16),
 

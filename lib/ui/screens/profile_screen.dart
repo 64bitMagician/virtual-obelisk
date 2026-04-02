@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // we take the snaphot data (user data document data)
         // and store it in our own variable: headerMap
 
-        final Map<String, dynamic> headerMap = {'uid': user!.uid, 'username': data?['username'], 'profileName': data?['profileName'] ?? defaultName, 'bio': data?['bio'] ?? "No bio yet...", 'avatarUrl': data?['avatarUrl'] ?? "default", 'rank': data?['rank'] ?? 'Beginner', 'followers': data?['followers'] ?? 0, 'following': data?['following'] ?? 0, 'likes': data?['likes'] ?? 0};
+        final Map<String, dynamic> headerMap = {'uid': user!.uid, 'username': data?['username'], 'displayName': data?['displayName'] ?? defaultName, 'bio': data?['bio'] ?? "No bio yet...", 'avatarUrl': data?['avatarUrl'] ?? "default", 'rank': data?['rank'] ?? 'Beginner', 'followers': data?['followers'] ?? 0, 'following': data?['following'] ?? 0, 'likes': data?['likes'] ?? 0};
 
         return Scaffold(
           floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add)),
@@ -140,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onEditProfile:
                               () => _showEditDialog(
                                 // you provide initial text to be shown in the text fields
-                                headerMap['name'],
+                                headerMap['displayName'],
                                 headerMap['bio'],
                               ),
                         );

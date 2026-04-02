@@ -11,7 +11,7 @@ class ArtPost {
   final String id;
   final MediaType mediaType;
   final String mediaUrl;
-  final String thumbnailUrl; // cover art for audio, or thumbnail for videos
+  final String additionalMediaUrl; // cover art for audio, or thumbnail for videos
   final String title;
   final String description;
   final String authorName;
@@ -23,7 +23,7 @@ class ArtPost {
     required this.id,
     required this.mediaType,
     required this.mediaUrl,
-    required this.thumbnailUrl,
+    required this.additionalMediaUrl,
     required this.title,
     required this.description,
     required this.authorName,
@@ -55,15 +55,15 @@ class ArtPost {
 
     // Return a ArtPost object defined by data from the received document
     return ArtPost(
+      additionalMediaUrl: data['additionalMediaUrl'], // if not provided, it has value: "default, by default
+      authorAvatar: data['authorAvatar'] ?? 'https://i.pravatar.cc/150?u=${doc.id}', // random avatar if none provided
+      authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided
+      description: data['description'] ?? '', // Empty description if non provided
       id: doc.id,
+      likes: data['likes'] ?? 0, // 0 likes if number of likes not provided
       mediaType: determineType(data['mediaType']),
       mediaUrl: data['mediaUrl'] ?? '', // Image Url will be empty string if no imageUrl provided
-      thumbnailUrl: data['thumbnailUrl'],
       title: data['title'] ?? 'Untitled', //  Title name will be "Untitled" if no title provided
-      description: data['description'] ?? '', // Empty description if non provided
-      authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided
-      authorAvatar: data['authorAvatar'] ?? 'https://i.pravatar.cc/150?u=${doc.id}', // random avatar if none provided
-      likes: data['likes'] ?? 0, // 0 likes if number of likes not provided
     );
   }
 }

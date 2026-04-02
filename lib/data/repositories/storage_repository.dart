@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:art_platform/core/constants.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +10,8 @@ import 'package:mime/mime.dart';
 class StorageRepository {
   // Establish connection with Firebase Storage SDK
   final FirebaseStorage _storage = FirebaseStorage.instance;
+
+
 
   /// Upload art to Firebase Storage.
   /// Requires the Post to be convert to binary code ([fileBytes] of type [Unit8List]).
@@ -24,7 +27,7 @@ class StorageRepository {
   /// with an "Out of Memory" error.
   ///
   /// So to prevent this, we will use [kIsWeb] to check wether we are on web or not.
-  Future<String> uploadMedia(XFile? file) async {
+  Future<String> uploadMedia(XFile? file, {required FolderPathEnum folderPath}) async {
     if(file == null)
       throw Exception("'file' is null...");
 
@@ -46,7 +49,7 @@ class StorageRepository {
     try {
       // Reference to the documents within the artworks collection on Firebase Storage
       // It also creates a new document with the given name if one does not exist
-      final Reference ref = _storage.ref().child('artworks/$uniqueFileName');
+      final Reference ref = _storage.ref().child('${folderPath.name}/$uniqueFileName');
 
       TaskSnapshot snapshot;
       // Branch the logic based on the platform!

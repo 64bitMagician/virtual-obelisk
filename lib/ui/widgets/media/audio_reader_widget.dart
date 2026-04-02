@@ -13,7 +13,7 @@ class AudioReaderWidget extends StatefulWidget {
   });
 
   String get audioUrl => post.mediaUrl;
-  String get coverUrl => post.thumbnailUrl;
+  String get coverUrl => post.additionalMediaUrl;
 
   @override
   State<AudioReaderWidget> createState() => _AudioReaderWidgetState();

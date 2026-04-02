@@ -21,7 +21,7 @@ class DatabaseRepository {
     required String description,
     required String mediaUrl,
     required String category,
-    String? thumbnailUrl,
+    String? additionalMediaUrl,
   }) async {
     final user = _auth.currentUser; // we fetch the current User, if any (can also be null)
     if (user == null) { // Exception Error. User is not logged in, therfore cannot upload
@@ -57,7 +57,7 @@ class DatabaseRepository {
         'description': description, // received as method parameter
         'category': category,
         'mediaUrl': mediaUrl, // received as method parameter
-        'thumbnailUrl': thumbnailUrl != null ? thumbnailUrl : "default",
+        'additionalMediaUrl': additionalMediaUrl != null ? additionalMediaUrl : "default",
         'userId': user.uid, // the user id of the authenticated user
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
         'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore

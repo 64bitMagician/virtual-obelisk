@@ -2,6 +2,10 @@ import 'dart:core';
 
 enum Ranks {novice, apprentice, artisan, master, virtuoso, visionary, legend}
 
+// enum with storage folders. This is for determining in which folder to store the uploaded art
+// used in upload_dialog.dart
+enum FolderPathEnum {artworks, coverart, thumbnail, avatars}
+
 enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED}
 
 // ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION

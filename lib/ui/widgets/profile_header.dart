@@ -72,7 +72,7 @@ class ProfileHeader extends StatelessWidget {
 
         // Display the name of User. If user does not have a name, display the word "Arist"
         Text(
-          userData['profileName'] ?? 'Artist',
+          userData['displayName'] ?? 'Artist',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
