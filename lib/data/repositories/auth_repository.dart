@@ -49,11 +49,10 @@ class AuthRepository {
         email: email,
         password: password,
       );
-    }
-    catch (e)
-    {
-      print("Something went wrong while trying to create the user");
-      print("ERROR: $e");
+    } on FirebaseAuthException catch (e) {
+      throw Exception(parseFirebaseAuthException(e));
+    } catch (e) {
+      throw Exception("Unexpected error occurred.");
     }
   }
 
@@ -64,8 +63,10 @@ class AuthRepository {
         email: email,
         password: password,
       );
+    }  on FirebaseAuthException catch (e) {
+      throw Exception(parseFirebaseAuthException(e));
     } catch (e) {
-      throw Exception(e.toString());
+      throw Exception("Unexpected error occurred.");
     }
   }
 
@@ -76,5 +77,36 @@ class AuthRepository {
   /// to automatically redirect the user to the Login Screen.
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  String parseFirebaseAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'The email address is not valid.';
+
+      case 'user-disabled':
+        return 'This user account has been disabled.';
+
+      case 'user-not-found':
+        return 'No account found for this email.';
+
+      case 'wrong-password':
+        return 'Incorrect password.';
+
+      case 'email-already-in-use':
+        return 'An account already exists with this email.';
+
+      case 'weak-password':
+        return 'The password is too weak. Please choose a stronger password.';
+
+      case 'operation-not-allowed':
+        return 'This sign-in method is not enabled.';
+
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+
+      default:
+        return '${e.message ?? "Unknown error"}';
+    }
   }
 }
