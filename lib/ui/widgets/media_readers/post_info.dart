@@ -1,63 +1,144 @@
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:flutter/material.dart';
 
-class PostInfo extends StatelessWidget {
-  // Data which defines the ArtPostCard object
-  final ArtPost post; // contains all data related to the ArtPost
-  final bool postInformationVisible; // state variable for the fading and position effects of the post information widgets
+/// Feature a Pull-up Handle to add the Post Information on the screen, without obscuring the art,
+/// or interfering with the Video/Audio Players
+class PostInfo extends StatefulWidget {
+  final ArtPost post;
+  final bool postInformationVisible;
 
   const PostInfo({super.key, required this.post, required this.postInformationVisible});
 
   @override
+  State<PostInfo> createState() => _PostInfoState();
+}
+
+class _PostInfoState extends State<PostInfo> {
+  // Local state to track if the user has pulled the info up
+  bool _isExpanded = false;
+
+  // Thigs gets triggered when you interact with the Pull-Up Handle
+  // Pulling up -> _isExpanded == true
+  // Pulling down -> _isExpended == false
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // This sits on top of the image
-    // AnimatedPositioned is what creates the smooth sliding motion of your bottom information overlay when isUiVisible changes.
+    // We grab the screen width so we can manually apply it later
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return AnimatedPositioned(
-      duration: const Duration(milliseconds: 500), // how much time it takes for the animation to complete
-      bottom: postInformationVisible ? 0 : -150, // ? 0 if Ui is visible, -150 otherwise
+      duration: const Duration(milliseconds: 500),
+      bottom: widget.postInformationVisible ? 0 : -250,
       left: 0,
-      right: 0,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 500),
-        opacity: postInformationVisible ? 1.0 : 0.0,
-        child: Container(
-          padding: const EdgeInsets.all(40),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [Colors.black87, Colors.transparent],
+        opacity: widget.postInformationVisible ? 1.0 : 0.0,
+
+        // IgnorePointer prevents the widget from eating clicks when it fades out
+        child: IgnorePointer(
+          ignoring: !widget.postInformationVisible,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: _isExpanded
+                  ? const LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Colors.black87, Colors.black54, Colors.transparent],
+              )
+                  : null,
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                post.title,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+
+                // 1. THE DRAGGER BUTTON
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, bottom: 16.0),
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (details) {
+                      if (details.delta.dy < -2 && !_isExpanded) _toggleExpand();
+                      else if (details.delta.dy > 2 && _isExpanded) _toggleExpand();
+                    },
+                    child: InkWell(
+                      onTap: _toggleExpand,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text("Info", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundImage: post.authorAvatar=="default" ?
-                    AssetImage('assets/icons/user-profile-icon.png') : NetworkImage(post.authorAvatar),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "by ${post.authorName}",
-                    style: const TextStyle(color: Colors.white70, fontSize: 18),
-                  ),
-                ],
-              ),
-            ],
+
+                // 2. THE POST INFO
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _isExpanded
+                      ? GestureDetector(
+                    onVerticalDragUpdate: (details) {
+                      if (details.delta.dy > 2 && _isExpanded) _toggleExpand();
+                    },
+                    child: SizedBox(
+                      width: screenWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(40, 0, 40, 40),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.post.title,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundImage: widget.post.authorAvatar == "default"
+                                      ? const AssetImage('assets/icons/user-profile-icon.png') as ImageProvider
+                                      : NetworkImage(widget.post.authorAvatar),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  "by ${widget.post.authorName}",
+                                  style: const TextStyle(color: Colors.white70, fontSize: 18),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
