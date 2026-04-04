@@ -49,77 +49,187 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
     super.dispose();
   }
 
+  // Helper method to format Duration into mm:ss
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return "0:00";
+    String minutes = (duration.inMinutes % 60).toString(); // return the whole minutes passed
+    String seconds = (duration.inSeconds % 60).toString().padLeft(2, '0'); // return timestamp of seconds
+    return "$minutes:$seconds";
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isError) {
       return const Center(child: Text('Error loading audio', style: TextStyle(color: Colors.red)));
     }
 
-
-
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[900], // Dark background for audio posts
-        image: widget.coverUrl != "default" ? DecorationImage(image: NetworkImage(widget.coverUrl!), fit: BoxFit.cover, colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken)) : DecorationImage(image: AssetImage('assets/icons/user-profile-icon.png')),
-      ),
-      child: Center(
-        // We use a StreamBuilder to listen to the player's state
-        // This automatically updates the UI to show a Play, Pause, or Loading button
-        child: StreamBuilder<PlayerState>(
+      color: Colors.grey[900], // Solid dark background for the player
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 32),
+
+          // 1. SQUARE COVER ART (Responsive)
+          // Wrapping it in Expanded forces it to shrink on smaller screens
+          // instead of pushing the play buttons off the bottom of the screen.
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  image: widget.coverUrl != "default"
+                      ? DecorationImage(
+                    image: NetworkImage(widget.coverUrl),
+                    fit: BoxFit.cover,
+                  )
+                      : const DecorationImage(
+                    image: AssetImage('assets/icons/default-audio-coverart.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // PROGRESS BAR & TIME LABELS
+          StreamBuilder<Duration>(
+            stream: _audioPlayer.positionStream,
+            builder: (context, snapshot) {
+              final position = snapshot.data ?? Duration.zero;
+              final duration = _audioPlayer.duration ?? Duration.zero;
+
+              // Prevent slider from breaking if position briefly exceeds duration
+              double sliderValue = position.inMilliseconds.toDouble();
+              double sliderMax = duration.inMilliseconds.toDouble();
+              if (sliderValue > sliderMax) sliderValue = sliderMax;
+
+              return Column(
+                children: [
+                  // The Draggable Slider
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4.0,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.grey[700],
+                      thumbColor: Colors.white,
+                    ),
+                    child: Slider(
+                      min: 0.0,
+                      max: sliderMax > 0 ? sliderMax : 1.0,
+                      value: sliderValue,
+                      onChanged: (value) {
+                        // Allows the user to drag the progress bar to seek!
+                        _audioPlayer.seek(Duration(milliseconds: value.toInt()));
+                      },
+                    ),
+                  ),
+
+                  // The mm:ss Time Labels
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_formatDuration(position), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text(_formatDuration(duration), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // PLAYBACK CONTROLS
+          // This represents the Play/Stop/Repeat Button, and their behaviours
+          // Also represents the state of the Audio Player in relation to the Streamed Audio
+          StreamBuilder<PlayerState>(
           // Because just_audio package uses a Stream to update the UI, it has to emit a single object every
           // time something changes. [PlayerState] is that object. Whenever the user presses play,
           // or whenever the network buffers, just_audio package spits out a brand new PlayerState object
           // so the StreamBuilder can rebuild the UI.
-          stream: _audioPlayer.playerStateStream,
-          builder: (context, snapshot) {
-            // [PlayerState?] is just a wrapper object that packages playing and processingState together.
-            final PlayerState? playerState = snapshot.data;
-            // [ProcessingState?] is an enum that tells you exactly what the underlying audio engine is
-            // currently doing. It has five possible states:
-            // - idle: The player is empty. No Url provided yet.
-            // - loading: You gave it a URL, and it is actively downloading the very first chunk of data. (You usually show a spinner here).
-            // - buffering: The audio was playing, but it ran out of downloaded data. It has paused automatically to fetch the next chunk
-            //              over the network. (You usually show a spinner here, too).
-            // - ready: The player has enough data loaded into memory to play audio smoothly.
-            // - completed: The audio track has reached the very end.
-            final ProcessingState? processingState = playerState?.processingState;
-            // [playing] is a boolean that represents whether the audio player is playing or paused state
-            // .play() and .pause() alter the state of this boolean...
-            // Note: Just because playing is true does not mean the user is actually hearing music.
-            // Note: For example, the user might have pressed play, but the app is still downloading the MP3
-            // Note: over a slow 3G connection. This relates to [ProcessingState] object.
-            final bool? playing = playerState?.playing;
+            stream: _audioPlayer.playerStateStream,
+            builder: (context, snapshot) {
+              // [PlayerState?] is just a wrapper object that packages playing and processingState together.
+              final PlayerState? playerState = snapshot.data;
+              // [ProcessingState?] is an enum that tells you exactly what the underlying audio engine is
+              // currently doing. It has five possible states:
+              // - idle: The player is empty. No Url provided yet.
+              // - loading: You gave it a URL, and it is actively downloading the very first chunk of data. (You usually show a spinner here).
+              // - buffering: The audio was playing, but it ran out of downloaded data. It has paused automatically to fetch the next chunk
+              //              over the network. (You usually show a spinner here, too).
+              // - ready: The player has enough data loaded into memory to play audio smoothly.
+              // - completed: The audio track has reached the very end.
+              final ProcessingState? processingState = playerState?.processingState;
+              // [playing] is a boolean that represents whether the audio player is playing or paused state
+              // .play() and .pause() alter the state of this boolean...
+              // Note: Just because playing is true does not mean the user is actually hearing music.
+              // Note: For example, the user might have pressed play, but the app is still downloading the MP3
+              // Note: over a slow 3G connection. This relates to [ProcessingState] object.
+              final bool? playing = playerState?.playing;
 
-            // So we show loading animation if player is loading or buffering
-            if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
-              return const CircularProgressIndicator(color: Colors.white);
-            } else if (processingState == ProcessingState.idle) {
-              // audio player has not been provided an Url
-              return Text("No audio has been provided to the audio player", style: TextStyle(color: Colors.red));
-            } else if (playing == false) {
-              // if not loading nor buffering, and also playing is set to pause, we show the "play" icon button
-              return IconButton(
-                icon: const Icon(Icons.play_circle_fill),
-                iconSize: 80.0,
-                color: Colors.white,
-                onPressed: _audioPlayer.play, // trigger audio to play
-              );
-              // else if the player is playing (playing==true), and there is still audio to be processed, we show "pause" icon button
-            } else if (processingState != ProcessingState.completed) {
-              return IconButton(
-                icon: const Icon(Icons.pause_circle_filled),
-                iconSize: 80.0,
-                color: Colors.white,
-                onPressed: _audioPlayer.pause, // trigger audio to pause
-              );
-            } else {
-              // there is no more audio to be processed, because ProcessingState is not complete
-              // Audio has finished playing, show replay button
-              return IconButton(icon: const Icon(Icons.replay_circle_filled), iconSize: 80.0, color: Colors.white, onPressed: () => _audioPlayer.seek(Duration.zero));
-            }
-          },
-        ),
+              // So we show loading animation if player is loading or buffering
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                return Container(
+                  margin: const EdgeInsets.all(16.0),
+                  width: 48.0,
+                  height: 48.0,
+                  child: const CircularProgressIndicator(color: Colors.white),
+                );
+              } else if (processingState == ProcessingState.idle) {
+                // audio player has not been provided an Url
+                return Text("No audio has been provided to the audio player", style: TextStyle(color: Colors.red));
+              }  else if (playing == false) {
+                // if not loading nor buffering, and also playing is set to pause, we show the "play" icon button
+                return IconButton(
+                  icon: const Icon(Icons.play_circle_fill),
+                  iconSize: 80.0,
+                  color: Colors.white,
+                  onPressed: _audioPlayer.play, // trigger audio to play
+                );
+              } else if (processingState != ProcessingState.completed) {
+                return IconButton(
+                  icon: const Icon(Icons.pause_circle_filled),
+                  iconSize: 80.0,
+                  color: Colors.white,
+                  onPressed: _audioPlayer.pause, // trigger audio to pause
+                );
+              } else {
+                // there is no more audio to be processed, because ProcessingState is now completed
+                // Audio has finished playing, show replay button
+                return IconButton(
+                  icon: const Icon(Icons.replay_circle_filled),
+                  iconSize: 80.0,
+                  color: Colors.white,
+                  onPressed: () => _audioPlayer.seek(Duration.zero),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
 }
+
+
+
+

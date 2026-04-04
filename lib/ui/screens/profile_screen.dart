@@ -1,5 +1,5 @@
-import 'package:art_platform/core/constants.dart';
-import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
+import 'package:art_platform/tools/mimeFileDetector.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_image.dart';
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -178,7 +178,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           itemCount: posts.length,
                           itemBuilder: (context, index) {
                             final post = posts[index];
-
                             return GestureDetector(
                               // child: will be the area of the onTap Detection
                               // push the UserGalleryScreen on to the stack, indexed on the selected image
@@ -186,29 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: ClipRRect(
                                 // ClipRRect rounds corners of the wrapped Widget
                                 borderRadius: BorderRadius.circular(8), // the roundness
-                                child: Image.network(
-                                  // the wrapped Widget, the Image
-                                  post.mediaUrl, // Pass the URL to the image
-                                  // the way the image is inscribed within the available space
-                                  // cover makes sure of no blank edges
-                                  // but may give up on parts of the image if the right ratio is not met
-                                  fit: BoxFit.cover,
-                                  // loadingBuilder specifies the widget to display to the user while an image is still loading
-                                  // this is within the grid (not the UserGalleryScreen)
-                                  loadingBuilder: (contex, child, progress) {
-                                    // child parameter represents the complete fetched image
-                                    // when progress is null, the image has finished loading
-                                    if (progress == null) return child;
-                                    // And while the image is not finished loading (is loading)
-                                    // we are returning this custom Circular Progress Indicator
-                                    return Container(color: Colors.grey[900], child: const Center(child: CircularProgressIndicator()));
-                                  },
-                                  // The errorBuilder property requires a callback function, that asks to
-                                  // return a widget to be displayed instead of the error that has occured,
-                                  // only in case an error has occured
-                                  // We will simply display a broken image icon
-                                  errorBuilder: (context, err, stack) => const Icon(Icons.broken_image),
-                                ),
+                                child: GalleryImage(post: post),
                               ),
                             );
                           },

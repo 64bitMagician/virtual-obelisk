@@ -18,11 +18,10 @@ class MediaNavigator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
-      // must expand, otherwise, if exitButton==false, all widgets in stack become non-existent (or not available on the screen at least)
-      fit: StackFit.expand,
       children: [
         // Exit button, or nothing at all, based on reader configuration
-        exitButton==true ? ExitReaderButton(isVisible: isVisible) : SizedBox.shrink(),
+        if(exitButton==true)
+          ExitReaderButton(isVisible: isVisible),
 
         // Retracting Animation (For the arrow left)
         AnimatedPositioned(
