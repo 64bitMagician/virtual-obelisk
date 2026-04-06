@@ -17,6 +17,8 @@ class UploadDialog extends StatefulWidget {
 
 class _UploadDialogState extends State<UploadDialog> {
 
+  double _uploadProgress = 0.0;
+
   // Connections to Storage and Firestore Firebase
   final StorageRepository _storageRepo = StorageRepository();
   final DatabaseRepository _dbRepo = DatabaseRepository();
@@ -109,6 +111,7 @@ class _UploadDialogState extends State<UploadDialog> {
     setState(() => _isUploading = true);
 
     String? mainFileDownloadUrl;
+    String? additionalMediaDownloadUrl;
 
     try {
       print("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
@@ -119,13 +122,20 @@ class _UploadDialogState extends State<UploadDialog> {
       mainFileDownloadUrl = await _storageRepo.uploadMedia(
         _fileInstance,
         folderPath: FolderPathEnum.artworks,
+        onProgress: (progress) {
+          if (mounted){
+            setState(() {
+              _uploadProgress = progress;
+            });
+          }
+        }
       );
       print("Main File uploaded to $mainFileDownloadUrl");
 
       // If there is additional media to be uploaded, [additionalMediaDownloadUrl] will hold the
       // string Url to that Media.
       // If there is no additional media to be uploaded, [additionalMediaDownloadUrl] will be null
-      String? additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
+      additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
 
 
       print("Attempting to upload Data of Main Uploaded File to Firestore...");
@@ -155,9 +165,14 @@ class _UploadDialogState extends State<UploadDialog> {
         );
       }
     } catch (e) {
-      // DELETE orphan file
+      // DELETE potential orphan files
+      // In case firestore document fails to create, but the storage uploads had executed
       if (mainFileDownloadUrl != null) {
         await _storageRepo.deleteMediaFromUrl(mainFileDownloadUrl);
+      }
+
+      if (additionalMediaDownloadUrl != null) {
+        await _storageRepo.deleteMediaFromUrl(additionalMediaDownloadUrl);
       }
 
       // Present error message to user
@@ -384,10 +399,15 @@ class _UploadDialogState extends State<UploadDialog> {
                     // customize button, to indicate the post is uploading and the user does not need
                     // to press on it again
                     child: _isUploading
-                        ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                        ? SizedBox(
+                      width: 200,
+                      child: Column(
+                        children: [
+                          LinearProgressIndicator(value: _uploadProgress),
+                          const SizedBox(height: 6),
+                          Text("${(_uploadProgress * 100).toStringAsFixed(1)}%"),
+                        ],
+                      ),
                     )
                         : const Text("Post Art"), // Uploading Button
                   ),

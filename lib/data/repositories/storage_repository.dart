@@ -27,7 +27,7 @@ class StorageRepository {
   /// with an "Out of Memory" error.
   ///
   /// So to prevent this, we will use [kIsWeb] to check wether we are on web or not.
-  Future<String> uploadMedia(XFile? file, {required FolderPathEnum folderPath}) async {
+  Future<String> uploadMedia(XFile? file, {required FolderPathEnum folderPath, void Function(double progress)? onProgress}) async {
     if(file == null)
       throw Exception("'file' is null...");
 
@@ -45,37 +45,37 @@ class StorageRepository {
     else
         print("SUCCESS: FILE TYPE IS: $fileMIMEtype");
 
+    // Reference to the documents within the artworks collection on Firebase Storage
+    // It also creates a new document with the given name if one does not exist
+    final Reference ref = _storage.ref().child('${folderPath.name}/$uniqueFileName');
 
+    UploadTask task;
     try {
-      // Reference to the documents within the artworks collection on Firebase Storage
-      // It also creates a new document with the given name if one does not exist
-      final Reference ref = _storage.ref().child('${folderPath.name}/$uniqueFileName');
-
-      TaskSnapshot snapshot;
       // Branch the logic based on the platform!
-        if (kIsWeb) { // if we are on web
-          // WEB: We MUST use bytes. Browsers handle memory differently, so this is safe.
-          final Uint8List fileBytes = await file.readAsBytes();
-          // We also need to explicitly tell Firebase what the MIME type is on Web,
-          // otherwise it might save as 'application/octet-stream'
-          final metadata = SettableMetadata(contentType: fileMIMEtype);
+      if (kIsWeb) { // if we are on web
+        // WEB: We MUST use bytes. Browsers handle memory differently, so this is safe.
+        final Uint8List fileBytes = await file.readAsBytes();
+        // We also need to explicitly tell Firebase what the MIME type is on Web,
+        // otherwise it might save as 'application/octet-stream'
+        final metadata = SettableMetadata(contentType: fileMIMEtype);
 
-          // upload the actual data content to the file reference
-          // ongoing upload task
-          // .putData will overwrite data at the given reference
-          // the reference may be an empty or non-empty document
-          // if non-empty, it does not change the document, but the content of it
-          // A [TaskSnapshot] is returned as the result of a Task [UploadTask] in our case...
-          // That's why we use await.
-          snapshot = await ref.putData(fileBytes, metadata);
-        } else {
-          // MOBILE: We use the physical File path.
-          // This streams the file from the hard drive to Firebase, saving RAM!
-          snapshot = await ref.putFile(File(file.path));
+        task = ref.putData(fileBytes, metadata);
+      } else {
+        // MOBILE: We use the physical File path.
+        // This streams the file from the hard drive to Firebase, saving RAM!
+        task = ref.putFile(File(file.path));
+      }
+
+      // LISTEN TO PROGRESS
+      task.snapshotEvents.listen((TaskSnapshot snapshot) {
+        if (onProgress != null) {
+          double progress = snapshot.bytesTransferred / snapshot.totalBytes;
+          onProgress(progress);
         }
+      });
 
-      // we fetch the reference from that snapshot, and get the downloadURL
-      // I assume it is the same 'ref' from above. The reference to the new Post Document...
+      // WAIT UNTIL FINISHED
+      final TaskSnapshot snapshot = await task;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
       print("Uploaded successfully to: $downloadUrl");
       // We return the downloadUrl
