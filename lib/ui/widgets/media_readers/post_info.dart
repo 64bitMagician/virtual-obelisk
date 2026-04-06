@@ -99,68 +99,59 @@ class _PostInfoState extends State<PostInfo> {
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   child: _isExpanded
-                      ? GestureDetector(
-                    onVerticalDragUpdate: (details) {
-                      if (details.delta.dy > 2 && _isExpanded) _toggleExpand();
-                    },
-                    child: SizedBox(
-                      width: screenWidth,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(40, 0, 40, 40),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.post.title,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundImage: widget.post.authorAvatar == "default"
-                                      ? const AssetImage('assets/icons/user-profile-icon.png') as ImageProvider
-                                      : NetworkImage(widget.post.authorAvatar),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  "by ${widget.post.authorName}",
-                                  style: const TextStyle(color: Colors.white70, fontSize: 18),
-                                ),
-                                const SizedBox(width: 12),
-                              ],
-                            ),
+                      ? Container(
+                    width: screenWidth,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.25,
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      // This stops the text from being squished into a tall, narrow tower on phones.
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // --- TITLE ---
+                          Text(
+                            widget.post.title,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2),
+                          ),
+                          const SizedBox(height: 8),
 
-                            // --- SCROLLABLE DESCRIPTION ---
-                            if (widget.post.description.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                // Restrict the maximum height so it doesn't cover the whole screen!
-                                // This limits the box to 30% of the screen height.
-                                constraints: BoxConstraints(
-                                  maxHeight: MediaQuery.of(context).size.height * 0.3,
-                                ),
-                                child: SingleChildScrollView(
-                                  // Bouncing physics feels native and smooth on mobile
-                                  physics: const BouncingScrollPhysics(),
-                                  child: Text(
-                                    widget.post.description,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      height: 1.4, // Adds nice line spacing for readability
-                                    ),
-                                  ),
-                                ),
+                          // --- AUTHOR INFO ---
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundImage: widget.post.authorAvatar == "default"
+                                    ? const AssetImage('assets/icons/user-profile-icon.png') as ImageProvider
+                                    : NetworkImage(widget.post.authorAvatar),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                "by ${widget.post.authorName}",
+                                style: const TextStyle(color: Colors.white70, fontSize: 18),
                               ),
                             ],
+                          ),
+
+                          // --- DESCRIPTION ---
+                          if (widget.post.description.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.post.description,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                height: 1.4,
+                              ),
+                            ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
                   )
