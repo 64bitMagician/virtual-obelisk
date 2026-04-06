@@ -160,7 +160,7 @@ class _ParentMediaReader extends State<MediaReader> {
                           postInformationVisible: _isVisible, // ArtPostRepresentation also has it's own implementation with _isUiVisible for animating the Post information Overlay
                         ),
                         // WIDGET: Information that sits on top of the post. Info about post...
-                        PostInfo(post: posts[index], postInformationVisible: _isVisible),
+                        PostInfo(post: posts[index], isVisible: _isVisible),
                       ],
                     );
                   },

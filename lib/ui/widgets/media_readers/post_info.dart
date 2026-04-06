@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 /// or interfering with the Video/Audio Players
 class PostInfo extends StatefulWidget {
   final ArtPost post;
-  final bool postInformationVisible;
+  final bool isVisible;
 
-  const PostInfo({super.key, required this.post, required this.postInformationVisible});
+  const PostInfo({super.key, required this.post, required this.isVisible});
 
   @override
   State<PostInfo> createState() => _PostInfoState();
@@ -31,17 +31,21 @@ class _PostInfoState extends State<PostInfo> {
     // We grab the screen width so we can manually apply it later
     final double screenWidth = MediaQuery.of(context).size.width;
 
+    // this variable makes it so the PullUp Handler, when Expanded, does not get affected by the
+    // timer going out of the parent, which normally hides this current widget
+    final actuallyVisible = widget.isVisible || _isExpanded;
+
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 500),
-      bottom: widget.postInformationVisible ? 0 : -250,
+      bottom: actuallyVisible ? 0 : -250,
       left: 0,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 500),
-        opacity: widget.postInformationVisible ? 1.0 : 0.0,
+        opacity: actuallyVisible ? 1.0 : 0.0,
 
         // IgnorePointer prevents the widget from eating clicks when it fades out
         child: IgnorePointer(
-          ignoring: !widget.postInformationVisible,
+          ignoring: !actuallyVisible,
           child: Container(
             decoration: BoxDecoration(
               gradient: _isExpanded
