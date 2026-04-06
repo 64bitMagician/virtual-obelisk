@@ -8,13 +8,13 @@ import 'package:mime/mime.dart';
 ///
 /// I believe it determines the MIME type based on the format at the end of file name (EX: .png, .was, .mp3 ...)
 /// Which means that having a file format at the end is required...
-MediaType determineMediaTypeFromFile(String? fileName) {
+MediaType determineMediaTypeFromFile(String? fileName, List<int> bytes) {
   if(fileName == null)
     throw Exception("fileName provided is 'null");
 
   print("ATTEMPTING TO GET THE MIME TYPE OF FILE...");
   // lookupMimeType returns a string like 'image/png' or 'audio/mp3'
-  final String? mimeType = lookupMimeType(fileName);
+  final mimeType = lookupMimeType(fileName, headerBytes: bytes);
 
   // If it can't figure it out, throw exception
   if (mimeType == null) {

@@ -85,4 +85,9 @@ class StorageRepository {
       throw Exception("Upload failed. Check the browser console.");
     }
   }
+
+  Future<void> deleteMediaFromUrl(String url) async {
+    final ref = FirebaseStorage.instance.refFromURL(url);
+    await ref.delete();
+  }
 }

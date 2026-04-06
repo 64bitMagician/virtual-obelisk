@@ -30,7 +30,7 @@ class _UploadDialogState extends State<UploadDialog> {
   MediaType? _mediaType;
 
   // --- THUMBNAIL STATE VARIABLES ---
-  XFile? _additionalMedialInstance;
+  XFile? _additionalMediaInstance;
   Uint8List? _additionalMediaBytes;
   String? _additionalMediaFileName;
 
@@ -56,7 +56,7 @@ class _UploadDialogState extends State<UploadDialog> {
     if (file != null) {
       Uint8List bytesContent = await file.readAsBytes();
       setState(() {
-        _additionalMedialInstance = file;
+        _additionalMediaInstance = file;
         _additionalMediaFileName = file.name;
         _additionalMediaBytes = bytesContent;
       });
@@ -71,40 +71,44 @@ class _UploadDialogState extends State<UploadDialog> {
 
     // if we managed to get a file
     if (file != null) {
-      // Reset Thumbnail data
-      if (_mediaType == MediaType.image) {
-        _additionalMedialInstance = null;
-        _additionalMediaFileName = null;
-        _additionalMediaBytes = null;
-      }
-
+      // Get new data from the new file so you assign it to member variables in setState()
       // get file as bytes
       Uint8List bytesContent = await file.readAsBytes();
+      // get the new media type of the new file
+      final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
+
+
       // new state data: selected file name, and the binary data of the file
       setState(() {
         _fileInstance = file;
         _selectedFileName = file.name; // set name of file
         _fileAsBytes = bytesContent;
         // get MediaType of file
-        _mediaType = determineMediaTypeFromFile(_selectedFileName);
+        _mediaType = newMediaType;
+
+        if (newMediaType == MediaType.image) {
+          _additionalMediaInstance = null;
+          _additionalMediaFileName = null;
+          _additionalMediaBytes = null;
+        }
       });
     }
   }
 
 
   Future<void> _handleUpload() async {
-    // if there is no text in the post name field OR if no category is selected, we display a message and return
-    // OR no data for the main art post upload
-    if (_titleController.text.isEmpty || _selectedCategory == null || _fileInstance == null) {
+    final validationError = validatingPostBeforeUpload();
+
+    if (validationError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload your art, enter a title, and choose a category")),
+        SnackBar(content: Text(validationError)),
       );
       return;
     }
 
-    // if image is provided and name as well
-    // set state to is uploading and rebuild
     setState(() => _isUploading = true);
+
+    String? mainFileDownloadUrl;
 
     try {
       print("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
@@ -112,14 +116,16 @@ class _UploadDialogState extends State<UploadDialog> {
       // We upload the Post through our storageRepo method which requires the post as byte object
       // We also provide a unique name for differentiation between Post Documents
 
-      final String mainFileDownloadUrl = await _storageRepo.uploadMedia(_fileInstance, folderPath: FolderPathEnum.artworks);
+      mainFileDownloadUrl = await _storageRepo.uploadMedia(
+        _fileInstance,
+        folderPath: FolderPathEnum.artworks,
+      );
       print("Main File uploaded to $mainFileDownloadUrl");
 
       // If there is additional media to be uploaded, [additionalMediaDownloadUrl] will hold the
       // string Url to that Media.
       // If there is no additional media to be uploaded, [additionalMediaDownloadUrl] will be null
       String? additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
-
 
 
       print("Attempting to upload Data of Main Uploaded File to Firestore...");
@@ -130,8 +136,8 @@ class _UploadDialogState extends State<UploadDialog> {
       // And the imageUrl that we just fetched
       await _dbRepo.uploadMedia(
         mediaType: _mediaType!.name,
-        title: _titleController.text,
-        description: _descriptionController.text,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
         category: _selectedCategory!,
         mediaUrl: mainFileDownloadUrl,
         additionalMediaUrl: additionalMediaDownloadUrl,
@@ -149,6 +155,12 @@ class _UploadDialogState extends State<UploadDialog> {
         );
       }
     } catch (e) {
+      // DELETE orphan file
+      if (mainFileDownloadUrl != null) {
+        await _storageRepo.deleteMediaFromUrl(mainFileDownloadUrl);
+      }
+
+      // Present error message to user
       if (mounted) {
         print("UPLOAD ERROR: $e");
         ScaffoldMessenger.of(context).showSnackBar(
@@ -168,7 +180,7 @@ class _UploadDialogState extends State<UploadDialog> {
   Future<String?> uploadAdditionalMediaIfItIsTheCase() async
   {
     // If additionalMedia has been imported in the dialog for upload:
-    if (_additionalMedialInstance != null) {
+    if (_additionalMediaInstance != null) {
       String? additionalMediaDownloadUrl;
       // check to see to which directory to upload additionalMedia based on main file type
       FolderPathEnum? folderPath;
@@ -176,11 +188,11 @@ class _UploadDialogState extends State<UploadDialog> {
         folderPath = FolderPathEnum.thumbnail;
       else if (_mediaType == MediaType.audio)
         folderPath = FolderPathEnum.coverart;
-      else if (folderPath == null)
+      else
         throw Exception("Additional Media has been provided, but it is not suited for the main art uploaded, OR, _mediaType may be null");
 
       print("---- ATTEMPTING TO UPLOAD ADDITIONAL MEDIA...");
-      additionalMediaDownloadUrl = await _storageRepo.uploadMedia(_additionalMedialInstance, folderPath: FolderPathEnum.coverart);
+      additionalMediaDownloadUrl = await _storageRepo.uploadMedia(_additionalMediaInstance, folderPath: folderPath);
       print("---- ADDITIONAL MEDIA UPLOADED SUCCESFULLY");
       return additionalMediaDownloadUrl;
     }
@@ -271,7 +283,7 @@ class _UploadDialogState extends State<UploadDialog> {
                       border: Border.all(color: Colors.grey, style: BorderStyle.none),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: _additionalMedialInstance == null
+                    child: _additionalMediaInstance == null
                         ? const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -313,11 +325,13 @@ class _UploadDialogState extends State<UploadDialog> {
               TextField(
                 controller: _descriptionController,
                 maxLines: 3,
+                maxLength: 1000,
                 decoration: const InputDecoration(
                   labelText: "Description",
                   border: OutlineInputBorder(),
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // --- NEW CATEGORY SELECTION UI ---
@@ -366,7 +380,7 @@ class _UploadDialogState extends State<UploadDialog> {
                   ElevatedButton(
                     // Disable button while uploading
                     // We don't want to trigger _handleUpload multiple times
-                    onPressed: _isUploading ? null : _handleUpload,
+                    onPressed: (_isUploading || _fileInstance == null) ? null : _handleUpload,
                     // customize button, to indicate the post is uploading and the user does not need
                     // to press on it again
                     child: _isUploading
@@ -385,4 +399,56 @@ class _UploadDialogState extends State<UploadDialog> {
       ),
     );
   }
+
+  String? validatingPostBeforeUpload() {
+
+    const int maxTitleLength = 100;
+    const int maxDescriptionLength = 1000;
+    const int maxFileSizeBytes = 25 * 1024 * 1024; // 25 MB
+
+    // Title validation
+    if (_titleController.text.trim().isEmpty) {
+      return "Please enter a title.";
+    }
+
+    final title = _titleController.text.trim();
+    if (title.length > maxTitleLength) {
+      return "Title is too long (max $maxTitleLength characters).";
+    }
+
+    // Description validation
+    final description = _descriptionController.text.trim();
+    if (description.length > maxDescriptionLength) {
+      return "Description is too long (max $maxDescriptionLength characters).";
+    }
+
+    // Category validation
+    if (_selectedCategory == null) {
+      return "Please select a category.";
+    }
+
+    // Main file validation
+    if (_fileInstance == null) {
+      return "Please select a file to upload.";
+    }
+
+    // Media type validation
+    if (_mediaType == null) {
+      return "Unsupported media type.";
+    }
+
+    // File size validation
+    if (_fileAsBytes != null && _fileAsBytes!.length > maxFileSizeBytes) {
+      return "File is too large. Maximum size is 25MB.";
+    }
+
+    // Additional media validation
+    if (_additionalMediaInstance != null &&
+        !(_mediaType == MediaType.audio || _mediaType == MediaType.video)) {
+      return "Additional media is only allowed for audio or video posts.";
+    }
+
+    return null; // everything is valid
+  }
+
 }

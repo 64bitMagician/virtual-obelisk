@@ -128,8 +128,33 @@ class _PostInfoState extends State<PostInfo> {
                                   "by ${widget.post.authorName}",
                                   style: const TextStyle(color: Colors.white70, fontSize: 18),
                                 ),
+                                const SizedBox(width: 12),
                               ],
                             ),
+
+                            // --- SCROLLABLE DESCRIPTION ---
+                            if (widget.post.description.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                // Restrict the maximum height so it doesn't cover the whole screen!
+                                // This limits the box to 30% of the screen height.
+                                constraints: BoxConstraints(
+                                  maxHeight: MediaQuery.of(context).size.height * 0.3,
+                                ),
+                                child: SingleChildScrollView(
+                                  // Bouncing physics feels native and smooth on mobile
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Text(
+                                    widget.post.description,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      height: 1.4, // Adds nice line spacing for readability
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
