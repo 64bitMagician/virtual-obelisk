@@ -142,12 +142,15 @@ class _PostInfoState extends State<PostInfo> {
                           // --- DESCRIPTION ---
                           if (widget.post.description.isNotEmpty) ...[
                             const SizedBox(height: 16),
-                            Text(
-                              widget.post.description,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                height: 1.4,
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 100, 0),
+                              child: Text(
+                                widget.post.description,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
