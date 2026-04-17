@@ -28,7 +28,9 @@ MediaType determineMediaTypeFromFile(String? fileName, List<int> bytes) {
     return MediaType.video;
   } else if (mimeType.startsWith('audio/')) {
     return MediaType.audio;
-  } else {
+  } else if (mimeType.startsWith('text/'))
+    return MediaType.text;
+    else {
     throw Exception('File type not allowed for art posts.');
   }
 }

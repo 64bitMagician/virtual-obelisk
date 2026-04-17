@@ -22,11 +22,11 @@ class ArtPostRepresentation extends StatelessWidget {
       case MediaType.image:
         innerWidget =  ImageReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.video:
-        innerWidget = VideoReaderWidget();
+        innerWidget = VideoReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.audio:
         innerWidget = AudioReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.text:
-        innerWidget = TextReaderWidget();
+        innerWidget = TextReaderWidget(post: post, postInformationVisible: postInformationVisible);
       default:
         return const Center(child: Text("Unsupported format"));
     }

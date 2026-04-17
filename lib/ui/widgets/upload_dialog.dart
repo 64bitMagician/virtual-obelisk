@@ -4,7 +4,8 @@ import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/tools/mimeFileDetector.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:cross_file/cross_file.dart';
 import '../../data/repositories/storage_repository.dart';
 import '../../data/repositories/database_repository.dart';
 
@@ -24,7 +25,6 @@ class _UploadDialogState extends State<UploadDialog> {
   final DatabaseRepository _dbRepo = DatabaseRepository();
 
   // Image Picker for picking image from local machine
-  final ImagePicker _picker = ImagePicker();
   String? _selectedFileName;
   bool _isUploading = false;
   XFile? _fileInstance;
@@ -53,10 +53,23 @@ class _UploadDialogState extends State<UploadDialog> {
   }
 
   Future<void> _pickThumbnail() async {
-    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+    // FIX: Removed .platform for v11 compatibility!
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
 
-    if (file != null) {
-      Uint8List bytesContent = await file.readAsBytes();
+    if (result != null) {
+      PlatformFile pickedFile = result.files.first;
+      // FIX: Added the '!' to tell Dart the bytes are definitely not null
+      Uint8List bytesContent = pickedFile.bytes!;
+
+      XFile file = XFile.fromData(
+        bytesContent,
+        name: pickedFile.name,
+        path: pickedFile.path,
+      );
+
       setState(() {
         _additionalMediaInstance = file;
         _additionalMediaFileName = file.name;
@@ -67,17 +80,41 @@ class _UploadDialogState extends State<UploadDialog> {
 
   // picks an image from local machine and stores the byte data and name of that image
   // within the state variables of our UploadDialogState object
-  Future<void> _pickImage() async {
-    // Picks file from local machine gallery
-    final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _pickMainFile() async {
+    // 1. Open the file browser but ONLY allow specific extensions!
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: [
+        // Images
+        'jpg', 'jpeg', 'png', 'gif', 'webp',
+        // Audio
+        'mp3', 'wav', 'ogg', 'm4a',
+        // Video
+        'mp4', 'mov', 'avi', 'mkv',
+        // Text
+        'txt'
+      ],
+      withData: true,
+    );
 
     // if we managed to get a file
-    if (file != null) {
+    if (result != null) {
+      PlatformFile pickedFile = result.files.first;
       // Get new data from the new file so you assign it to member variables in setState()
       // get file as bytes
-      Uint8List bytesContent = await file.readAsBytes();
+      Uint8List bytesContent = pickedFile.bytes!;
+
+      // convert to XFile
+      XFile file = XFile.fromData(
+        bytesContent,
+        name: pickedFile.name,
+        path: pickedFile.path,
+      );
+
       // get the new media type of the new file
       final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
+
+
 
 
       // new state data: selected file name, and the binary data of the file
@@ -88,11 +125,10 @@ class _UploadDialogState extends State<UploadDialog> {
         // get MediaType of file
         _mediaType = newMediaType;
 
-        if (newMediaType == MediaType.image) {
+        // You picked a new file, so you want to reset the data of the additionalMedia
           _additionalMediaInstance = null;
           _additionalMediaFileName = null;
           _additionalMediaBytes = null;
-        }
       });
     }
   }
@@ -239,7 +275,7 @@ class _UploadDialogState extends State<UploadDialog> {
               // InkWell is like a button configured to change it's state (usually color), and add
               // add some animation effects upon different behaviours of pressing (hold, tap, double tap etc...)
               InkWell(
-                onTap: _pickImage, // it will pick an image from local machine
+                onTap: _pickMainFile, // it will pick an image from local machine
                 // it changes the state variable such that we have the image object as byte object
                 // and the name of the uploaded image aswell
                 child: Container( // the area of the InkWell
@@ -424,7 +460,7 @@ class _UploadDialogState extends State<UploadDialog> {
 
     const int maxTitleLength = 100;
     const int maxDescriptionLength = 1000;
-    const int maxFileSizeBytes = 25 * 1024 * 1024; // 25 MB
+    const int maxFileSizeBytes = 4000 * 1024 * 1024; // 4 GB
 
     // Title validation
     if (_titleController.text.trim().isEmpty) {
@@ -459,7 +495,7 @@ class _UploadDialogState extends State<UploadDialog> {
 
     // File size validation
     if (_fileAsBytes != null && _fileAsBytes!.length > maxFileSizeBytes) {
-      return "File is too large. Maximum size is 25MB.";
+      return "File is too large. Maximum size is 4GB.";
     }
 
     // Additional media validation
