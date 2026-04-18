@@ -367,6 +367,7 @@ class _UploadDialogState extends State<UploadDialog> {
               // Text Fields for providing Title and Description for Posts
               TextField(
                 controller: _titleController,
+                maxLength: 100,
                 decoration: const InputDecoration(
                   labelText: "Title",
                   border: OutlineInputBorder(),
