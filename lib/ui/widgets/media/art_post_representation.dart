@@ -10,9 +10,10 @@ class ArtPostRepresentation extends StatelessWidget {
   // Data which defines the ArtPostCard object
   final ArtPost post; // contains all data related to the ArtPost
   final bool postInformationVisible; // state variable for the fading and position effects of the post information widgets
+  final VoidCallback callStartHideTimer;
 
   /// Constructor requires a [ArtPost] and [bool] to be passed to the [post] and [postInformationVisible] parameters.
-  const ArtPostRepresentation({super.key, required this.post, required this.postInformationVisible});
+  const ArtPostRepresentation({super.key, required this.post, required this.postInformationVisible, required this.callStartHideTimer});
 
   // The visual representation of the ArtPostCard
   @override
@@ -26,7 +27,7 @@ class ArtPostRepresentation extends StatelessWidget {
       case MediaType.audio:
         innerWidget = AudioReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.text:
-        innerWidget = TextReaderWidget(post: post, postInformationVisible: postInformationVisible);
+        innerWidget = TextReaderWidget(post: post, postInformationVisible: postInformationVisible, callStartHideTimer: callStartHideTimer,);
       default:
         return const Center(child: Text("Unsupported format"));
     }

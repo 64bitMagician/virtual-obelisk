@@ -158,6 +158,7 @@ class _ParentMediaReader extends State<MediaReader> {
                         ArtPostRepresentation(
                           post: posts[index], // shows the post at the determined index
                           postInformationVisible: _isVisible, // ArtPostRepresentation also has it's own implementation with _isUiVisible for animating the Post information Overlay
+                          callStartHideTimer: _startHideTimer,
                         ),
                         // WIDGET: Information that sits on top of the post. Info about post...
                         PostInfo(post: posts[index], isVisible: _isVisible),
