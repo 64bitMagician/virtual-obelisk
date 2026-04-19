@@ -8,8 +8,8 @@ import 'package:art_platform/data/repositories/auth_repository.dart';
 /// - The username
 class ProfileHeader extends StatelessWidget {
   final Map<String, dynamic> userData;
-  final VoidCallback onAvatarTap;
-  final VoidCallback onEditProfile;
+  final VoidCallback? onAvatarTap;
+  final VoidCallback? onEditProfile;
   DatabaseRepository _db = DatabaseRepository();
   AuthRepository _authRepository = AuthRepository();
 
@@ -26,7 +26,7 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
-    final String rank = userData['rank'] ?? 'No rank';
+    final String rank = userData['rank'] ?? 'rankless';
     // store the avatarUrl of user in a variable, otherwise get a unique avatar url from robohash.org
     final String avatarUrl = userData['avatarUrl'] ?? "default";
 
@@ -54,17 +54,18 @@ class ProfileHeader extends StatelessWidget {
               ),
               // Positioned() will control where it's child Widget (Camera Icon) will be positioned
               // within it's available area
-              Positioned(
-                // The position is relative to the property
-                // Ex: bottom: 0 is at the botton while bottom: 100 means 100 pixels above the bottom
-                bottom: 0, // at the far bottom
-                right: 0, // at the far right
-                child: CircleAvatar(
-                  radius: 15, // camera icon size
-                  backgroundColor: Theme.of(context).primaryColor, // fetch theme color
-                  child: const Icon(Icons.camera_alt, size: 18, color: Colors.white), // camera icon
+              if(onAvatarTap!=null)
+                Positioned(
+                  // The position is relative to the property
+                  // Ex: bottom: 0 is at the botton while bottom: 100 means 100 pixels above the bottom
+                  bottom: 0, // at the far bottom
+                  right: 0, // at the far right
+                  child: CircleAvatar(
+                    radius: 15, // camera icon size
+                    backgroundColor: Theme.of(context).primaryColor, // fetch theme color
+                    child: const Icon(Icons.camera_alt, size: 18, color: Colors.white), // camera icon
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -82,11 +83,12 @@ class ProfileHeader extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Button to edit user profile
-        OutlinedButton.icon(
-          onPressed: onEditProfile, // Use member callback function
-          icon: const Icon(Icons.edit, size: 16),
-          label: const Text("Edit Profile"),
-        ),
+        if(onEditProfile!=null)
+          OutlinedButton.icon(
+            onPressed: onEditProfile, // Use member callback function
+            icon: const Icon(Icons.edit, size: 16),
+            label: const Text("Edit Profile"),
+          ),
 
         const SizedBox(height: 24),
 
@@ -119,10 +121,11 @@ class ProfileHeader extends StatelessWidget {
   // method to get a specific color based on rank
   Color _getRankColor(String rank) {
     switch (rank) {
-      case 'Legend': return Colors.amber;
-      case 'Virtuoso': return Colors.purpleAccent;
-      case 'Scholar': return Colors.blue;
-      default: return Colors.grey;
+      case 'legend': return Colors.amber;
+      case 'virtuoso': return Colors.purpleAccent;
+      case 'scholar': return Colors.blue;
+      case 'beginner': return Colors.grey;
+      default: return Colors.transparent;
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
+import 'package:art_platform/ui/screens/other_user_profile_screen.dart';
 import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -97,6 +98,26 @@ final GoRouter router = GoRouter(
               }
             )
           ]
+        ),
+        GoRoute(
+            path: '/user/:user_id',
+            builder: (context, state) {
+              // Extract the variable from the URL path
+              final String username = state.pathParameters['user_id']!;
+              // Pass it to the screen
+              return OtherUserProfileScreen(username: username);
+            },
+            routes: [
+              GoRoute(
+                  path: 'media_reader/:post_index',
+                  builder: (context, state) {
+                    // Extract the variable from the URL path
+                    final int postIndex = int.parse(state.pathParameters['post_index']!);
+                    // Pass it to the screen
+                    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true);
+                  }
+              )
+            ]
         ),
         GoRoute(
           path: '/categories',

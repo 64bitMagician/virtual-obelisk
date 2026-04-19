@@ -1,5 +1,6 @@
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Feature a Pull-up Handle to add the Post Information on the screen, without obscuring the art,
 /// or interfering with the Video/Audio Players
@@ -123,20 +124,34 @@ class _PostInfoState extends State<PostInfo> {
                           const SizedBox(height: 8),
 
                           // --- AUTHOR INFO ---
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 14,
-                                backgroundImage: widget.post.authorAvatar == "default"
-                                    ? const AssetImage('assets/icons/user-profile-icon.png') as ImageProvider
-                                    : NetworkImage(widget.post.authorAvatar),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                "by ${widget.post.authorName}",
-                                style: const TextStyle(color: Colors.white70, fontSize: 18),
-                              ),
-                            ],
+                          GestureDetector(
+                            // behavior: HitTestBehavior.opaque ensures that tapping the empty space
+                            // between the avatar and the text still triggers the click!
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              context.push("/user/${widget.post.authorUsername}");
+                            },
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundImage: widget.post.authorAvatar == "default"
+                                      ? const AssetImage('assets/icons/user-profile-icon.png') as ImageProvider
+                                      : NetworkImage(widget.post.authorAvatar),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  "by ${widget.post.authorName}",
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 18,
+                                    // Optional: Add an underline so users know it's a clickable link
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
 
                           // --- DESCRIPTION ---

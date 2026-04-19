@@ -74,6 +74,16 @@ class _ParentMediaReader extends State<MediaReader> {
       // if user is not signed-in, tough at this step I believe it is impossible
       if (FirebaseAuth.instance.currentUser == null) throw Exception("Cannot fetch the Profile Gallery Posts of Current User because there is none authenticated...");
 
+      // ! FIX THIS !
+      // The profile gallery is still pointing to the authenticated user, rather than whatever user is on the
+      // currently displayed profile page.
+      // I can either make it so you get the user posts by unique username
+      // OR
+      // Somehow get the user id of the user whose Profile Page I can currently see
+      // But the easiest thing for now, I believe, would be to create a stream based on username, and not user id
+      // Cause otherwise I'd have to create the user model, and also pass it as argument to this widget's constructor
+      // I believe it would be more efficient tough to still do it with user id. So maybe I'll work on it for the
+      // next time
       _postsStream = _repository.getUserPosts('me');
     }
 

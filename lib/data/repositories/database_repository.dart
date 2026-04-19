@@ -34,7 +34,8 @@ class DatabaseRepository {
       // profile? can return null if profile is null (we user ? cause otherwise it would crash)
       // if not null, we return value of the displayName key
       // if null, we return the String chunk of the user's email up to the '@' character
-      final String authorName = profile?['displayName'] ?? user.email!.split('@')[0];
+      final String authorName = profile?['displayName'];
+      final String authorUsername = profile?['username'];
       // if not null, we return value of the avatarUrl key
       // if null, we return the uri bellow, with the uid of our user inserted within the uri
       // Since our 'uid's are hashed, every uid is unique, therefore, every link/uri will be unique
@@ -60,6 +61,7 @@ class DatabaseRepository {
         'additionalMediaUrl': additionalMediaUrl != null ? additionalMediaUrl : "default",
         'userId': user.uid, // the user id of the authenticated user
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
+        'authorUsername': authorUsername,
         'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore
         'createdAt': FieldValue.serverTimestamp(), // create a timestamp for when this document/post was added
         'likes': 0, //! number of likes currently hardcoded
@@ -68,6 +70,23 @@ class DatabaseRepository {
       print("DATABASE ERROR: $e");
       throw Exception("Failed to upload to database");
     }
+  }
+
+  /// Fetches a user's profile stream using their username instead of their UID
+  Stream<Map<String, dynamic>?> getProfileStreamByUsername(String username) {
+    return _db.collection('users')
+        .where('username', isEqualTo: username)
+        .limit(1) // Usernames are unique, so we only need the first match
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data();
+        // We inject the hidden UID into the map so we can use it to fetch posts later
+        data['uid'] = snapshot.docs.first.id;
+        return data;
+      }
+      return null; // Username not found
+    });
   }
 
   /// The feed which contains the posts that appear on the HomeScreen

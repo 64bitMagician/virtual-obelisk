@@ -17,8 +17,10 @@ const List<String> artCategories =  [
   "pixelart",
   "graffiti",
   "photography",
+  "videoart",
   "music",
   "poetry",
+  "prose"
 ];
 
 // ! THIS REPRESENTS HOW THE CATEGORY NAME WILL BE DISPLAYED WITHIN THE APP
@@ -31,5 +33,7 @@ const Map<String, String> artCategoriesDisplayName = {
   "photography" : "Photography",
   "music" : "Music",
   "poetry" : "Poetry",
+  "videoart" : "Video Art",
+  "prose" : "Prose",
 };
 

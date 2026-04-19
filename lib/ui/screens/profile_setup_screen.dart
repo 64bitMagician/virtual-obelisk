@@ -89,6 +89,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           "bio": "No bio yet...",
           "avatarUrl": "default",
           "createdAt": FieldValue.serverTimestamp(),
+          "rank": 'rankless',
         });
       });
 

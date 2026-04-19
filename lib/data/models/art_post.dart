@@ -15,6 +15,7 @@ class ArtPost {
   final String title;
   final String description;
   final String authorName;
+  final String authorUsername;
   final String authorAvatar;
   final int likes;
 
@@ -27,6 +28,7 @@ class ArtPost {
     required this.title,
     required this.description,
     required this.authorName,
+    required this.authorUsername,
     required this.authorAvatar,
     required this.likes,
   });
@@ -58,6 +60,7 @@ class ArtPost {
       additionalMediaUrl: data['additionalMediaUrl'], // if not provided, it has value: "default, by default
       authorAvatar: data['authorAvatar'] ?? 'https://i.pravatar.cc/150?u=${doc.id}', // random avatar if none provided
       authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided
+      authorUsername: data['authorUsername'],
       description: data['description'] ?? '', // Empty description if non provided
       id: doc.id,
       likes: data['likes'] ?? 0, // 0 likes if number of likes not provided

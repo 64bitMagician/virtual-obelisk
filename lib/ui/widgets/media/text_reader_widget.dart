@@ -12,7 +12,7 @@ class TextReaderWidget extends StatefulWidget {
     super.key,
     required this.post,
     required this.postInformationVisible,
-    required this.callStartHideTimer, // 🚨 ADDED CALLBACK
+    required this.callStartHideTimer,
   });
 
   @override
@@ -272,7 +272,7 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
                           opacity: _currentPage > 0 ? 1.0 : 0.3,
                           child: GestureDetector(
                             onTap: _currentPage > 0 ? () {
-                              widget.callStartHideTimer(); // 🚨 RESET TIMER!
+                              widget.callStartHideTimer(); // RESET TIMER!
                               _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             } : null,
                             child: Container(
@@ -306,7 +306,7 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
                           opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.3,
                           child: GestureDetector(
                             onTap: _currentPage < _pages.length - 1 ? () {
-                              widget.callStartHideTimer(); // 🚨 RESET TIMER!
+                              widget.callStartHideTimer(); // RESET TIMER!
                               _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             } : null,
                             child: Container(

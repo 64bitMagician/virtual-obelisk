@@ -174,7 +174,7 @@ class _UploadDialogState extends State<UploadDialog> {
       additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
 
 
-      print("Attempting to upload Data of Main Uploaded File to Firestore...");
+      print("Attempting to upload Data Document of Main Uploaded File to Firestore...");
       // So far we uploaded the raw content of the post
       // We also need to upload to Firestore the Document which represents the Post.
       // This Document contains all the information related to the Post.

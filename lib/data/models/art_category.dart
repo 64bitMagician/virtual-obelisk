@@ -20,7 +20,7 @@ class ArtCategory {
 }
 
 
-
+// ! The order and indexing is very important. It must coincide with 'artCategories' List's order (from constants.dart).
 // Data Source
 List<ArtCategory> appCategories = [
   ArtCategory(title: artCategoriesDisplayName["drawing"]!, categoryName: artCategories[0], icon: Icons.edit, themeColor: Colors.blueAccent),
@@ -29,6 +29,8 @@ List<ArtCategory> appCategories = [
   ArtCategory(title: artCategoriesDisplayName["pixelart"]!, categoryName: artCategories[3], icon: Icons.gamepad_outlined, themeColor: Colors.green),
   ArtCategory(title: artCategoriesDisplayName["graffiti"]!, categoryName: artCategories[4], icon: Icons.format_paint, themeColor: Colors.orangeAccent),
   ArtCategory(title: artCategoriesDisplayName["photography"]!, categoryName: artCategories[5], icon: Icons.camera_outlined, themeColor: Colors.orangeAccent),
-  ArtCategory(title: artCategoriesDisplayName["music"]!, categoryName: artCategories[6], icon: Icons.music_note, themeColor: Colors.purpleAccent),
-  ArtCategory(title: artCategoriesDisplayName["poetry"]!, categoryName: artCategories[7], icon: Icons.history_edu, themeColor: Colors.teal),
+  ArtCategory(title: artCategoriesDisplayName["videoart"]!, categoryName: artCategories[6], icon: Icons.local_movies_outlined, themeColor: Colors.brown),
+  ArtCategory(title: artCategoriesDisplayName["music"]!, categoryName: artCategories[7], icon: Icons.music_note, themeColor: Colors.purpleAccent),
+  ArtCategory(title: artCategoriesDisplayName["poetry"]!, categoryName: artCategories[8], icon: Icons.history_edu, themeColor: Colors.teal),
+  ArtCategory(title: artCategoriesDisplayName["prose"]!, categoryName: artCategories[9], icon: Icons.book_outlined, themeColor: Colors.brown),
 ];
