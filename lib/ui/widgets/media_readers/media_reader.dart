@@ -28,6 +28,7 @@ class MediaReader extends StatefulWidget {
   final int profilePostIndex;
   final String? category;
   final bool? exitButton;
+  final String? profileUid;
 
   const MediaReader({
     super.key,
@@ -37,6 +38,8 @@ class MediaReader extends StatefulWidget {
     // tapping on a post from the Gallery of the Profile
     this.profilePostIndex = 0,
     this.category,
+    // required to not be null if mediaReaderConfiguration == PROFILE_FEED
+    this.profileUid,
   });
 
   @override
@@ -71,20 +74,10 @@ class _ParentMediaReader extends State<MediaReader> {
 
       _postsStream = _repository.getCategoryFeedPosts(category: widget.category!);
     } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
-      // if user is not signed-in, tough at this step I believe it is impossible
-      if (FirebaseAuth.instance.currentUser == null) throw Exception("Cannot fetch the Profile Gallery Posts of Current User because there is none authenticated...");
+      if(widget.profileUid==null)
+        throw Exception("ERROR: COULD NOT FETCH THE USER ID OF THE PROFILE YOU ARE TRYING TO ACCESS");
 
-      // ! FIX THIS !
-      // The profile gallery is still pointing to the authenticated user, rather than whatever user is on the
-      // currently displayed profile page.
-      // I can either make it so you get the user posts by unique username
-      // OR
-      // Somehow get the user id of the user whose Profile Page I can currently see
-      // But the easiest thing for now, I believe, would be to create a stream based on username, and not user id
-      // Cause otherwise I'd have to create the user model, and also pass it as argument to this widget's constructor
-      // I believe it would be more efficient tough to still do it with user id. So maybe I'll work on it for the
-      // next time
-      _postsStream = _repository.getUserPosts('me');
+      _postsStream = _repository.getUserPosts(widget.profileUid!);
     }
 
     _startHideTimer();

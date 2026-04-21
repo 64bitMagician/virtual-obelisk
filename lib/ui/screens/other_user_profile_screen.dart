@@ -112,7 +112,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                             final post = posts[index];
                             return GestureDetector(
                               // Update routing to use the username!
-                              onTap: () => context.push("/user/${widget.username}/media_reader/$index"),
+                              onTap: () => context.push("/user/${widget.username}/media_reader/$index", extra: hiddenUid),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: GalleryImage(post: post),

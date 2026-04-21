@@ -100,10 +100,10 @@ final GoRouter router = GoRouter(
           ]
         ),
         GoRoute(
-            path: '/user/:user_id',
+            path: '/user/:username',
             builder: (context, state) {
               // Extract the variable from the URL path
-              final String username = state.pathParameters['user_id']!;
+              final String username = state.pathParameters['username']!;
               // Pass it to the screen
               return OtherUserProfileScreen(username: username);
             },
@@ -111,10 +111,12 @@ final GoRouter router = GoRouter(
               GoRoute(
                   path: 'media_reader/:post_index',
                   builder: (context, state) {
+                    // Grab the hidden uid passed from other_user_profile_screen.dart when we context.push ed.
+                    final String profileUid = state.extra as String;
                     // Extract the variable from the URL path
                     final int postIndex = int.parse(state.pathParameters['post_index']!);
                     // Pass it to the screen
-                    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true);
+                    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true, profileUid: profileUid,);
                   }
               )
             ]
