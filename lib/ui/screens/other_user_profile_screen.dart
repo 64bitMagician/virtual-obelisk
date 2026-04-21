@@ -42,10 +42,10 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
         }
 
         // WE EXTRACT THE HIDDEN UID FROM THE DATABASE RESULT
-        final String hiddenUid = data['uid'];
+        final String otherProfileUid = data['uid'];
 
         final Map<String, dynamic> headerMap = {
-          'uid': hiddenUid,
+          'uid': otherProfileUid,
           'username': data['username'] ?? 'Unknown User',
           'displayName': data['displayName'] ?? "Artist",
           'bio': data['bio'] ?? "No bio yet...",
@@ -71,6 +71,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                       userData: headerMap,
                       onEditProfile: null,
                       onAvatarTap: null,
+                      profileUid: otherProfileUid,
                     ),
 
                     const SizedBox(height: 32),
@@ -83,7 +84,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                     // The Posts Gallery
                     StreamBuilder<List<ArtPost>>(
                       // WE PASS THE HIDDEN UID TO FETCH THE POSTS
-                      stream: _repository.getUserPosts(hiddenUid),
+                      stream: _repository.getUserPosts(otherProfileUid),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
@@ -112,7 +113,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                             final post = posts[index];
                             return GestureDetector(
                               // Update routing to use the username!
-                              onTap: () => context.push("/user/${widget.username}/media_reader/$index", extra: hiddenUid),
+                              onTap: () => context.push("/user/${widget.username}/media_reader/$index", extra: otherProfileUid),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: GalleryImage(post: post),

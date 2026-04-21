@@ -10,6 +10,7 @@ class ProfileHeader extends StatelessWidget {
   final Map<String, dynamic> userData;
   final VoidCallback? onAvatarTap;
   final VoidCallback? onEditProfile;
+  final String profileUid;
   DatabaseRepository _db = DatabaseRepository();
   AuthRepository _authRepository = AuthRepository();
 
@@ -17,6 +18,7 @@ class ProfileHeader extends StatelessWidget {
   /// tap on the avatar picture, and when you press on edit profile button.
   ProfileHeader({
     super.key,
+    required this.profileUid,
     required this.userData,
     required this.onAvatarTap,
     required this.onEditProfile,
@@ -98,7 +100,7 @@ class ProfileHeader extends StatelessWidget {
           children: [
             // Posts Stats
             FutureBuilder<int>(
-              future: _fetchNumberOfPosts(),
+              future: _fetchNumberOfPosts(profileUid),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return _buildStat("Posts", 0);
@@ -147,14 +149,13 @@ class ProfileHeader extends StatelessWidget {
   );
 
   // fetch number of user profile posts
-  Future<int> _fetchNumberOfPosts() async{
+  Future<int> _fetchNumberOfPosts(String uid) async{
     int? numberOfPosts = 0;
-    final user = _authRepository.currentUser;
-    if (user != null) {
-      numberOfPosts = await _db.fetchNumberOfUserPosts(user.uid);
+    if (uid != null) {
+      numberOfPosts = await _db.fetchNumberOfUserPosts(uid);
     }
     else {
-      throw Exception("ERROR: User is not authenticated!!!");
+      throw Exception("ERROR: Could not fetch user id");
     }
 
     return numberOfPosts;

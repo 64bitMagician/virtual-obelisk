@@ -143,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 headerMap['displayName'],
                                 headerMap['bio'],
                               ),
+                          profileUid: _authRepo.currentUser!.uid,
                         );
                       },
                     ),
