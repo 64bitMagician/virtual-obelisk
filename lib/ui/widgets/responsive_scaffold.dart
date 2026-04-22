@@ -119,7 +119,7 @@ class ResponsiveScaffold extends StatelessWidget {
         context.go('/chains');
         break;
       case 3:
-        context.go('/profile');
+        context.go('/personal_profile');
         break;
       case 4:
         context.go('/settings');

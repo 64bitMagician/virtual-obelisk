@@ -90,6 +90,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           "avatarUrl": "default",
           "createdAt": FieldValue.serverTimestamp(),
           "rank": 'rankless',
+          "following": 0,
+          "followers": 0,
+          "posts": 0,
         });
       });
 

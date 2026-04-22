@@ -129,7 +129,7 @@ class _PostInfoState extends State<PostInfo> {
                             // between the avatar and the text still triggers the click!
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
-                              context.push("/user/${widget.post.authorUsername}");
+                              context.push("/user_profile/${widget.post.authorUsername}");
                             },
                             child: Row(
                               children: [

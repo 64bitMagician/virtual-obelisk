@@ -2,6 +2,7 @@ import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
 import 'package:art_platform/ui/screens/other_user_profile_screen.dart';
 import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/screens/home_screen.dart';
@@ -85,7 +86,7 @@ final GoRouter router = GoRouter(
           ],
         ),
         GoRoute(
-          path: '/profile',
+          path: '/personal_profile',
           builder: (context, state) => const ProfileScreen(),
           routes: [
             GoRoute(
@@ -94,13 +95,13 @@ final GoRouter router = GoRouter(
                 // Extract the variable from the URL path
                 final int postIndex = int.parse(state.pathParameters['post_index']!);
                 // Pass it to the screen
-                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true);
+                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true, profileUid: FirebaseAuth.instance.currentUser?.uid ?? null);
               }
             )
           ]
         ),
         GoRoute(
-            path: '/user/:username',
+            path: '/user_profile/:username',
             builder: (context, state) {
               // Extract the variable from the URL path
               final String username = state.pathParameters['username']!;

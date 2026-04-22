@@ -1,5 +1,7 @@
+import 'package:art_platform/ui/widgets/profile_screen_widgets/follow_button.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_image.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_post.dart';
@@ -41,20 +43,24 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
           );
         }
 
-        // WE EXTRACT THE HIDDEN UID FROM THE DATABASE RESULT
+        // WE EXTRACT THE UID FROM THE DATABASE RESULT
         final String otherProfileUid = data['uid'];
 
         final Map<String, dynamic> headerMap = {
           'uid': otherProfileUid,
-          'username': data['username'] ?? 'Unknown User',
-          'displayName': data['displayName'] ?? "Artist",
-          'bio': data['bio'] ?? "No bio yet...",
-          'avatarUrl': data['avatarUrl'] ?? "default",
-          'rank': data['rank'] ?? 'rankless',
-          'followers': data['followers'] ?? 0,
-          'following': data['following'] ?? 0,
+          'username': data?['username'] ?? 'Unknown User',
+          'displayName': data?['displayName'] ?? "Artist",
+          'bio': data?['bio'] ?? "No bio yet...",
+          'avatarUrl': data?['avatarUrl'] ?? "default",
+          'rank': data?['rank'] ?? 'rankless',
+          'posts': data?['posts'] ?? -1,
+          'followers': data?['followers'] ?? -1,
+          'following': data?['following'] ?? -1,
           'likes': data['likes'] ?? 0
         };
+
+        // get current user
+        final currentUid = FirebaseAuth.instance.currentUser?.uid;
 
         return Scaffold(
           appBar: AppBar(
@@ -73,6 +79,13 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                       onAvatarTap: null,
                       profileUid: otherProfileUid,
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // THE FOLLOW BUTTON
+                    // We only show it if the user is logged in AND they aren't looking at their own profile!
+                    if (currentUid != null && currentUid != otherProfileUid)
+                      FollowButton(targetUid: otherProfileUid),
 
                     const SizedBox(height: 32),
                     const Divider(),
@@ -113,7 +126,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                             final post = posts[index];
                             return GestureDetector(
                               // Update routing to use the username!
-                              onTap: () => context.push("/user/${widget.username}/media_reader/$index", extra: otherProfileUid),
+                              onTap: () => context.push("/user_profile/${widget.username}/media_reader/$index", extra: otherProfileUid),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: GalleryImage(post: post),

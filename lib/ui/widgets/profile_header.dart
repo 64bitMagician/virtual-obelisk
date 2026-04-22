@@ -1,6 +1,6 @@
 import 'package:art_platform/data/repositories/database_repository.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/connections_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:art_platform/data/repositories/auth_repository.dart';
 
 /// The [ProfileHeader] represents a visual representation of the user that displays:
 /// - The rank
@@ -11,12 +11,10 @@ class ProfileHeader extends StatelessWidget {
   final VoidCallback? onAvatarTap;
   final VoidCallback? onEditProfile;
   final String profileUid;
-  DatabaseRepository _db = DatabaseRepository();
-  AuthRepository _authRepository = AuthRepository();
 
   /// You need to pass the [userData] that defines the header, as well as callback functions for when you
   /// tap on the avatar picture, and when you press on edit profile button.
-  ProfileHeader({
+  const ProfileHeader({
     super.key,
     required this.profileUid,
     required this.userData,
@@ -98,22 +96,19 @@ class ProfileHeader extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Posts Stats
-            FutureBuilder<int>(
-              future: _fetchNumberOfPosts(profileUid),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return _buildStat("Posts", 0);
-                }
-                return _buildStat("Posts", snapshot.data!);
-              },
+            _buildStat("Posts", userData['posts'] ?? -1),
+            _buildDivider(),
+            _buildStat(
+                "Followers",
+                userData['followers'] ?? -1,
+                onTap: () => _showConnectionsDialog(context, "Followers", "followers", userData['uid'])
             ),
             _buildDivider(),
-            // Followers Stats
-            _buildStat("Followers", userData['followers'] ?? 0),
-            _buildDivider(),
-            // Following Stats
-            _buildStat("Following", userData['following'] ?? 0),
+            _buildStat(
+                "Following",
+                userData['following'] ?? -1,
+                onTap: () => _showConnectionsDialog(context, "Following", "following", userData['uid'])
+            ),
           ],
         ),
       ],
@@ -132,13 +127,30 @@ class ProfileHeader extends StatelessWidget {
   }
 
   // returns a widget that displays the value of something (the passed label)
-  Widget _buildStat(String label, int value) {
-    return Column(
-      children: [
-        // we convert value to string to show it as a Text widget
-        Text(value.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.grey)),
-      ],
+  Widget _buildStat(String label, int value, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap, // If onTap is null, InkWell automatically disables the ripple effect
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          children: [
+            Text(value.toString(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showConnectionsDialog(BuildContext context, String title, String collectionName, String profileUid) {
+    showDialog(
+      context: context,
+      builder: (context) => ConnectionsDialog(
+        title: title,
+        collectionName: collectionName,
+        profileUid: profileUid,
+      ),
     );
   }
 
@@ -147,18 +159,4 @@ class ProfileHeader extends StatelessWidget {
   Widget _buildDivider() => Container(
       height: 30, width: 1, color: Colors.grey.shade700, margin: const EdgeInsets.symmetric(horizontal: 24)
   );
-
-  // fetch number of user profile posts
-  Future<int> _fetchNumberOfPosts(String uid) async{
-    int? numberOfPosts = 0;
-    if (uid != null) {
-      numberOfPosts = await _db.fetchNumberOfUserPosts(uid);
-    }
-    else {
-      throw Exception("ERROR: Could not fetch user id");
-    }
-
-    return numberOfPosts;
-  }
-
 }

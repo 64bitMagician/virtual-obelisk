@@ -53,8 +53,8 @@ class DatabaseRepository {
       // we add a new document to the artworks collection | Data type: Map<String, dynamic>
       // this document represents the post we are uploading
       await artworksRef.add({
-        'mediaType' : mediaType,
-        'title' : title, // received as method parameter
+        'mediaType': mediaType,
+        'title': title, // received as method parameter
         'description': description, // received as method parameter
         'category': category,
         'mediaUrl': mediaUrl, // received as method parameter
@@ -66,6 +66,10 @@ class DatabaseRepository {
         'createdAt': FieldValue.serverTimestamp(), // create a timestamp for when this document/post was added
         'likes': 0, //! number of likes currently hardcoded
       });
+      // Increase Posts count at user document
+      incrementUserPostCounter(user.uid);
+      // SIGNAL SUCCESS
+      print("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
     } catch (e) { // Something went wrong while trying to upload to Firestore database
       print("DATABASE ERROR: $e");
       throw Exception("Failed to upload to database");
@@ -259,17 +263,65 @@ class DatabaseRepository {
     return doc.exists;
   }
 
-  Future<int> fetchNumberOfUserPosts(String userId) async{
-    // in case of argument userId == 'me', the targetID becomes the Current User's ID
-    // otherwise, targetId becomes userId passed as argument
-    final String? targetId = (userId == 'me') ? _auth.currentUser?.uid : userId;
+  /// Checks if a user is following another user
+  Future<bool> isFollowing(String currentUid, String targetUid) async {
+    final doc = await _db.collection('users').doc(currentUid)
+        .collection('following').doc(targetUid).get();
+    return doc.exists;
+  }
 
-    // Computing the number of posts based on how many posts with the given userId are present in the
-    // artworks collection
+  /// Follows a user (creates a document in a subcollection)
+  Future<void> followUser(String currentUid, String targetUid) async {
+    // Add to current user's "following"
+    await _db.collection('users').doc(currentUid)
+    // now going into the 'following' subfolder of the authenticated user's document
+        .collection('following').doc(targetUid).set({'timestamp': FieldValue.serverTimestamp()});
 
-    AggregateQuerySnapshot snapshot = await _db.collection('artworks').where('userId', isEqualTo: targetId).count().get();
-    int numberOfPosts = snapshot.count!;
+    // Add to target user's "followers"
+    await _db.collection('users').doc(targetUid)
+    // now going into the 'following' subfolder of the targeted user's document
+        .collection('followers').doc(currentUid).set({'timestamp': FieldValue.serverTimestamp()});
 
-    return numberOfPosts;
-    }
+    // SECURELY INCREMENT COUNTERS (queues the requests to follow such that there won't be two users
+    // calling the follow function at the same time, which would result to unexpected behaviour)
+
+    // Increase the current user's "following" count by 1
+    await _db.collection('users').doc(currentUid).update({
+      'following': FieldValue.increment(1)
+    });
+
+    // Increase the target user's "followers" count by 1
+    await _db.collection('users').doc(targetUid).update({
+      'followers': FieldValue.increment(1)
+    });
+  }
+
+  /// Unfollows a user
+  Future<void> unfollowUser(String currentUid, String targetUid) async {
+    await _db.collection('users').doc(currentUid).collection('following').doc(targetUid).delete();
+    await _db.collection('users').doc(targetUid).collection('followers').doc(currentUid).delete();
+
+    // SECURELY DECREMENT COUNTERS
+    // Decrease the current user's "following" count by 1 (using -1)
+    await _db.collection('users').doc(currentUid).update({
+      'following': FieldValue.increment(-1)
+    });
+
+    // Decrease the target user's "followers" count by 1
+    await _db.collection('users').doc(targetUid).update({
+      'followers': FieldValue.increment(-1)
+    });
+  }
+
+  Future<void> incrementUserPostCounter(String targetUid) async {
+    await _db.collection('users').doc(targetUid).update({
+      'posts': FieldValue.increment(1)
+    });
+  }
+
+  Future<void> decrementUserPostCounter(String targetUid) async {
+    await _db.collection('users').doc(targetUid).update({
+      'posts': FieldValue.increment(-1)
+    });
+  }
 }

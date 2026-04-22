@@ -1,4 +1,3 @@
-import 'package:art_platform/tools/mimeFileDetector.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_image.dart';
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
@@ -113,14 +112,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         final data = snapshot.data;
         // we take the snaphot data (user data document data)
-        // and store it in our own variable: headerMap
+        // and store it in our own variable: userData
 
-        final Map<String, dynamic> headerMap = {'uid': user!.uid, 'username': data?['username'], 'displayName': data?['displayName'] ?? defaultName, 'bio': data?['bio'] ?? "No bio yet...", 'avatarUrl': data?['avatarUrl'] ?? "default", 'rank': data?['rank'] ?? 'Beginner', 'followers': data?['followers'] ?? 0, 'following': data?['following'] ?? 0, 'likes': data?['likes'] ?? 0};
+        final Map<String, dynamic> userData = {
+          'uid': user!.uid,
+          'username': data?['username'],
+          'displayName': data?['displayName'] ?? defaultName,
+          'bio': data?['bio'] ?? "No bio yet...",
+          'avatarUrl': data?['avatarUrl'] ?? "default",
+          'rank': data?['rank'] ?? 'Beginner',
+          'posts': data?['posts'] ?? -1,
+          'followers': data?['followers'] ?? -1,
+          'following': data?['following'] ?? -1,
+          'likes': data?['likes'] ?? 0
+        };
 
         return Scaffold(
           floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add)),
           appBar: AppBar(
-            title: Text(headerMap['username']),
+            title: Text(userData['username']),
           ),
           body: SingleChildScrollView(
             child: Center(
@@ -129,23 +139,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    StreamBuilder<Map<String, dynamic>?>(
-                      // get user data document
-                      // the builder will retrigger everytime changes to that document occur
-                      stream: _repository.getProfileStream(user!.uid),
-                      builder: (context, snapshot) {
-                        return ProfileHeader(
-                          userData: headerMap,
-                          onAvatarTap: _changeAvatar,
-                          onEditProfile:
-                              () => _showEditDialog(
-                                // you provide initial text to be shown in the text fields
-                                headerMap['displayName'],
-                                headerMap['bio'],
-                              ),
-                          profileUid: _authRepo.currentUser!.uid,
-                        );
-                      },
+                    ProfileHeader(
+                      userData: userData,
+                      onAvatarTap: _changeAvatar,
+                      onEditProfile:
+                          () => _showEditDialog(
+                            // you provide initial text to be shown in the text fields
+                            userData['displayName'],
+                            userData['bio'],
+                          ),
+                      profileUid: _authRepo.currentUser!.uid,
                     ),
                     // Up 'til this point we constructed the Profile Header
                     const SizedBox(height: 32),
@@ -182,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return GestureDetector(
                               // child: will be the area of the onTap Detection
                               // push the UserGalleryScreen on to the stack, indexed on the selected image
-                              onTap: () => context.go("/profile/media_reader/$index"),
+                              onTap: () => context.go("/personal_profile/media_reader/$index"),
                               child: ClipRRect(
                                 // ClipRRect rounds corners of the wrapped Widget
                                 borderRadius: BorderRadius.circular(8), // the roundness
