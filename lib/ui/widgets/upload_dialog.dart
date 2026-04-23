@@ -17,12 +17,15 @@ class UploadDialog extends StatefulWidget {
 }
 
 class _UploadDialogState extends State<UploadDialog> {
+  IconData suggestiveFileTypeIcon = Icons.question_mark;
 
   double _uploadProgress = 0.0;
 
   // Connections to Storage and Firestore Firebase
   final StorageRepository _storageRepo = StorageRepository();
   final DatabaseRepository _dbRepo = DatabaseRepository();
+
+  final ScrollController _formScrollController = ScrollController();
 
   // Image Picker for picking image from local machine
   String? _selectedFileName;
@@ -49,6 +52,7 @@ class _UploadDialogState extends State<UploadDialog> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _formScrollController.dispose();
     super.dispose();
   }
 
@@ -114,8 +118,14 @@ class _UploadDialogState extends State<UploadDialog> {
       // get the new media type of the new file
       final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
 
-
-
+      // determine the icon to display
+      IconData icon = Icons.question_mark;
+      if (newMediaType == MediaType.audio)
+        icon = Icons.audio_file_outlined;
+      else if (newMediaType == MediaType.video)
+        icon = Icons.video_file_outlined;
+      else if (newMediaType == MediaType.text)
+        icon = Icons.text_snippet_outlined;
 
       // new state data: selected file name, and the binary data of the file
       setState(() {
@@ -124,6 +134,7 @@ class _UploadDialogState extends State<UploadDialog> {
         _fileAsBytes = bytesContent;
         // get MediaType of file
         _mediaType = newMediaType;
+        suggestiveFileTypeIcon = icon;
 
         // You picked a new file, so you want to reset the data of the additionalMedia
           _additionalMediaInstance = null;
@@ -261,197 +272,208 @@ class _UploadDialogState extends State<UploadDialog> {
       child: Container(
         width: 500,
         padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView( // Added scroll view to prevent overflow on smaller screens
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Upload Masterpiece",
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. PINNED TITLE (Always visible at the top)
+            Text(
+              "Upload Masterpiece",
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 24),
 
-              // InkWell is like a button configured to change it's state (usually color), and add
-              // add some animation effects upon different behaviours of pressing (hold, tap, double tap etc...)
-              InkWell(
-                onTap: _pickMainFile, // it will pick an image from local machine
-                // it changes the state variable such that we have the image object as byte object
-                // and the name of the uploaded image aswell
-                child: Container( // the area of the InkWell
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: _fileInstance == null // if no file has been provided
-                  // we will display an icon with text to suggest to click on the InkWell
-                  // such that we trigger the _pickImage method
-                      ? const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+            // 2. SCROLLABLE FORM AREA
+            Flexible(
+              child: Scrollbar( // Force the scrollbar to stay visible!
+                controller: _formScrollController,
+                thumbVisibility: true,
+                thickness: 6.0,
+                radius: const Radius.circular(8),
+                child: SingleChildScrollView(
+                  controller: _formScrollController,
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.cloud_upload, size: 48, color: Colors.deepPurple),
-                      SizedBox(height: 8),
-                      Text("Click to select Art"),
-                    ],
-                  )
-                  // If main art has been provided, we will display the image + it's local machine name (if it has one)
-                      : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: _mediaType==MediaType.image ? Image.memory(_fileAsBytes!) : Icon(Icons.file_copy), // displays image based on Byte data Uint8List (list of Bytes)
-                        ),
-                      ),
-                      Text(
-                        // displays the name of the image (the name fetched from the local machine)
-                        // if it does not have a name, the text will be replaced with "Image" word.
-                        _selectedFileName ?? "Image",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // --- DYNAMIC THUMBNAIL PICKER ---
-              if (_mediaType == MediaType.audio || _mediaType == MediaType.video) ...[
-                _mediaType==MediaType.audio ? const Text("Add Cover Art (Optional)", style: TextStyle(fontWeight: FontWeight.bold)) : const Text("Add Thumbnail (Optional)", style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                InkWell(
-                  onTap: _pickThumbnail,
-                  child: Container(
-                    height: 100, // Smaller than the main picker
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      border: Border.all(color: Colors.grey, style: BorderStyle.none),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: _additionalMediaInstance == null
-                        ? const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.image, size: 32, color: Colors.grey),
-                        SizedBox(height: 4),
-                        Text("Click to select image", style: TextStyle(color: Colors.grey)),
-                      ],
-                    )
-                        : Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.memory(_additionalMediaBytes!, width: 80, height: 80, fit: BoxFit.cover),
-                        ),
-                        Expanded(
-                          child: Text(
-                            _additionalMediaFileName ?? (_mediaType == MediaType.audio ? "Cover Art Image" : "Thumbnail Image"),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
+                      InkWell(
+                        onTap: _pickMainFile,
+                        child: Container(
+                          height: 125,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: _fileInstance == null
+                              ? const Column( // if no file yet provided
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_upload, size: 48, color: Colors.deepPurple),
+                              SizedBox(height: 8),
+                              Text("Click to select Art"),
+                            ],
+                          )
+                        : Column( // if file data has been provided
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: _mediaType == MediaType.image
+                                      ? Image.memory(_fileAsBytes!)
+                                      : Icon(suggestiveFileTypeIcon, size: 48,),
+                                ),
+                              ),
+                              Text(
+                                _selectedFileName ?? "Image",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // --- DYNAMIC THUMBNAIL PICKER ---
+                      if (_mediaType == MediaType.audio || _mediaType == MediaType.video) ...[
+                        _mediaType == MediaType.audio
+                            ? const Text("Add Cover Art (Optional)", style: TextStyle(fontWeight: FontWeight.bold))
+                            : const Text("Add Thumbnail (Optional)", style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: _pickThumbnail,
+                          child: Container(
+                            height: 100,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.1),
+                              border: Border.all(color: Colors.grey, style: BorderStyle.none),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _additionalMediaInstance == null
+                                ? const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.image, size: 32, color: Colors.grey),
+                                SizedBox(height: 4),
+                                Text("Click to select image", style: TextStyle(color: Colors.grey)),
+                              ],
+                            )
+                                : Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Image.memory(_additionalMediaBytes!, width: 80, height: 80, fit: BoxFit.cover),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    _additionalMediaFileName ?? (_mediaType == MediaType.audio ? "Cover Art Image" : "Thumbnail Image"),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                       ],
-                    ),
-                  ),
-                ),
-              ],
 
-              const SizedBox(height: 16),
-
-              // Text Fields for providing Title and Description for Posts
-              TextField(
-                controller: _titleController,
-                maxLength: 100,
-                decoration: const InputDecoration(
-                  labelText: "Title",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _descriptionController,
-                maxLines: 3,
-                maxLength: 1000,
-                decoration: const InputDecoration(
-                  labelText: "Description",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // --- NEW CATEGORY SELECTION UI ---
-              const Text(
-                "Select Category",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              DropdownMenu<String>(
-                initialSelection: _selectedCategory,
-                // text to show when nothing is selected
-                hintText: 'Select a category',
-                expandedInsets: EdgeInsets.zero,
-                enableSearch: true,
-                dropdownMenuEntries: _categories.map<DropdownMenuEntry<String>>((String category) {
-                  return DropdownMenuEntry<String>(
-                    value: category,
-                    label: _categoryDisplayNames["$category"]!,
-                  );
-                }).toList(), // from Iterable -> List
-                // The 'newSelectedCategory' is received from the 'value:' property of a DropdownMenuEntry
-                // Everytime you click on a DropdownMenuEntry, flutter checks to see the value: of that
-                // And if you have an 'onSelected:' property for the DropdownMenu, it
-                // will pass the value of 'value:' to the parameter of onSelected:'s function.
-                // And since the 'value:' requires the Generics 'T' of the DropdownMenu class
-                // (which is 'String' in our case), we are receiving a String value
-                // So in a way, Each DropdownMenuEntry represents a String...
-                onSelected: (String? newSelectedCategory) {
-                  setState(() {
-                    _selectedCategory = newSelectedCategory;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              // Cancel Button and Uploading Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: const Text("Cancel"),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    // Disable button while uploading
-                    // We don't want to trigger _handleUpload multiple times
-                    onPressed: (_isUploading || _fileInstance == null) ? null : _handleUpload,
-                    // customize button, to indicate the post is uploading and the user does not need
-                    // to press on it again
-                    child: _isUploading
-                        ? SizedBox(
-                      width: 200,
-                      child: Column(
+                      // Title and Category side-by-side
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          LinearProgressIndicator(value: _uploadProgress),
-                          const SizedBox(height: 6),
-                          Text("${(_uploadProgress * 100).toStringAsFixed(1)}%"),
+                          // Title Field takes up 3/5 of the space
+                          Expanded(
+                            flex: 3,
+                            child: TextField(
+                              controller: _titleController,
+                              maxLength: 100,
+                              decoration: const InputDecoration(
+                                labelText: "Title",
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+
+                          // Category Dropdown takes up 2/5 of the space
+                          Expanded(
+                            flex: 2,
+                            child: DropdownMenu<String>(
+                              initialSelection: _selectedCategory,
+                              label: const Text("Category"), // Looks identical to the TextField label!
+                              expandedInsets: EdgeInsets.zero, // Forces it to fill the Expanded width
+                              enableSearch: true,
+                              menuHeight: 250,
+                              dropdownMenuEntries: _categories.map<DropdownMenuEntry<String>>((String category) {
+                                return DropdownMenuEntry<String>(
+                                  value: category,
+                                  label: _categoryDisplayNames[category]!,
+                                );
+                              }).toList(),
+                              onSelected: (String? newSelectedCategory) {
+                                setState(() {
+                                  _selectedCategory = newSelectedCategory;
+                                });
+                              },
+                            ),
+                          ),
                         ],
                       ),
-                    )
-                        : const Text("Post Art"), // Uploading Button
+
+                      // Removed the SizedBox(height: 16) here because the maxLength counter
+                      // on the title field already provides natural padding!
+
+                      TextField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        maxLength: 1000,
+                        decoration: const InputDecoration(
+                          labelText: "Description",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 3. PINNED ACTION BUTTONS (Always visible at the bottom)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text("Cancel"),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: (_isUploading || _fileInstance == null) ? null : _handleUpload,
+                  child: _isUploading
+                      ? SizedBox(
+                    width: 200,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        LinearProgressIndicator(value: _uploadProgress),
+                        const SizedBox(height: 6),
+                        Text("${(_uploadProgress * 100).toStringAsFixed(1)}%"),
+                      ],
+                    ),
+                  )
+                      : const Text("Post Art"),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
