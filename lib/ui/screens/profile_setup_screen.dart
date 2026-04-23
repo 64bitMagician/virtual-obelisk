@@ -104,6 +104,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       // If reached this point, everything is good we can navigate to home screen
       // we navigate the user to home screen, thus marking his entry to the application
       context.go("/");
+
+      dispose();
       return;
     } catch (e) {
       print("TRANSACTION ERROR: $e");
@@ -139,6 +141,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   labelText: "Username",
                   border: const OutlineInputBorder(),
                   errorText: _usernameError,
+                  helperText: "! Unique and cannot be changed later. Used for user searching and identification !",
+                  helperMaxLines: 2, // Allows the text to wrap to a second line on small phone screens
+                  helperStyle: TextStyle(color: Colors.redAccent),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -160,6 +165,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 decoration: const InputDecoration(
                   labelText: "Profile Name",
                   border: OutlineInputBorder(),
+                  helperText: "The name that will be displayed on your posts and profile page. You can change this anytime.",
+                  helperMaxLines: 2,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -183,6 +190,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       : const Text("Create Profile"),
                 ),
               ),
+
+              const SizedBox(height: 30),
+
+              const Center(
+                child: Text(
+                  "If you haven't been redirected to the application, please refresh the page (on web), or restart the application (on mobile) and log in.",
+                  style: TextStyle(color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                ),
+              )
             ],
           ),
         ),
