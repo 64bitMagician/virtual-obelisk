@@ -37,3 +37,8 @@ const Map<String, String> artCategoriesDisplayName = {
   "prose" : "Prose",
 };
 
+// Artist Point Reward Values:
+int upload_artpost_artist_points_reward = 50;
+int gain_follower_artist_points_reward = 10;
+int get_like_artist_points_reward = 10;
+

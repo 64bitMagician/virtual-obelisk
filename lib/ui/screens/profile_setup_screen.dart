@@ -93,6 +93,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           "following": 0,
           "followers": 0,
           "posts": 0,
+          "artist_points": 0,
         });
       });
 

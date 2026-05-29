@@ -1,6 +1,7 @@
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/connections_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/rank_progress_bar.dart';
 
 /// The [ProfileHeader] represents a visual representation of the user that displays:
 /// - The rank
@@ -25,6 +26,8 @@ class ProfileHeader extends StatelessWidget {
   // Visual Part of the Profile Header
   @override
   Widget build(BuildContext context) {
+    // Fetch points to drive both the Progress Bar AND the Avatar Border!
+    final int userPoints = userData['artist_points'] ?? 0;
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
     final String rank = userData['rank'] ?? 'rankless';
     // store the avatarUrl of user in a variable, otherwise get a unique avatar url from robohash.org
@@ -44,7 +47,7 @@ class ProfileHeader extends StatelessWidget {
                 decoration: BoxDecoration( //
                   shape: BoxShape.circle,
                   // border color determined by rank
-                  border: Border.all(color: _getRankColor(rank), width: 3),
+                  border: Border.all(color: _getDynamicAvatarColor(userPoints), width: 3),
                 ),
                 child: CircleAvatar( // the circle with usser's avatar image
                   radius: 100,
@@ -92,6 +95,15 @@ class ProfileHeader extends StatelessWidget {
 
         const SizedBox(height: 24),
 
+        // THE PROGRESS BAR
+        // Constrain its width so it doesn't stretch infinitely on wide screens
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: RankProgressBar(artistPoints: userPoints),
+        ),
+
+        const SizedBox(height: 24),
+
         // Display number of Posts, Followers and Following
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -115,15 +127,17 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  // method to get a specific color based on rank
-  Color _getRankColor(String rank) {
-    switch (rank) {
-      case 'legend': return Colors.amber;
-      case 'virtuoso': return Colors.purpleAccent;
-      case 'scholar': return Colors.blue;
-      case 'beginner': return Colors.grey;
-      default: return Colors.transparent;
+  // Helper method to sync the Avatar border color with the RankProgressBar logic!
+  Color _getDynamicAvatarColor(int points) {
+    for (int i = 0; i < RankProgressBar.ranks.length; i++) {
+      if (i == RankProgressBar.ranks.length - 1 && points >= RankProgressBar.ranks[i]['max']) {
+        return RankProgressBar.ranks.last['color'];
+      }
+      if (points >= RankProgressBar.ranks[i]['min'] && points < RankProgressBar.ranks[i]['max']) {
+        return RankProgressBar.ranks[i]['color'];
+      }
     }
+    return RankProgressBar.ranks.first['color']; // Fallback to Novice color
   }
 
   // returns a widget that displays the value of something (the passed label)

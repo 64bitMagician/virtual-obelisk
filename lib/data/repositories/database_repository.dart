@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:art_platform/data/models/art_post.dart';
+import 'package:art_platform/core/constants.dart';
 
 /// Responsible for all communication with Firestore Database
 ///
@@ -68,6 +69,8 @@ class DatabaseRepository {
       });
       // Increase Posts count at user document
       incrementUserPostCounter(user.uid);
+      // Gain Artist Points (AP) as reward for uploading
+      addArtistPointsForUploading(user.uid);
       // SIGNAL SUCCESS
       print("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
     } catch (e) { // Something went wrong while trying to upload to Firestore database
@@ -291,8 +294,10 @@ class DatabaseRepository {
     });
 
     // Increase the target user's "followers" count by 1
+    // Also reward him artist points (AP) as reward for gaining one follower
     await _db.collection('users').doc(targetUid).update({
-      'followers': FieldValue.increment(1)
+      'followers': FieldValue.increment(1),
+      'artist_points': FieldValue.increment(gain_follower_artist_points_reward),
     });
   }
 
@@ -316,6 +321,12 @@ class DatabaseRepository {
   Future<void> incrementUserPostCounter(String targetUid) async {
     await _db.collection('users').doc(targetUid).update({
       'posts': FieldValue.increment(1)
+    });
+  }
+
+  Future<void> addArtistPointsForUploading(String targetUid) async {
+    await _db.collection('users').doc(targetUid).update({
+      'artist_points': FieldValue.increment(upload_artpost_artist_points_reward)
     });
   }
 
