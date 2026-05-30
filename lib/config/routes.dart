@@ -1,4 +1,5 @@
 import 'package:art_platform/core/constants.dart';
+import 'package:art_platform/ui/screens/admin_dashboard_screen.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
 import 'package:art_platform/ui/screens/other_user_profile_screen.dart';
 import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
@@ -143,6 +144,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/admin',
+          builder: (context, state) => const AdminDashboardScreen(),
         ),
       ],
     ),

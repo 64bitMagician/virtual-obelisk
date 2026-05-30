@@ -94,6 +94,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           "followers": 0,
           "posts": 0,
           "artist_points": 0,
+          "role": "user", // user role by default
         });
       });
 
@@ -104,7 +105,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
       // If reached this point, everything is good we can navigate to home screen
       // we navigate the user to home screen, thus marking his entry to the application
-      context.go("/");
+      if (mounted) {
+        context.go("/");
+      }
+      return;
 
       dispose();
       return;

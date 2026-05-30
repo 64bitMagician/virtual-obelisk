@@ -56,7 +56,8 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
           'posts': data?['posts'] ?? -1,
           'followers': data?['followers'] ?? -1,
           'following': data?['following'] ?? -1,
-          'likes': data['likes'] ?? 0
+          'likes': data['likes'] ?? 0,
+          'artist_points': data?['artist_points'] ?? -1,
         };
 
         // get current user

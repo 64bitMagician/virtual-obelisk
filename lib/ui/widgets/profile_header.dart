@@ -27,7 +27,7 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Fetch points to drive both the Progress Bar AND the Avatar Border!
-    final int userPoints = userData['artist_points'] ?? 0;
+    final int userPoints = userData['artist_points'] ?? -1;
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
     final String rank = userData['rank'] ?? 'rankless';
     // store the avatarUrl of user in a variable, otherwise get a unique avatar url from robohash.org
@@ -129,15 +129,20 @@ class ProfileHeader extends StatelessWidget {
 
   // Helper method to sync the Avatar border color with the RankProgressBar logic!
   Color _getDynamicAvatarColor(int points) {
+    // iterate through the ranks
     for (int i = 0; i < RankProgressBar.ranks.length; i++) {
+      // if the last rank's max points have been exceeded
       if (i == RankProgressBar.ranks.length - 1 && points >= RankProgressBar.ranks[i]['max']) {
-        return RankProgressBar.ranks.last['color'];
+        return RankProgressBar.ranks.last['color']; // return the color of last rank
       }
+      // if we fit in the range of the rank
       if (points >= RankProgressBar.ranks[i]['min'] && points < RankProgressBar.ranks[i]['max']) {
-        return RankProgressBar.ranks[i]['color'];
+        return RankProgressBar.ranks[i]['color']; // return the color of the rank
       }
     }
-    return RankProgressBar.ranks.first['color']; // Fallback to Novice color
+
+    // In any other case, we fall back to Novice Rank Color
+    return RankProgressBar.ranks.first['color'];
   }
 
   // returns a widget that displays the value of something (the passed label)
