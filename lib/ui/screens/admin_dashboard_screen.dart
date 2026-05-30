@@ -122,8 +122,29 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
 
-          // You can add more admin tools here later!
-          // (e.g., "Delete all reported posts", "Ban User by Username", etc.)
+          const SizedBox(height: 16),
+
+          // REPORTED ARTPOSTS
+          Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Colors.orange.shade300, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              leading: const Icon(Icons.gavel, color: Colors.orange, size: 32),
+              title: const Text("Moderation Queue"),
+              subtitle: const Text("Review user-reported artworks, issue warnings, or remove content violating platform rules."),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              onTap: () {
+                // Navigate to the future moderation screen!
+                // context.push('/admin/moderation');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Moderation Queue coming soon!")),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
