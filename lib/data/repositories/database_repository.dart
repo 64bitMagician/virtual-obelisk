@@ -54,18 +54,20 @@ class DatabaseRepository {
       // we add a new document to the artworks collection | Data type: Map<String, dynamic>
       // this document represents the post we are uploading
       await artworksRef.add({
-        'mediaType': mediaType,
-        'title': title, // received as method parameter
-        'description': description, // received as method parameter
-        'category': category,
-        'mediaUrl': mediaUrl, // received as method parameter
-        'additionalMediaUrl': additionalMediaUrl != null ? additionalMediaUrl : "default",
-        'userId': user.uid, // the user id of the authenticated user
+        'additionalMediaUrl': additionalMediaUrl ?? "default",
+        'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
         'authorUsername': authorUsername,
-        'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore
+        'category': category,
         'createdAt': FieldValue.serverTimestamp(), // create a timestamp for when this document/post was added
+        'description': description, // received as method parameter
+        'isDeactivated': false,
         'likes': 0, //! number of likes currently hardcoded
+        'mediaType': mediaType,
+        'mediaUrl': mediaUrl, // received as method parameter
+        'reportCount': 0,
+        'title': title, // received as method parameter
+        'userId': user.uid, // the user id of the authenticated user
       });
       // Increase Posts count at user document
       incrementUserPostCounter(user.uid);

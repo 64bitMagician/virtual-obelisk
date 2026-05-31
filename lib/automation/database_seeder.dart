@@ -114,7 +114,9 @@ class DatabaseSeeder {
         'authorUsername': randomAuthor['username'],
         'authorAvatar': randomAuthor['avatarUrl'],
         'createdAt': FieldValue.serverTimestamp(), // Fixed field name
-        'likes': _random.nextInt(500), // Kept random so you can test popular posts!
+        'likes': _random.nextInt(500), // Kept random so you can test popular posts
+        'isDeactivated': false,
+        'reportCount': _random.nextInt(6),
       };
 
       // Set batch to write postData to postRef

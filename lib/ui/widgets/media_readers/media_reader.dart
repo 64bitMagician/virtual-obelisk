@@ -8,6 +8,8 @@ import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
 
+import 'artpost_options_widget.dart';
+
 /// [MediaReader] is required to have one of the three configurations available:
 /// [MediaReaderConfiguration.HOME_FEED],[MediaReaderConfiguration.PROFILE_FEED] or [MediaReaderConfiguration.CATEGORY_FEED].
 /// They are passed to the required [mediaReaderConfiguration] parameter...
@@ -133,6 +135,16 @@ class _ParentMediaReader extends State<MediaReader> {
               // Loading Animation while fetching post list
               return const Center(child: CircularProgressIndicator());
             }
+            // Reveal the hidden Firebase error if there are any
+            if (snapshot.hasError) {
+              print("STREAM ERROR: ${snapshot.error}");
+              return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Error: ${snapshot.error}", style: const TextStyle(color: Colors.red)),
+                  )
+              );
+            }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               // if we have a list containing null, or empty list
               return const Center(child: Text("No art found.", style: TextStyle(color: Colors.white)));
@@ -165,6 +177,16 @@ class _ParentMediaReader extends State<MediaReader> {
                         ),
                         // WIDGET: Information that sits on top of the post. Info about post...
                         PostInfo(post: posts[index], isVisible: _isVisible),
+                        // WIDGET: The Three Dots Menu (Positioned Top Right)
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: ArtPostOptions(
+                            post: posts[index],
+                            isVisible: _isVisible,
+                            onUserInteracted: _startHideTimer, // Keeps UI visible if they click it
+                          ),
+                        ),
                       ],
                     );
                   },

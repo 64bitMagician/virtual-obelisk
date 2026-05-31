@@ -8,29 +8,39 @@ enum MediaType { image, audio, video, text }
 /// !THIS IS NOT THE VISUAL REPRESENTATION OF THE POST!
 /// !FOR THAT, CHECK art_post_card.dart
 class ArtPost {
-  final String id;
-  final MediaType mediaType;
-  final String mediaUrl;
   final String additionalMediaUrl; // cover art for audio, or thumbnail for videos
-  final String title;
-  final String description;
+  final String authorAvatar;
   final String authorName;
   final String authorUsername;
-  final String authorAvatar;
+  final String category;
+  final DateTime createdAt;
+  final String description;
+  final String id;
+  final bool isDeactivated;
   final int likes;
+  final MediaType mediaType;
+  final String mediaUrl;
+  final int reportCount;
+  final String title;
+  final String userId;
 
   /// Contructs the [ArtPost] object, based on required parameters...
   ArtPost({
-    required this.id,
-    required this.mediaType,
-    required this.mediaUrl,
     required this.additionalMediaUrl,
-    required this.title,
-    required this.description,
+    required this.authorAvatar,
     required this.authorName,
     required this.authorUsername,
-    required this.authorAvatar,
+    required this.category,
+    required this.createdAt,
+    required this.description,
+    required this.id,
+    required this.isDeactivated,
     required this.likes,
+    required this.mediaType,
+    required this.mediaUrl,
+    required this.reportCount,
+    required this.title,
+    required this.userId,
   });
 
   /// Creates an [ArtPost] object defined by the data of the document passed as an argument
@@ -55,18 +65,32 @@ class ArtPost {
       }
     }
 
+    // Note: Pro Tip: When you upload a post using FieldValue.serverTimestamp(), there is a split second where the local cache reads it as null before
+    // the server responds with the real time. We add a safe fallback to DateTime.now() to prevent crashes during that microsecond
+
+    //Safely convert Firebase Timestamp to Dart DateTime
+    DateTime postDate = DateTime.now(); // Safe fallback
+    if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
+      postDate = (data['createdAt'] as Timestamp).toDate();
+    }
+
     // Return a ArtPost object defined by data from the received document
     return ArtPost(
       additionalMediaUrl: data['additionalMediaUrl'], // if not provided, it has value: "default, by default
-      authorAvatar: data['authorAvatar'] ?? 'https://i.pravatar.cc/150?u=${doc.id}', // random avatar if none provided
+      authorAvatar: data['authorAvatar'] ?? 'default', // random avatar if none provided
       authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided
       authorUsername: data['authorUsername'],
+      category: data['category'],
+      createdAt: postDate,
       description: data['description'] ?? '', // Empty description if non provided
       id: doc.id,
+      isDeactivated: data['isDeactivated'] ?? false,
       likes: data['likes'] ?? 0, // 0 likes if number of likes not provided
       mediaType: determineType(data['mediaType']),
       mediaUrl: data['mediaUrl'] ?? '', // Image Url will be empty string if no imageUrl provided
+      reportCount: data['reportCount'] ?? 0,
       title: data['title'] ?? 'Untitled', //  Title name will be "Untitled" if no title provided
+      userId: data['userId'] ?? '' // nothing if userId is not there
     );
   }
 }
