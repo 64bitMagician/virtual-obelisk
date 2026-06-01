@@ -105,6 +105,7 @@ class DatabaseRepository {
   Stream<List<ArtPost>> getHomeFeedPosts() {
     return _db
         .collection('artworks') // We select the 'artworks' collection from Firestore
+        .where('isDeactivated', isEqualTo: false)
         .orderBy('createdAt', descending: true) // we order the documents/posts within the collection by the time of upload, in descending order
         .snapshots() // Configure a Stream that returns the full list of documents (QuerySnapshot<Map<String, dymaic>>), anytime changes within the list of documents occur.
         .map((snapshot) { // Given the list of documents (snapshot.docs), make a new list, where each document is replaced with a ArtPost object containing the document's data
@@ -122,6 +123,7 @@ class DatabaseRepository {
     return _db
         .collection('artworks') // Always target the main collection
         .where('category', isEqualTo: category) // Filter the documents by category
+        .where('isDeactivated', isEqualTo: false)
         .orderBy('createdAt', descending: true) // Order the filtered results
         .snapshots()
         .map((snapshot) {
@@ -150,6 +152,7 @@ class DatabaseRepository {
     return _db
         .collection('artworks')
         .where('userId', isEqualTo: targetId)
+        .where('isDeactivated', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {

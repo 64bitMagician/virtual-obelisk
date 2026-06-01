@@ -18,9 +18,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       builder: (context) => AlertDialog(
         title: const Text("Seed Database?"),
         content: const Text(
-            "This will generate 20 fake users and 50 fake art posts. "
-                "Make sure your Firestore Security Rules are temporarily set to 'allow read, write: if true;' "
-                "OR your Admin Bypass is fully active!"
+            "This will generate 5 fake users and 10 fake art posts. "
         ),
         actions: [
           TextButton(
@@ -30,7 +28,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Yes, Seed it!"),
+            child: const Text("Yes"),
           ),
         ],
       ),
@@ -102,7 +100,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               leading: const Icon(Icons.data_object, color: Colors.redAccent, size: 32),
               title: const Text("Populate Mock Data (Seeder)"),
-              subtitle: const Text("Generates random users, posts, and stats to test UI layouts and pagination."),
+              subtitle: const Text("Generates random users and posts."),
               trailing: _isSeeding
                   ? const SizedBox(
                   width: 24,
