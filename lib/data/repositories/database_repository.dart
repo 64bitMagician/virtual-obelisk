@@ -414,4 +414,16 @@ class DatabaseRepository {
       throw Exception("Failed to submit report.");
     }
   }
+
+  /// ADMIN ONLY: Fetch all deactivated (because of reports) posts for the moderation queue
+  Stream<List<ArtPost>> getDeactivatedPosts() {
+    return _db
+        .collection('artworks')
+        .where('isDeactivated', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
+    });
+  }
 }

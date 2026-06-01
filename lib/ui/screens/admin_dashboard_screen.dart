@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:art_platform/automation/database_seeder.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -15,23 +16,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     // Show confirmation dialog before doing anything destructive/heavy
     final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Seed Database?"),
-        content: const Text(
-            "This will generate 5 fake users and 10 fake art posts. "
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Seed Database?"),
+            content: const Text(
+              "This will generate 5 fake users and 10 fake art posts. ",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Yes"),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
     );
 
     // If user cancelled or dismissed the dialog, stop here.
@@ -42,7 +47,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     // Show a temporary snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Seeding started... Check terminal for progress.")),
+      const SnackBar(
+        content: Text("Seeding started... Check terminal for progress."),
+      ),
     );
 
     try {
@@ -78,7 +85,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin Dashboard"),
-        backgroundColor: Colors.red[900], // Give the admin screen a distinct, serious color
+        backgroundColor:
+            Colors.red[900], // Give the admin screen a distinct, serious color
         foregroundColor: Colors.white,
       ),
       body: ListView(
@@ -86,7 +94,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           const Text(
             "Developer Tools",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -97,26 +109,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              leading: const Icon(Icons.data_object, color: Colors.redAccent, size: 32),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              leading: const Icon(
+                Icons.data_object,
+                color: Colors.redAccent,
+                size: 32,
+              ),
               title: const Text("Populate Mock Data (Seeder)"),
               subtitle: const Text("Generates random users and posts."),
-              trailing: _isSeeding
-                  ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent)
-              )
-                  : ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.1),
-                  foregroundColor: Colors.redAccent,
-                  elevation: 0,
-                ),
-                onPressed: _runSeeder,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text("RUN"),
-              ),
+              trailing:
+                  _isSeeding
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.redAccent,
+                        ),
+                      )
+                      : ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent.withOpacity(0.1),
+                          foregroundColor: Colors.redAccent,
+                          elevation: 0,
+                        ),
+                        onPressed: _runSeeder,
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text("RUN"),
+                      ),
             ),
           ),
 
@@ -129,18 +152,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
               leading: const Icon(Icons.gavel, color: Colors.orange, size: 32),
               title: const Text("Moderation Queue"),
-              subtitle: const Text("Review user-reported artworks, issue warnings, or remove content violating platform rules."),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-              onTap: () {
-                // Navigate to the future moderation screen!
-                // context.push('/admin/moderation');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Moderation Queue coming soon!")),
-                );
-              },
+              subtitle: const Text(
+                "Review user-reported artworks, issue warnings, or remove content violating platform rules.",
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+              // Inside your Card's ListTile in admin_dashboard_screen.dart
+              onTap: () => context.push('/admin/media_reader'),
             ),
           ),
         ],

@@ -71,15 +71,19 @@ class _ParentMediaReader extends State<MediaReader> {
     // Assign the right stream depending on MediaReader Configuration
     if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED)
       _postsStream = _repository.getHomeFeedPosts();
-    else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+    else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED)
+    {
       if (widget.category == null) throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader no value has been passed for category parameter...");
-
       _postsStream = _repository.getCategoryFeedPosts(category: widget.category!);
-    } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
+    } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED)
+    {
       if(widget.profileUid==null)
         throw Exception("ERROR: COULD NOT FETCH THE USER ID OF THE PROFILE YOU ARE TRYING TO ACCESS");
-
       _postsStream = _repository.getUserPosts(widget.profileUid!);
+    }
+    else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED)
+    {
+      _postsStream = _repository.getDeactivatedPosts();
     }
 
     _startHideTimer();
@@ -180,7 +184,7 @@ class _ParentMediaReader extends State<MediaReader> {
                         // WIDGET: The Three Dots Menu (Positioned Top Right)
                         Positioned(
                           top: 16,
-                          right: 16,
+                          left: 16,
                           child: ArtPostOptions(
                             post: posts[index],
                             isVisible: _isVisible,

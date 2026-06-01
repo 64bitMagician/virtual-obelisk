@@ -148,6 +148,12 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/admin',
           builder: (context, state) => const AdminDashboardScreen(),
+            routes: [
+              GoRoute(
+                  path: 'media_reader',
+                  builder: (context, state) => MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED, exitButton: true,),
+              )
+            ]
         ),
       ],
     ),
