@@ -8,8 +8,10 @@ class ArtPostOptions extends StatelessWidget {
   final ArtPost post;
   final bool isVisible;
   final VoidCallback onUserInteracted; // To reset fade timer
+  final DatabaseRepository _repo = DatabaseRepository();
 
-  const ArtPostOptions({
+
+  ArtPostOptions({
     super.key,
     required this.post,
     required this.isVisible,
@@ -22,10 +24,9 @@ class ArtPostOptions extends StatelessWidget {
     return doc.data()?['role'] == 'admin';
   }
 
-  // The actual Report Dialog!
+  // The actual Report Dialog
   void _showReportDialog(BuildContext context) {
     final reasonController = TextEditingController();
-    final DatabaseRepository repo = DatabaseRepository();
 
     showDialog(
       context: context,
@@ -62,7 +63,7 @@ class ArtPostOptions extends StatelessWidget {
 
               try {
                 // Call the backend function we just built!
-                await repo.submitReport(
+                await _repo.submitReport(
                     artworkId: post.id,
                     reason: reason
                 );
@@ -81,6 +82,40 @@ class ArtPostOptions extends StatelessWidget {
               }
             },
             child: const Text("Submit Report"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Delete Confirmation Dialog
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Post?"),
+        content: const Text("Are you sure you want to permanently delete this artwork? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              try {
+                await _repo.deletePost(post.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post deleted.")));
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to delete post.")));
+                }
+              }
+            },
+            child: const Text("Delete"),
           ),
         ],
       ),
@@ -108,22 +143,29 @@ class ArtPostOptions extends StatelessWidget {
               icon: const Icon(Icons.more_vert, color: Colors.white, size: 30),
               color: Colors.grey[900],
               onOpened: onUserInteracted, // Keeps UI visible while menu is open
-              onSelected: (value) {
+              onSelected: (value) async {
                 onUserInteracted(); // Reset timer after selection
 
                 if (value == 'report') {
                   _showReportDialog(context);
                 } else if (value == 'edit') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit feature coming soon!")));
+                  // Editing requires a new screen with form fields
+                  // TO BE CONTINUED
+                  // context.push('/edit_post', extra: post);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit UI needs to be built!")));
                 } else if (value == 'delete') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Delete feature coming soon!")));
-                } else if (value == 'admin_ban') {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Admin: Take down post (Coming soon)")));
+                  _showDeleteDialog(context);
+                } else if (value == 'admin_deactivate') {
+                  await _repo.adminDeactivatePost(post.id);
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post deactivated.")));
+                } else if (value == 'admin_reactivate') {
+                  await _repo.adminReactivatePost(post.id);
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post reactivated!")));
                 }
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  // OPTIONS FOR THE OWNER
+                  // 1. OWNER OPTIONS
                   if (isOwner || isAdmin) ...[
                     const PopupMenuItem(
                       value: 'edit',
@@ -135,7 +177,7 @@ class ArtPostOptions extends StatelessWidget {
                     ),
                   ],
 
-                  // OPTIONS FOR REGULAR VIEWERS
+                  // 2. VIEWER OPTIONS
                   if (!isOwner) ...[
                     const PopupMenuItem(
                       value: 'report',
@@ -143,13 +185,23 @@ class ArtPostOptions extends StatelessWidget {
                     ),
                   ],
 
-                  // OPTIONS FOR ADMINS ONLY
-                  if (isAdmin && !isOwner) ...[
+                  // 3. ADMIN MODERATION CONTROLS
+                  if (isAdmin) ...[
                     const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'admin_ban',
-                      child: Row(children: [Icon(Icons.gavel, color: Colors.red, size: 20), SizedBox(width: 8), Text("ADMIN: Force Takedown", style: TextStyle(color: Colors.red))]),
-                    ),
+
+                    // If post is live, show "Take Down"
+                    if (!post.isDeactivated)
+                      const PopupMenuItem(
+                        value: 'admin_deactivate',
+                        child: Row(children: [Icon(Icons.gavel, color: Colors.red, size: 20), SizedBox(width: 8), Text("ADMIN: Force Takedown", style: TextStyle(color: Colors.red))]),
+                      ),
+
+                    // If post is deactivated (in the queue), show "Reactivate"
+                    if (post.isDeactivated)
+                      const PopupMenuItem(
+                        value: 'admin_reactivate',
+                        child: Row(children: [Icon(Icons.check_circle, color: Colors.green, size: 20), SizedBox(width: 8), Text("ADMIN: Reactivate Post", style: TextStyle(color: Colors.green))]),
+                      ),
                   ],
                 ];
               },

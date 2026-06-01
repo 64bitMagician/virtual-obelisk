@@ -426,4 +426,40 @@ class DatabaseRepository {
       return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
     });
   }
+
+  // ============================================================================
+  // POST MANAGEMENT & MODERATION
+  // ============================================================================
+
+  /// Deletes a post entirely from the database
+  Future<void> deletePost(String artworkId) async {
+    try {
+      await _db.collection('artworks').doc(artworkId).delete();
+    } catch (e) {
+      throw Exception("Failed to delete post: $e");
+    }
+  }
+
+  /// ADMIN: Forces a post to be deactivated and hidden from the public feed
+  Future<void> adminDeactivatePost(String artworkId) async {
+    try {
+      await _db.collection('artworks').doc(artworkId).update({
+        'isDeactivated': true,
+      });
+    } catch (e) {
+      throw Exception("Failed to deactivate post: $e");
+    }
+  }
+
+  /// ADMIN: Reactivates a post and resets its report counter to 0
+  Future<void> adminReactivatePost(String artworkId) async {
+    try {
+      await _db.collection('artworks').doc(artworkId).update({
+        'isDeactivated': false,
+        'reportCount': 0, // Forgive and forget!
+      });
+    } catch (e) {
+      throw Exception("Failed to reactivate post: $e");
+    }
+  }
 }
