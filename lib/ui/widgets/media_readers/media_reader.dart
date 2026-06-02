@@ -8,6 +8,8 @@ import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
 
+import 'admin_report_overlay.dart';
+import 'art_post_like_button.dart';
 import 'artpost_options_widget.dart';
 
 /// [MediaReader] is required to have one of the three configurations available:
@@ -191,6 +193,30 @@ class _ParentMediaReader extends State<MediaReader> {
                             onUserInteracted: _startHideTimer, // Keeps UI visible if they click it
                           ),
                         ),
+
+                        // The Like Button (Positioned Below Options)
+                        Positioned(
+                          bottom: 16, // Sits comfortably below the three dots
+                          right: 16,
+                          child: ArtPostLikeButton(
+                            post: posts[index],
+                            isVisible: _isVisible,
+                            onUserInteracted: _startHideTimer,
+                          ),
+                        ),
+
+                        // The Admin Report Panel (Positioned on the Right)
+                        // It ONLY renders if we are in the Moderation Queue (ADMIN DASHBOARD -> REPORT FEED SECTION)
+                        if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED)
+                          Positioned(
+                            top: 80, // Placed below the top UI buttons
+                            right: 16, // Snug against the right edge
+                            bottom: 100, // Leaves room so it doesn't cover PostInfo
+                            child: AdminReportOverlay(
+                              artworkId: posts[index].id,
+                              isVisible: _isVisible,
+                            ),
+                          ),
                       ],
                     );
                   },

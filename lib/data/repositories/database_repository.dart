@@ -317,9 +317,10 @@ class DatabaseRepository {
       'following': FieldValue.increment(-1)
     });
 
-    // Decrease the target user's "followers" count by 1
+    // Decrease the target user's "followers" count AND deduct the points
     await _db.collection('users').doc(targetUid).update({
-      'followers': FieldValue.increment(-1)
+      'followers': FieldValue.increment(-1),
+      'artist_points': FieldValue.increment(-gain_follower_artist_points_reward), // Deducting the exact reward amount
     });
   }
 
@@ -431,10 +432,16 @@ class DatabaseRepository {
   // POST MANAGEMENT & MODERATION
   // ============================================================================
 
-  /// Deletes a post entirely from the database
-  Future<void> deletePost(String artworkId) async {
+  /// Deletes a post entirely from the database and deducts the upload points
+  Future<void> deletePost(String artworkId, String ownerUid) async {
     try {
+      // Delete the actual post
       await _db.collection('artworks').doc(artworkId).delete();
+
+      // Deduct the points from the user who uploaded it
+      await _db.collection('users').doc(ownerUid).update({
+        'artist_points': FieldValue.increment(-upload_artpost_artist_points_reward)
+      });
     } catch (e) {
       throw Exception("Failed to delete post: $e");
     }
@@ -473,6 +480,75 @@ class DatabaseRepository {
       });
     } catch (e) {
       throw Exception("Failed to edit post: $e");
+    }
+  }
+
+  /// ADMIN ONLY: Fetches all reports submitted against a specific artwork
+  Stream<List<Map<String, dynamic>>> getReportsForPost(String artworkId) {
+    return _db.collection('reports')
+        .where('artworkId', isEqualTo: artworkId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  // ============================================================================
+  // LIKES SYSTEM
+  // ============================================================================
+
+  /// Stream to check if the current user has liked this specific post
+  Stream<bool> hasUserLikedPost(String artworkId, String userId) {
+    return _db
+        .collection('artworks')
+        .doc(artworkId)
+        .collection('likes')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) => snapshot.exists);
+  }
+
+  /// Toggles the like status and rewards/deducts artist points
+  Future<void> toggleLike(String artworkId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception("Must be logged in to like.");
+
+    final artworkRef = _db.collection('artworks').doc(artworkId);
+    final likeRef = artworkRef.collection('likes').doc(uid);
+
+    try {
+      await _db.runTransaction((transaction) async {
+        final likeSnapshot = await transaction.get(likeRef);
+        final artworkSnapshot = await transaction.get(artworkRef);
+
+        if (!artworkSnapshot.exists) throw Exception("Artwork not found.");
+
+        final data = artworkSnapshot.data() as Map<String, dynamic>;
+        final currentLikes = data['likes'] ?? 0;
+        final String postOwnerId = data['userId']; // Get the creator's ID
+
+        // Reference to the creator's user document
+        final ownerRef = _db.collection('users').doc(postOwnerId);
+
+        if (likeSnapshot.exists) {
+          // UNLIKE SCENARIO
+          transaction.delete(likeRef);
+          transaction.update(artworkRef, {'likes': currentLikes - 1});
+          // Deduct the point(s) from the owner
+          transaction.update(ownerRef, {
+            'artist_points': FieldValue.increment(-get_like_artist_points_reward)
+          });
+        } else {
+          // LIKE SCENARIO
+          transaction.set(likeRef, {'timestamp': FieldValue.serverTimestamp()});
+          transaction.update(artworkRef, {'likes': currentLikes + 1});
+          // Reward the point(s) to the owner
+          transaction.update(ownerRef, {
+            'artist_points': FieldValue.increment(get_like_artist_points_reward)
+          });
+        }
+      });
+    } catch (e) {
+      throw Exception("Failed to toggle like: $e");
     }
   }
 }

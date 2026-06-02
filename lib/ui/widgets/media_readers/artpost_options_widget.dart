@@ -106,7 +106,7 @@ class ArtPostOptions extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context); // Close dialog
               try {
-                await _repo.deletePost(post.id);
+                await _repo.deletePost(post.id, post.userId);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post deleted.")));
                 }
