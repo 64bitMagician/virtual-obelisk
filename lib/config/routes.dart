@@ -6,6 +6,8 @@ import 'package:art_platform/ui/widgets/media_readers/media_reader.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../data/models/art_post.dart';
+import '../ui/screens/edit_art_post_screen.dart';
 import '../ui/screens/home_screen.dart';
 import '../ui/screens/chains_screen.dart';
 import '../ui/screens/chain_detail_screen.dart';
@@ -72,6 +74,14 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/',
           builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/edit_post',
+          builder: (context, state) {
+            // Extract the ArtPost passed via the 'extra' property (transition storage)
+            final postToEdit = state.extra as ArtPost;
+            return EditArtPostScreen(post: postToEdit);
+          },
         ),
         GoRoute(
           path: '/chains',

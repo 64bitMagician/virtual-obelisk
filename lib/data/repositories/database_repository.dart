@@ -462,4 +462,17 @@ class DatabaseRepository {
       throw Exception("Failed to reactivate post: $e");
     }
   }
+
+  /// Updates the text and category data of an existing art post
+  Future<void> editPost(String artworkId, String newTitle, String newDescription, String newCategory) async {
+    try {
+      await _db.collection('artworks').doc(artworkId).update({
+        'title': newTitle,
+        'description': newDescription,
+        'category': newCategory,
+      });
+    } catch (e) {
+      throw Exception("Failed to edit post: $e");
+    }
+  }
 }

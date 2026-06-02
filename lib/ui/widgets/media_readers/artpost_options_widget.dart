@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
+import 'package:go_router/go_router.dart';
 
 class ArtPostOptions extends StatelessWidget {
   final ArtPost post;
@@ -149,9 +150,7 @@ class ArtPostOptions extends StatelessWidget {
                 if (value == 'report') {
                   _showReportDialog(context);
                 } else if (value == 'edit') {
-                  // Editing requires a new screen with form fields
-                  // TO BE CONTINUED
-                  // context.push('/edit_post', extra: post);
+                  context.push('/edit_post', extra: post);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit UI needs to be built!")));
                 } else if (value == 'delete') {
                   _showDeleteDialog(context);
