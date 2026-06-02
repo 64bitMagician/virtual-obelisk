@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
 
                     // Gallery and Saved Posts Buttons
-                    const Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [Icon(Icons.grid_on, color: Colors.deepPurple), Icon(Icons.bookmark_border, color: Colors.grey)]),
+                    const Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [Icon(Icons.grid_on, color: Colors.deepPurple)]),
                     const SizedBox(height: 16),
 
                     // The Posts Gallery
