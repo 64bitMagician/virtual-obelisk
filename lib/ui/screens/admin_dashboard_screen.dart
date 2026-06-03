@@ -170,6 +170,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onTap: () => context.push('/admin/media_reader'),
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // CHAIN CREATOR DASHBOARD
+          Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Colors.deepPurple.shade300, width: 1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              leading: const Icon(Icons.link, color: Colors.deepPurpleAccent, size: 32),
+              title: const Text("Create Art Chain"),
+              subtitle: const Text(
+                "Launch a new collaborative prompt for the community. Set the theme, description, and deadline.",
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+              onTap: () => context.push('/admin/create_chain'),
+            ),
+          ),
         ],
       ),
     );

@@ -13,6 +13,7 @@ class ArtPost {
   final String authorName;
   final String authorUsername;
   final String category;
+  final String? chainId;
   final DateTime createdAt;
   final String description;
   final String id;
@@ -31,6 +32,7 @@ class ArtPost {
     required this.authorName,
     required this.authorUsername,
     required this.category,
+    required this.chainId,
     required this.createdAt,
     required this.description,
     required this.id,
@@ -81,6 +83,7 @@ class ArtPost {
       authorName: data['authorName'] ?? 'Unknown Artist', // "Unknown Artist" author name if none provided
       authorUsername: data['authorUsername'],
       category: data['category'],
+      chainId: data['chainId'],
       createdAt: postDate,
       description: data['description'] ?? '', // Empty description if non provided
       id: doc.id,

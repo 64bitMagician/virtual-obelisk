@@ -10,7 +10,9 @@ import '../../data/repositories/storage_repository.dart';
 import '../../data/repositories/database_repository.dart';
 
 class UploadDialog extends StatefulWidget {
-  const UploadDialog({super.key});
+  final String? chainId;
+
+  const UploadDialog({super.key, this.chainId});
 
   @override
   State<UploadDialog> createState() => _UploadDialogState();
@@ -198,6 +200,7 @@ class _UploadDialogState extends State<UploadDialog> {
         category: _selectedCategory!,
         mediaUrl: mainFileDownloadUrl,
         additionalMediaUrl: additionalMediaDownloadUrl,
+        chainId: widget.chainId,
       );
       print("Main File Data saved to Firestore");
 

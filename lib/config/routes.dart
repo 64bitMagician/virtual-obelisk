@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../data/models/art_post.dart';
+import '../ui/screens/create_chain_screen.dart';
 import '../ui/screens/edit_art_post_screen.dart';
 import '../ui/screens/home_screen.dart';
 import '../ui/screens/chains_screen.dart';
@@ -159,10 +160,16 @@ final GoRouter router = GoRouter(
           path: '/admin',
           builder: (context, state) => const AdminDashboardScreen(),
             routes: [
+              // Reported Artposts Feed Media Reader
               GoRoute(
                   path: 'media_reader',
                   builder: (context, state) => MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED, exitButton: true,),
-              )
+              ),
+              // Create Chain Screen
+              GoRoute(
+                path: 'create_chain',
+                builder: (context, state) => const CreateChainScreen(),
+              ),
             ]
         ),
       ],

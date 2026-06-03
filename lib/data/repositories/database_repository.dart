@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/core/constants.dart';
 
+import '../models/art_chain.dart';
+
 /// Responsible for all communication with Firestore Database
 ///
 /// Contains methods for uploading art, fetching the feed, fetching user posts, fetching user profile data,
@@ -23,6 +25,7 @@ class DatabaseRepository {
     required String mediaUrl,
     required String category,
     String? additionalMediaUrl,
+    String? chainId,
   }) async {
     final user = _auth.currentUser; // we fetch the current User, if any (can also be null)
     if (user == null) { // Exception Error. User is not logged in, therfore cannot upload
@@ -59,6 +62,7 @@ class DatabaseRepository {
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
         'authorUsername': authorUsername,
         'category': category,
+        'chainId': chainId,
         'createdAt': FieldValue.serverTimestamp(), // create a timestamp for when this document/post was added
         'description': description, // received as method parameter
         'isDeactivated': false,
@@ -550,5 +554,61 @@ class DatabaseRepository {
     } catch (e) {
       throw Exception("Failed to toggle like: $e");
     }
+  }
+
+  // ============================================================================
+  // CHAINS SYSTEM
+  // ============================================================================
+
+  /// ADMIN ONLY: Creates a new ArtChain prompt
+  Future<void> createChain({
+    required String title,
+    required String description,
+    required int lifespanDays,
+    required List<String> categoryNodes,
+  }) async {
+    try {
+      final expiresAt = DateTime.now().add(Duration(days: lifespanDays));
+
+      await _db.collection('chains').add({
+        'title': title,
+        'description': description,
+        'createdAt': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(expiresAt),
+        'isClosed': false,
+        'categoryNodes': categoryNodes,
+      });
+    } catch (e) {
+      throw Exception("Failed to create chain: $e");
+    }
+  }
+
+  /// ADMIN ONLY: Manually closes a chain early
+  Future<void> closeChainEarly(String chainId) async {
+    try {
+      await _db.collection('chains').doc(chainId).update({
+        'isClosed': true,
+      });
+    } catch (e) {
+      throw Exception("Failed to close chain: $e");
+    }
+  }
+
+  /// Fetches all Chains (Ordered by newest first)
+  /// Client-side ArtChain model will handle the "is it expired?" logic
+  Stream<List<ArtChain>> getAllChains() {
+    return _db.collection('chains')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => ArtChain.fromFirestore(doc)).toList());
+  }
+
+  /// Fetches all ArtPosts that belong to a specific Chain
+  Stream<List<ArtPost>> getPostsForChain(String chainId) {
+    return _db.collection('artworks')
+        .where('chainId', isEqualTo: chainId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
   }
 }
