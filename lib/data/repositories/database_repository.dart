@@ -79,9 +79,14 @@ class DatabaseRepository {
       addArtistPointsForUploading(user.uid);
       // SIGNAL SUCCESS
       print("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
-    } catch (e) { // Something went wrong while trying to upload to Firestore database
-      print("DATABASE ERROR: $e");
-      throw Exception("Failed to upload to database");
+    } on FirebaseException catch (e) { // Something went wrong while trying to upload to Firestore database
+      // Catch the specific bouncer rejection (for time traveling exploit in chains <=> Uploading even tough chain is closed)
+      if (e.code == 'permission-denied') {
+        throw Exception("Upload rejected: This chain is closed or has expired.");
+      }
+      throw Exception("Database error: ${e.message}");
+    } catch (e) {
+      throw Exception("Failed to upload post: $e");
     }
   }
 
@@ -321,7 +326,7 @@ class DatabaseRepository {
       'following': FieldValue.increment(-1)
     });
 
-    // Decrease the target user's "followers" count AND deduct the points
+    // Decrease the target user's "followers" count and deduct the points
     await _db.collection('users').doc(targetUid).update({
       'followers': FieldValue.increment(-1),
       'artist_points': FieldValue.increment(-gain_follower_artist_points_reward), // Deducting the exact reward amount
@@ -610,5 +615,13 @@ class DatabaseRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
+  }
+
+  /// Fetches a single ArtChain by its ID
+  Stream<ArtChain> getChainById(String chainId) {
+    return _db.collection('chains')
+        .doc(chainId)
+        .snapshots()
+        .map((doc) => ArtChain.fromFirestore(doc));
   }
 }

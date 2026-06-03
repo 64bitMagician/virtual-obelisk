@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:art_platform/data/models/art_chain.dart';
+import 'package:art_platform/data/models/art_post.dart';
+import 'package:art_platform/data/repositories/database_repository.dart';
+import 'package:art_platform/core/constants.dart';
+import 'package:art_platform/ui/widgets/upload_dialog.dart';
 
 class ChainDetailScreen extends StatelessWidget {
   final String chainId;
@@ -7,209 +12,219 @@ class ChainDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String title = chainId == '1' ? "The Red Planet" : "Chain #$chainId";
-    final String status = "Active";
-    final String initiator = "Vlad (Alpha)";
+    final DatabaseRepository repo = DatabaseRepository();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Collaboration Details")),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const CircleAvatar(radius: 12, child: Icon(Icons.person, size: 12)),
-                    const SizedBox(width: 8),
-                    Text("Initiated by $initiator", style: const TextStyle(color: Colors.grey)),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+      appBar: AppBar(
+        title: const Text("Collaboration Details"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
+      // Fetch the Chain Details
+      body: StreamBuilder<ArtChain>(
+        stream: repo.getChainById(chainId),
+        builder: (context, chainSnapshot) {
+          if (chainSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!chainSnapshot.hasData) {
+            return const Center(child: Text("Chain not found.", style: TextStyle(color: Colors.white)));
+          }
+
+          final chain = chainSnapshot.data!;
+
+          // Fetch the ArtPosts assigned to this chain
+          return StreamBuilder<List<ArtPost>>(
+            stream: repo.getPostsForChain(chainId),
+            builder: (context, postSnapshot) {
+              final posts = postSnapshot.data ?? [];
+
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // HEADER
+                        Text(
+                          chain.title,
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          chain.description,
+                          style: TextStyle(fontSize: 16, color: Colors.grey[400], height: 1.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: chain.isClosed ? Colors.grey.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: chain.isClosed ? Colors.grey : Colors.green),
+                              ),
+                              child: Text(
+                                chain.isClosed ? "CLOSED" : "ACTIVE",
+                                style: TextStyle(
+                                  color: chain.isClosed ? Colors.grey : Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        const Divider(color: Colors.white24),
+                        const SizedBox(height: 24),
+
+                        // TIMELINE
+                        ...List.generate(chain.categoryNodes.length, (index) {
+                          final categoryKey = chain.categoryNodes[index];
+                          final categoryName = artCategoriesDisplayName[categoryKey] ?? categoryKey.toUpperCase();
+
+                          // Filter the posts that belong to this specific node category
+                          final nodePosts = posts.where((p) => p.category == categoryKey).toList();
+
+                          return _buildTimelineNode(
+                            stepNumber: index + 1,
+                            categoryName: categoryName,
+                            posts: nodePosts,
+                            isLast: index == chain.categoryNodes.length - 1,
+                          );
+                        }),
+
+                        const SizedBox(height: 100), // Spacing for the floating button
+                      ],
+                    ),
+                  ),
+
+                  // FLOATING JOIN BUTTON
+                  if (!chain.isClosed)
+                    Positioned(
+                      bottom: 24,
+                      left: 24,
+                      right: 24,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurpleAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          // Open the Upload Dialog and pass the chainId and the allowed categories
+                          showDialog(
+                            context: context,
+                            builder: (context) => UploadDialog(
+                              chainId: chain.id,
+                              allowedCategories: chain.categoryNodes,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.edit),
+                        label: const Text("Join this Chain", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     )
-                  ],
-                ),
-                const Divider(height: 40),
-
-                ListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildStepDisplay(
-                      stepNumber: 1,
-                      type: "text",
-                      author: "Vlad",
-                      content: "The year is 2042. The dust storms on Mars never seem to end...",
-                      isCompleted: true,
-                    ),
-                    _buildConnector(),
-                    _buildStepDisplay(
-                      stepNumber: 2,
-                      type: "image",
-                      author: "Elena",
-                      content: "https://images.unsplash.com/photo-1614728853970-c8f2b42332b0?q=80&w=1000&auto=format&fit=crop",
-                      isCompleted: true,
-                    ),
-                    _buildConnector(),
-                    _buildStepDisplay(
-                      stepNumber: 3,
-                      type: "audio",
-                      author: null,
-                      content: "",
-                      isCompleted: false,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Participation is coming soon!")),
-                      );
-                    },
-                    icon: const Icon(Icons.brush),
-                    label: const Text("Join this Chain"),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  Widget _buildConnector() {
-    return Container(
-      height: 40,
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 24),
-      child: Container(
-        width: 2,
-        color: Colors.grey.withOpacity(0.5),
-      ),
-    );
-  }
-
-  Widget _buildStepDisplay({
+  // Visual widget for each step in the chain
+  Widget _buildTimelineNode({
     required int stepNumber,
-    required String type,
-    required String? author,
-    required String content,
-    required bool isCompleted,
+    required String categoryName,
+    required List<ArtPost> posts,
+    required bool isLast,
   }) {
-    bool isLocked = !isCompleted;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left side: The timeline line and dot
+          Column(
+            children: [
+              CircleAvatar(
+                backgroundColor: posts.isNotEmpty ? Colors.deepPurpleAccent : Colors.white12,
+                child: Icon(
+                  posts.isNotEmpty ? Icons.check : Icons.lock_outline,
+                  color: posts.isNotEmpty ? Colors.white : Colors.white54,
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: Colors.white12,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                )
+            ],
+          ),
+          const SizedBox(width: 16),
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
+          // Right side: The content box
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 32),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isLocked ? Colors.grey.shade800 : Colors.deepPurple,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white12, width: 2),
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white12),
               ),
-              child: Center(
-                child: isLocked
-                    ? const Icon(Icons.lock_outline, color: Colors.white54)
-                    : Icon(_getIconForType(type), color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 20),
-
-        Expanded(
-          child: Card(
-            elevation: isLocked ? 0 : 4,
-            color: isLocked ? Colors.grey.withOpacity(0.1) : null,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Step $stepNumber: ${type.toUpperCase()}",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent),
-                      ),
-                      if (author != null)
-                        Text("by $author", style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    ],
+                  Text(
+                    "Step $stepNumber: ${categoryName.toUpperCase()}",
+                    style: const TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
 
-                  isLocked
-                      ? const Text("Waiting for an artist to fill this slot...", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey))
-                      : _renderContent(type, content),
+                  // Gallery of uploaded content or empty state
+                  if (posts.isEmpty)
+                    const Text("Waiting for an artist to fill this slot...", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
+                  else
+                    SizedBox(
+                      height: 120, // Height for the horizontal scrolling gallery
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: posts.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, i) {
+                          final post = posts[i];
+                          return Container(
+                            width: 120,
+                            decoration: BoxDecoration(
+                              color: Colors.black26,
+                              borderRadius: BorderRadius.circular(8),
+                              image: post.mediaType.name == 'image' && post.mediaUrl.isNotEmpty
+                                  ? DecorationImage(image: NetworkImage(post.mediaUrl), fit: BoxFit.cover)
+                                  : null,
+                            ),
+                            child: post.mediaType.name != 'image'
+                                ? Center(child: Text(post.title, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)))
+                                : null,
+                          );
+                        },
+                      ),
+                    )
                 ],
               ),
             ),
-          ),
-        ),
-      ],
+          )
+        ],
+      ),
     );
-  }
-
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'image': return Icons.image;
-      case 'audio': return Icons.music_note;
-      case 'text': return Icons.article;
-      default: return Icons.help;
-    }
-  }
-
-  Widget _renderContent(String type, String content) {
-    if (type == 'image') {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(content, fit: BoxFit.cover),
-      );
-    } else if (type == 'text') {
-      return Text(content, style: const TextStyle(fontSize: 16, height: 1.5, fontFamily: 'serif'));
-    } else {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
-        child: const Row(
-          children: [
-            Icon(Icons.play_circle_fill, size: 32, color: Colors.deepPurple),
-            SizedBox(width: 12),
-            Expanded(child: LinearProgressIndicator(value: 0.3)),
-            SizedBox(width: 12),
-            Text("0:45 / 3:20"),
-          ],
-        ),
-      );
-    }
   }
 }

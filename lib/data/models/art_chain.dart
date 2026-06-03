@@ -35,7 +35,7 @@ class ArtChain {
     }
 
     // A chain is considered closed if the Admin manually closed it (isClosed == true)
-    // OR if the current date and time is past the expiration date.
+    // or if the current date and time is past the expiration date.
     bool adminClosed = data['isClosed'] ?? false;
     bool timeExpired = DateTime.now().isAfter(expirationDate);
 

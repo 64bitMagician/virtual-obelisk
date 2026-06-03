@@ -26,7 +26,7 @@ class ProfileHeader extends StatelessWidget {
   // Visual Part of the Profile Header
   @override
   Widget build(BuildContext context) {
-    // Fetch points to drive both the Progress Bar AND the Avatar Border!
+    // Fetch points to drive both the Progress Bar and the Avatar Border!
     final int userPoints = userData['artist_points'] ?? -1;
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
     final String rank = userData['rank'] ?? 'rankless';

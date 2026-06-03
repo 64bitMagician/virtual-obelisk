@@ -11,8 +11,9 @@ import '../../data/repositories/database_repository.dart';
 
 class UploadDialog extends StatefulWidget {
   final String? chainId;
+  final List<String>? allowedCategories;
 
-  const UploadDialog({super.key, this.chainId});
+  const UploadDialog({super.key, this.chainId, this.allowedCategories});
 
   @override
   State<UploadDialog> createState() => _UploadDialogState();
@@ -44,11 +45,23 @@ class _UploadDialogState extends State<UploadDialog> {
   // Added state variables for category selection
   String? _selectedCategory;
   // list passed by reference to 'artCategories' constant from "constants.dart"
-  final List<String> _categories = artCategories;
+  late final List<String> _categories;
   final Map<String, String> _categoryDisplayNames = artCategoriesDisplayName;
 
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // If a specific list was passed, use it. Otherwise, default to ALL categories.
+    _categories = widget.allowedCategories ?? artCategories;
+
+    // If the chain only allows ONE category, auto-select it for the user!
+    if (_categories.length == 1) {
+      _selectedCategory = _categories.first;
+    }
+  }
 
   @override
   void dispose() {
@@ -254,7 +267,7 @@ class _UploadDialogState extends State<UploadDialog> {
       else if (_mediaType == MediaType.audio)
         folderPath = FolderPathEnum.coverart;
       else
-        throw Exception("Additional Media has been provided, but it is not suited for the main art uploaded, OR, _mediaType may be null");
+        throw Exception("Additional Media has been provided, but it is not suited for the main art uploaded, or, _mediaType may be null");
 
       print("---- ATTEMPTING TO UPLOAD ADDITIONAL MEDIA...");
       additionalMediaDownloadUrl = await _storageRepo.uploadMedia(_additionalMediaInstance, folderPath: folderPath);

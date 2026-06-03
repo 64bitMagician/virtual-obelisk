@@ -84,7 +84,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                     const SizedBox(height: 16),
 
                     // THE FOLLOW BUTTON
-                    // We only show it if the user is logged in AND they aren't looking at their own profile!
+                    // We only show it if the user is logged in and they aren't looking at their own profile!
                     if (currentUid != null && currentUid != otherProfileUid)
                       FollowButton(targetUid: otherProfileUid),
 
