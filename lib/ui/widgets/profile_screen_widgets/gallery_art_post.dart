@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 enum FetchType { network, local }
 
-class GalleryImage extends StatelessWidget {
+class GalleryArtPost extends StatelessWidget {
   final ArtPost post;
 
-  const GalleryImage({required this.post, super.key});
+  const GalleryArtPost({required this.post, super.key});
 
   // Getters
   MediaType get postType => post.mediaType;
@@ -31,10 +31,21 @@ class GalleryImage extends StatelessWidget {
   }
 
   Widget _createLocalGalleryImage(String localImageUrl, {IconData? icon}) {
-    return Stack(fit: StackFit.expand, children: [Image.asset(localImageUrl, fit: BoxFit.cover), if (icon != null) Positioned(bottom: 5, right: 5, child: getMediaTypeIconWidget(icon))]);
+    bool chain_icon = _checkIfChainPost();
+
+    return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(localImageUrl, fit: BoxFit.cover),
+          if (chain_icon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
+          if (icon != null) Positioned(bottom: 5, right: 5, child: getMediaTypeIconWidget(icon)),
+        ]
+    );
   }
 
   Widget _createNetworkGalleryImage(String imageUrl, {IconData? icon}) {
+    bool chain_icon = _checkIfChainPost();
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -61,6 +72,7 @@ class GalleryImage extends StatelessWidget {
           // We will simply display a broken image icon
           errorBuilder: (context, err, stack) => const Icon(Icons.broken_image),
         ),
+        if (chain_icon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
         if (icon != null) Positioned(bottom: 5, right: 5, child: getMediaTypeIconWidget(icon)),
       ],
     );
@@ -76,6 +88,14 @@ class GalleryImage extends StatelessWidget {
       return Icons.text_snippet_outlined; // text -> text icon
 
     return null;
+  }
+
+  // This method checks if the artpost belongs to a chain
+  bool _checkIfChainPost() {
+    if (post.chainId != null)
+      return true;
+
+    return false;
   }
 
   // This function Returns a record (multiple values)
@@ -128,5 +148,9 @@ class GalleryImage extends StatelessWidget {
 
   Widget getMediaTypeIconWidget(IconData icon) {
     return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 20));
+  }
+
+  Widget getChainIcon() {
+    return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: Icon(Icons.link_outlined, color: Colors.white, size: 20));
   }
 }

@@ -624,4 +624,14 @@ class DatabaseRepository {
         .snapshots()
         .map((doc) => ArtChain.fromFirestore(doc));
   }
+
+  /// Fetches ArtPosts for a specific node in a Chain
+  Stream<List<ArtPost>> getChainNodePosts({required String chainId, required String category}) {
+    return _db.collection('artworks')
+        .where('chainId', isEqualTo: chainId)
+        .where('category', isEqualTo: category)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
+  }
 }

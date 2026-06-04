@@ -1,5 +1,5 @@
 import 'package:art_platform/ui/widgets/profile_screen_widgets/follow_button.dart';
-import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_image.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_art_post.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -130,7 +130,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                               onTap: () => context.push("/user_profile/${widget.username}/media_reader/$index", extra: otherProfileUid),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: GalleryImage(post: post),
+                                child: GalleryArtPost(post: post),
                               ),
                             );
                           },

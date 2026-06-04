@@ -121,7 +121,7 @@ class ResponsiveScaffold extends StatelessWidget {
     // depending on what the uri looks like, we return the index
     if (location.startsWith('/categories')) return 1;
     if (location.startsWith('/chains')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/personal_profile')) return 3;
     if (location.startsWith('/settings')) return 4;
 
     // SAFEGUARD: If the URL is '/admin' but they aren't an admin, default to Home(0)

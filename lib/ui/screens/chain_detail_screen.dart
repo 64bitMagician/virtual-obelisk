@@ -1,9 +1,14 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_chain.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
+import '../widgets/media_readers/media_reader.dart';
+import '../widgets/profile_screen_widgets/gallery_art_post.dart';
+
+
 
 class ChainDetailScreen extends StatelessWidget {
   final String chainId;
@@ -15,6 +20,7 @@ class ChainDetailScreen extends StatelessWidget {
     final DatabaseRepository repo = DatabaseRepository();
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1E1E1E), // Dark background matching your theme
       appBar: AppBar(
         title: const Text("Collaboration Details"),
         backgroundColor: Colors.transparent,
@@ -40,97 +46,66 @@ class ChainDetailScreen extends StatelessWidget {
             builder: (context, postSnapshot) {
               final posts = postSnapshot.data ?? [];
 
-              return Stack(
-                children: [
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // HEADER
+                    Text(
+                      chain.title,
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      chain.description,
+                      style: TextStyle(fontSize: 16, color: Colors.grey[400], height: 1.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
                       children: [
-                        // HEADER
-                        Text(
-                          chain.title,
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          chain.description,
-                          style: TextStyle(fontSize: 16, color: Colors.grey[400], height: 1.5),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: chain.isClosed ? Colors.grey.withOpacity(0.2) : Colors.green.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: chain.isClosed ? Colors.grey : Colors.green),
-                              ),
-                              child: Text(
-                                chain.isClosed ? "CLOSED" : "ACTIVE",
-                                style: TextStyle(
-                                  color: chain.isClosed ? Colors.grey : Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: chain.isClosed ? Colors.grey.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: chain.isClosed ? Colors.grey : Colors.green),
+                          ),
+                          child: Text(
+                            chain.isClosed ? "CLOSED" : "ACTIVE",
+                            style: TextStyle(
+                              color: chain.isClosed ? Colors.grey : Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
-                          ],
+                          ),
                         ),
-                        const SizedBox(height: 32),
-                        const Divider(color: Colors.white24),
-                        const SizedBox(height: 24),
-
-                        // TIMELINE
-                        ...List.generate(chain.categoryNodes.length, (index) {
-                          final categoryKey = chain.categoryNodes[index];
-                          final categoryName = artCategoriesDisplayName[categoryKey] ?? categoryKey.toUpperCase();
-
-                          // Filter the posts that belong to this specific node category
-                          final nodePosts = posts.where((p) => p.category == categoryKey).toList();
-
-                          return _buildTimelineNode(
-                            stepNumber: index + 1,
-                            categoryName: categoryName,
-                            posts: nodePosts,
-                            isLast: index == chain.categoryNodes.length - 1,
-                          );
-                        }),
-
-                        const SizedBox(height: 100), // Spacing for the floating button
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                    const Divider(color: Colors.white24),
+                    const SizedBox(height: 24),
 
-                  // FLOATING JOIN BUTTON
-                  if (!chain.isClosed)
-                    Positioned(
-                      bottom: 24,
-                      left: 24,
-                      right: 24,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurpleAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          // Open the Upload Dialog and pass the chainId and the allowed categories
-                          showDialog(
-                            context: context,
-                            builder: (context) => UploadDialog(
-                              chainId: chain.id,
-                              allowedCategories: chain.categoryNodes,
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.edit),
-                        label: const Text("Join this Chain", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    )
-                ],
+                    // TIMELINE
+                    ...List.generate(chain.categoryNodes.length, (index) {
+                      final categoryKey = chain.categoryNodes[index];
+                      final categoryName = artCategoriesDisplayName[categoryKey] ?? categoryKey.toUpperCase();
+
+                      // Filter the posts that belong to this specific node category
+                      final nodePosts = posts.where((p) => p.category == categoryKey).toList();
+
+                      return _buildTimelineNode(
+                        context: context,
+                        chainId: chain.id,
+                        categoryKey: categoryKey,
+                        categoryName: categoryName,
+                        posts: nodePosts,
+                        isLast: index == chain.categoryNodes.length - 1,
+                        isClosed: chain.isClosed,
+                      );
+                    }),
+                  ],
+                ),
               );
             },
           );
@@ -139,27 +114,24 @@ class ChainDetailScreen extends StatelessWidget {
     );
   }
 
-  // Visual widget for each step in the chain
+  // Visual widget for each step/category in the chain
   Widget _buildTimelineNode({
-    required int stepNumber,
+    required BuildContext context,
+    required String chainId,
+    required String categoryKey,
     required String categoryName,
     required List<ArtPost> posts,
     required bool isLast,
+    required bool isClosed,
   }) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left side: The timeline line and dot
+          // Left side: The timeline line and dynamic action dot
           Column(
             children: [
-              CircleAvatar(
-                backgroundColor: posts.isNotEmpty ? Colors.deepPurpleAccent : Colors.white12,
-                child: Icon(
-                  posts.isNotEmpty ? Icons.check : Icons.lock_outline,
-                  color: posts.isNotEmpty ? Colors.white : Colors.white54,
-                ),
-              ),
+              _buildTimelineAvatar(context, chainId, categoryKey, isClosed, posts.isNotEmpty),
               if (!isLast)
                 Expanded(
                   child: Container(
@@ -186,37 +158,54 @@ class ChainDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Step $stepNumber: ${categoryName.toUpperCase()}",
+                    categoryName.toUpperCase(),
                     style: const TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
 
                   // Gallery of uploaded content or empty state
                   if (posts.isEmpty)
-                    const Text("Waiting for an artist to fill this slot...", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
+                    const Text("Waiting for artists to contribute...", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
                   else
                     SizedBox(
-                      height: 120, // Height for the horizontal scrolling gallery
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: posts.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                        itemBuilder: (context, i) {
-                          final post = posts[i];
-                          return Container(
-                            width: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.black26,
-                              borderRadius: BorderRadius.circular(8),
-                              image: post.mediaType.name == 'image' && post.mediaUrl.isNotEmpty
-                                  ? DecorationImage(image: NetworkImage(post.mediaUrl), fit: BoxFit.cover)
-                                  : null,
-                            ),
-                            child: post.mediaType.name != 'image'
-                                ? Center(child: Text(post.title, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12)))
-                                : null,
-                          );
-                        },
+                      height: 120,
+                      // ScrollConfiguration enables Mouse Dragging on Desktop/Web
+                      child: ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
+                        ),
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: posts.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (context, i) {
+                            final post = posts[i];
+                            return SizedBox(
+                              width: 120,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: InkWell(
+                                  // OPEN THE MEDIA READER
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MediaReader(
+                                          mediaReaderConfiguration: MediaReaderConfiguration.CHAIN_NODE_FEED,
+                                          chainId: chainId,
+                                          category: categoryKey,
+                                          profilePostIndex: i, // Starts the reader at the exact post they clicked
+                                          exitButton: true,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: GalleryArtPost(post: post),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     )
                 ],
@@ -226,5 +215,38 @@ class ChainDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // TIMELINE AVATAR
+  Widget _buildTimelineAvatar(BuildContext context, String chainId, String categoryKey, bool isClosed, bool hasPosts) {
+    // If the chain is closed, show a checkmark (if filled) or a lock (if empty).
+    if (isClosed) {
+      return CircleAvatar(
+        backgroundColor: hasPosts ? Colors.deepPurpleAccent : Colors.white12,
+        child: Icon(
+          hasPosts ? Icons.check : Icons.lock_outline,
+          color: hasPosts ? Colors.white : Colors.white54,
+        ),
+      );
+    }
+    // If the chain is open, always show a clickable Plus button
+    else {
+      return InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => UploadDialog(
+              chainId: chainId,
+              allowedCategories: [categoryKey], //RESTRICTS UPLOAD TO EXACTLY THIS CATEGORY
+            ),
+          );
+        },
+        child: const CircleAvatar(
+          backgroundColor: Colors.deepPurpleAccent,
+          child: Icon(Icons.add, color: Colors.white),
+        ),
+      );
+    }
   }
 }

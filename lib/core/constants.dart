@@ -6,7 +6,7 @@ enum Ranks {novice, apprentice, artisan, master, virtuoso, visionary, legend}
 // used in upload_dialog.dart
 enum FolderPathEnum {artworks, coverart, thumbnail, avatars}
 
-enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED, REPORTED_ARTPOSTS_FEED}
+enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED, REPORTED_ARTPOSTS_FEED, CHAIN_NODE_FEED}
 
 // ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION
 // ! IF YOU WANT TO ADD A NEW ART CATEGORY, YOU MUST ALSO PROVIDE THE DISPLAY NAME IN THE MAP OBJECT TYPE BELLOW

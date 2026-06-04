@@ -33,6 +33,7 @@ class MediaReader extends StatefulWidget {
   final String? category;
   final bool? exitButton;
   final String? profileUid;
+  final String? chainId;
 
   const MediaReader({
     super.key,
@@ -44,6 +45,7 @@ class MediaReader extends StatefulWidget {
     this.category,
     // required to not be null if mediaReaderConfiguration == PROFILE_FEED
     this.profileUid,
+    this.chainId,
   });
 
   @override
@@ -86,6 +88,10 @@ class _ParentMediaReader extends State<MediaReader> {
     else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED)
     {
       _postsStream = _repository.getDeactivatedPosts();
+    }
+    else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CHAIN_NODE_FEED) {
+      if(widget.chainId == null || widget.category == null) throw Exception("Chain ID or Category is missing.");
+      _postsStream = _repository.getChainNodePosts(chainId: widget.chainId!, category: widget.category!);
     }
 
     _startHideTimer();

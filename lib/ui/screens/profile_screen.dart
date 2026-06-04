@@ -1,4 +1,4 @@
-import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_image.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_art_post.dart';
 import 'package:art_platform/ui/widgets/upload_dialog.dart';
 import 'package:art_platform/ui/widgets/profile_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: ClipRRect(
                                 // ClipRRect rounds corners of the wrapped Widget
                                 borderRadius: BorderRadius.circular(8), // the roundness
-                                child: GalleryImage(post: post),
+                                child: GalleryArtPost(post: post),
                               ),
                             );
                           },
