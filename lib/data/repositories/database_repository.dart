@@ -610,8 +610,11 @@ class DatabaseRepository {
 
   /// Fetches all ArtPosts that belong to a specific Chain
   Stream<List<ArtPost>> getPostsForChain(String chainId) {
+    // We use this for getting the post for the chain
+
     return _db.collection('artworks')
         .where('chainId', isEqualTo: chainId)
+        .where('isDeactivated', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
@@ -627,9 +630,13 @@ class DatabaseRepository {
 
   /// Fetches ArtPosts for a specific node in a Chain
   Stream<List<ArtPost>> getChainNodePosts({required String chainId, required String category}) {
+    // We use this such that when we open an artpost from a category on the chain, we get a
+    // stream in MediaReader of artpost belonging only to that category of the selected artpost
+
     return _db.collection('artworks')
         .where('chainId', isEqualTo: chainId)
         .where('category', isEqualTo: category)
+        .where('isDeactivated', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());

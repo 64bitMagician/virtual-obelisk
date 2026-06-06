@@ -86,6 +86,8 @@ class GalleryArtPost extends StatelessWidget {
       return Icons.movie_outlined;
     else if (postType == MediaType.text)
       return Icons.text_snippet_outlined; // text -> text icon
+    else if (postType == MediaType.image)
+      return Icons.image_outlined;
 
     return null;
   }
