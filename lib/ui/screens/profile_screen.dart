@@ -129,7 +129,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         };
 
         return Scaffold(
-          floatingActionButton: FloatingActionButton.extended(onPressed: () => _showUploadDialog(context), label: const Text("Create"), icon: const Icon(Icons.add)),
           appBar: AppBar(
             title: Text(userData['username']),
           ),
@@ -201,6 +200,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () async {
+              // We should add a progression indicator if the users report that the upload button takes
+              // to much time to open the UploadDialog
+
+              // Check if user can upload (did not hit the upload limit cap)
+              final canUpload = await _repository.canUserUploadToday(user!.uid, dailyLimit: 2);
+
+              // We ensure the screen still exists after the database check
+              if (!context.mounted) return;
+
+              if (canUpload) {
+                _showUploadDialog(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("You cannot upload more than 2 artworks a day.\nNote: This does not apply when uploading artworks for chains."),
+                    backgroundColor: Colors.orange.shade800,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                );
+              }
+            },
+              label: const Text("Upload"),
+              icon: const Icon(Icons.add),
           ),
         );
       },

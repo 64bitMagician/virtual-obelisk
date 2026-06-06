@@ -634,4 +634,24 @@ class DatabaseRepository {
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
   }
+
+  /// Checks if the user has reached their daily upload limit
+  Future<bool> canUserUploadToday(String uid, {int dailyLimit = 2}) async {
+    try {
+      final now = DateTime.now();
+      final midnight = DateTime(now.year, now.month, now.day); // today, but midnight, because no further data provided at construction
+
+      // Query the database for posts by this user created after midnight
+      final querySnapshot = await _db.collection('artworks')
+          .where('userId', isEqualTo: uid)
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(midnight))
+          .get();
+
+      // Return true if they haven't hit the limit yet
+      return querySnapshot.docs.length < dailyLimit;
+    } catch (e) {
+      print("Error checking upload limit: $e");
+      return false;
+    }
+  }
 }
