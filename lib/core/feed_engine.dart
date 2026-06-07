@@ -8,6 +8,7 @@ class FeedEngine {
 
   // List for storing the fetched users:
   List<UserModel> _userPool = [];
+  final Set<String> _exhaustedUserIds = {};
   // Keep track of post that the user has already seen:
   // We do this to prevent the user from seeing the same post again in the current
   // run of the application.
@@ -38,14 +39,16 @@ class FeedEngine {
   /// Spin the wheel to pick a User based on Artist Points Percentage Chance
   /// This will return the lucky UserModel
   UserModel? _pickWeightedUser() {
-    if (_userPool.isEmpty) return null;
+    List<UserModel> availableUsers = _userPool.where((u) => !_exhaustedUserIds.contains(u.uid)).toList();
+
+    if (availableUsers.isEmpty) return null;
 
     // Calculate the total "weight" (Sum of all Artist Points)
     // We use fold to surf through all users and add their artist points to the sum
     // sum gets returned in the end
     // we use max(1, user.artistPoints); because of the implementation bellow, of finding our lucky user
     // cause if more users had 0, and 0 was used, then we would not be able to identify the user
-    int totalWeight = _userPool.fold(0, (sum, user) {
+    int totalWeight = availableUsers.fold(0, (sum, user) {
       return sum + max(1, user.artistPoints);
     });
 
@@ -64,7 +67,7 @@ class FeedEngine {
     // or randomVal < 0
     // Which means that, when we hit randomVal <=0, we have just substracted the AP of the lucky_user, which means:
     // the 'user' variable is actually our lucky user | We have found our lucky user, and return it
-    for (var user in _userPool) {
+    for (var user in availableUsers) {
       randomVal -= max(1, user.artistPoints);
 
       if (randomVal <= 0) {
@@ -138,7 +141,10 @@ class FeedEngine {
       final selectedPost = await _pickWeightedPost(selectedUser.uid);
 
       // if by any chance, the user has no post, we continue to next loop
-      if (selectedPost == null) continue;
+      if (selectedPost == null) {
+        _exhaustedUserIds.add(selectedUser.uid);
+        continue;
+      }
 
       // but if we picked a user and a post of his:
       // we mark the post as seened already by adding it to the list of seened posts
