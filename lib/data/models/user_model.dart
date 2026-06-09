@@ -32,7 +32,6 @@ class UserModel {
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-    // Safely parse the Timestamp
     DateTime createdDate = DateTime.now();
     if (data['createdAt'] != null && data['createdAt'] is Timestamp) {
       createdDate = (data['createdAt'] as Timestamp).toDate();
@@ -54,7 +53,6 @@ class UserModel {
     );
   }
 
-  // Optional: A helper to push updates back to Firestore
   Map<String, dynamic> toFirestore() {
     return {
       "uid": uid,
@@ -62,7 +60,6 @@ class UserModel {
       "displayName": displayName,
       "bio": bio,
       "avatarUrl": avatarUrl,
-      // We usually let the server handle timestamps, but you can pass it if needed
       "rank": rank,
       "following": following,
       "followers": followers,
