@@ -59,8 +59,8 @@ class _MediaReaderState extends State<MediaReader> {
 
   List<ArtPost> _posts = [];
   bool _isLoading = true;
-  bool _isFetchingMore = false; // Tracks if we are fetching the next batch
-  bool _hasReachedEnd = false;  // Tracks if the Feed Engine ran out of unseen posts
+  bool _isFetchingMore = false;
+  bool _hasReachedEnd = false;
   String? _error;
   StreamSubscription<List<ArtPost>>? _streamSubscription;
   FeedEngine? _feedEngine;
@@ -77,16 +77,19 @@ class _MediaReaderState extends State<MediaReader> {
     _pageController = PageController(initialPage: widget.profilePostIndex);
 
     // Assign the right stream depending on MediaReader Configuration
-    if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED) {
+    if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
+        widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED && widget.category == null) {
+        throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader no value has been passed for category parameter...");
+      }
+
       _feedEngine = FeedEngine();
-      _loadMoreHomeFeed();
+      _loadMoreFeed();
     } else {
       Stream<List<ArtPost>> stream;
 
-      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
-        if (widget.category == null) throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader no value has been passed for category parameter...");
-        stream = _repository.getCategoryFeedPosts(category: widget.category!);
-      } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
         if (widget.profileUid == null) throw Exception("ERROR: COULD NOT FETCH THE USER ID OF THE PROFILE YOU ARE TRYING TO ACCESS");
         stream = _repository.getUserPosts(widget.profileUid!);
       } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED) {
@@ -118,8 +121,7 @@ class _MediaReaderState extends State<MediaReader> {
     _startHideTimer();
   }
 
-  Future<void> _loadMoreHomeFeed() async {
-    // Prevent fetching if already fetching or if we know we hit the end
+  Future<void> _loadMoreFeed() async {
     if (_feedEngine == null || _isFetchingMore || _hasReachedEnd) return;
 
     if (mounted) {
@@ -127,21 +129,20 @@ class _MediaReaderState extends State<MediaReader> {
     }
 
     try {
-      // Add a small artificial delay so the UI doesn't flash too quickly if the DB is fast
       final newPosts = await Future.delayed(
           const Duration(seconds: 1),
-              () => _feedEngine!.generateFeedBatch()
+              () => _feedEngine!.generateFeedBatch(category: widget.category)
       );
 
       if (mounted) {
         setState(() {
-          // If the engine returns null or empty, we've seen everything!
           if (newPosts == null || newPosts.isEmpty) {
             _hasReachedEnd = true;
           } else {
             _posts.addAll(newPosts);
           }
           _isFetchingMore = false;
+          _isLoading = false;
         });
       }
     } catch (e) {
@@ -149,6 +150,7 @@ class _MediaReaderState extends State<MediaReader> {
         setState(() {
           _error = e.toString();
           _isFetchingMore = false;
+          _isLoading = false;
         });
       }
     }
@@ -220,12 +222,21 @@ class _MediaReaderState extends State<MediaReader> {
     }
 
     if (_posts.isEmpty && _hasReachedEnd) {
-      return const Center(
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+        return const Center(
           child: Text(
-              "You've seen all the artworks that have been uploaded! 🎉",
-              style: TextStyle(color: Colors.white, fontSize: 16)
-          )
-      );
+            "No artpost of this category exists yet",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        );
+      } else {
+        return const Center(
+          child: Text(
+            "No art found yet! Be the first to upload. 🎉",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        );
+      }
     }
 
     if (_posts.isEmpty) {
@@ -246,16 +257,15 @@ class _MediaReaderState extends State<MediaReader> {
           itemCount: _posts.length + ((_isFetchingMore || _hasReachedEnd) ? 1 : 0),
 
           onPageChanged: (index) {
-            // User interacted. Make sure UI is visible and reset the timer.
             if (!_isVisible) {
               setState(() => _isVisible = true);
             }
             _startHideTimer();
 
-            // Your existing infinite scroll logic
-            if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED) {
+            if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
+                widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
               if (index >= _posts.length - 2) {
-                _loadMoreHomeFeed();
+                _loadMoreFeed();
               }
             }
           },

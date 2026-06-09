@@ -8,6 +8,7 @@ class FeedEngine {
 
   // List for storing the fetched users:
   List<UserModel> _userPool = [];
+  // ...
   final Set<String> _exhaustedUserIds = {};
   // Keep track of post that the user has already seen:
   // We do this to prevent the user from seeing the same post again in the current
@@ -82,12 +83,16 @@ class FeedEngine {
   /// Spin the Wheel to pick a Post belonging to the Lucky User.
   /// The Greater the Number of Likes on a Post, the Higher the Chance of that Post
   /// to be Picked by the Wheel
-  Future<ArtPost?> _pickWeightedPost(String userId) async {
+  Future<ArtPost?> _pickWeightedPost(String userId, [String? category]) async {
     try {
       // Fetch all artworks Firestore Documents of the Lucky User
-      final snapshotOfAllLuckyUserArtPosts = await _db.collection('artworks')
-          .where('userId', isEqualTo: userId)
-          .get();
+      Query query = _db.collection('artworks').where('userId', isEqualTo: userId);
+
+      if (category != null) {
+        query = query.where('category', isEqualTo: category);
+      }
+
+      final snapshotOfAllLuckyUserArtPosts = await query.get();
 
       // Convert each artwork into an ArtPost model, and store them into a list, but:
       // - do not include already seen posts
@@ -120,7 +125,7 @@ class FeedEngine {
   }
 
   /// Generate a batch of artworks for the feed
-  Future<List<ArtPost>?> generateFeedBatch({int batchSize = 5}) async {
+  Future<List<ArtPost>?> generateFeedBatch({int batchSize = 5, String? category}) async {
     // Initialize the Pool if it has not been initialized
     if (_userPool.isEmpty) {
       await _refreshUserPool();
@@ -138,7 +143,7 @@ class FeedEngine {
       if (selectedUser == null) continue;
 
       // pick a post of the user, based on the weight of post (ammount of likes chance)
-      final selectedPost = await _pickWeightedPost(selectedUser.uid);
+      final selectedPost = await _pickWeightedPost(selectedUser.uid, category);
 
       // if by any chance, the user has no post, we continue to next loop
       if (selectedPost == null) {
