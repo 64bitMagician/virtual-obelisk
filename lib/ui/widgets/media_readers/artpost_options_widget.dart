@@ -63,7 +63,7 @@ class ArtPostOptions extends StatelessWidget {
               Navigator.pop(context); // Close dialog immediately
 
               try {
-                // Call the backend function we just built!
+                // Call the backend function we just built
                 await _repo.submitReport(
                     artworkId: post.id,
                     reason: reason
@@ -106,7 +106,9 @@ class ArtPostOptions extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context); // Close dialog
               try {
-                await _repo.deletePost(post.id, post.userId);
+                final userDoc = await FirebaseFirestore.instance.collection('users').doc(post.userId).get();
+                final currentPostCount = userDoc.data()?['posts'] ?? 0;
+                await _repo.deletePost(post.id, post.userId, currentPostCount);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post deleted.")));
                 }
@@ -151,14 +153,16 @@ class ArtPostOptions extends StatelessWidget {
                   _showReportDialog(context);
                 } else if (value == 'edit') {
                   context.push('/edit_post', extra: post);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit UI needs to be built!")));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Edit UI needs to be built")));
                 } else if (value == 'delete') {
                   _showDeleteDialog(context);
                 } else if (value == 'admin_deactivate') {
-                  await _repo.adminDeactivatePost(post.id);
+                  final userDoc = await FirebaseFirestore.instance.collection('users').doc(post.userId).get();
+                  final currentPostCount = userDoc.data()?['posts'] ?? 0;
+                  await _repo.adminDeactivatePost(post.id, post.userId, currentPostCount);
                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post deactivated.")));
                 } else if (value == 'admin_reactivate') {
-                  await _repo.adminReactivatePost(post.id);
+                  await _repo.adminReactivatePost(post.id, post.userId);
                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Post reactivated!")));
                 }
               },

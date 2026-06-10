@@ -27,7 +27,7 @@ class FeedEngine {
   // Used for randomness factor:
   final Random _random = Random();
 
-  /// Initializes/Re-Initializes the "Pool" of potential creators/uploaders ([UserModel] instances).
+  /// Initializes/Re-Initializes the "Pool" of potential users ([UserModel] instances).
   /// Since we will do the test to less than 100 users, there is no need for more advanced pick user algorithms yet
   Future<void> _refreshUserPool() async {
     try {
@@ -36,6 +36,8 @@ class FeedEngine {
 
       // For now we grab the 100 most recently signed up users.
       final snapshotOfUsersGathered = await _db.collection('users')
+          .where('posts', isGreaterThanOrEqualTo: 1) // they have uploaded at least one post
+          .orderBy('posts')
           .orderBy('createdAt', descending: true)
           .limit(100)
           .get();

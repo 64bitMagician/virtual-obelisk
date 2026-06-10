@@ -83,18 +83,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
         // Create new Document representing the data of the Authenticated User
         await transaction.set(userRef, {
+          "artist_points": 0,
+          "avatarUrl": "default",
+          "bio": "No bio yet...",
+          "createdAt": FieldValue.serverTimestamp(),
+          "displayName": profileName,
+          "followers": 0,
+          "following": 0,
+          "hasActivePosts": false,
+          "lastUploadAt": null,
+          "posts": 0,
+          "rank": 'rankless',
+          "role": "user", // user role by default
           "uid": uid,
           "username": username,
-          "displayName": profileName,
-          "bio": "No bio yet...",
-          "avatarUrl": "default",
-          "createdAt": FieldValue.serverTimestamp(),
-          "rank": 'rankless',
-          "following": 0,
-          "followers": 0,
-          "posts": 0,
-          "artist_points": 0,
-          "role": "user", // user role by default
         });
       });
 

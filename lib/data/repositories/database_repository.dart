@@ -107,39 +107,6 @@ class DatabaseRepository {
     });
   }
 
-  /// The feed which contains the posts that appear on the HomeScreen
-  ///
-  /// Fetch a List of ArtPost objects [List<ArtPost>], where each ArtPost object is an instantiation
-  /// containing the data of it's corresponding document from the 'artworks' collection on Firestore.
-  Stream<List<ArtPost>> getHomeFeedPosts() {
-    return _db
-        .collection('artworks') // We select the 'artworks' collection from Firestore
-        .where('isDeactivated', isEqualTo: false)
-        .orderBy('createdAt', descending: true) // we order the documents/posts within the collection by the time of upload, in descending order
-        .snapshots() // Configure a Stream that returns the full list of documents (QuerySnapshot<Map<String, dymaic>>), anytime changes within the list of documents occur.
-        .map((snapshot) { // Given the list of documents (snapshot.docs), make a new list, where each document is replaced with a ArtPost object containing the document's data
-          //After that, return the Stream made out of this List
-      return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
-    });
-  }
-
-  /// The feed which contains the posts that appear on the CategoryFeedScreen. Must provide [category]
-  /// such that the app knows the category type of ArtPosts that is to be displayed.
-  ///
-  /// Fetch a List of ArtPost objects [List<ArtPost>], where each ArtPost object is an instantiation
-  /// containing the data of it's corresponding document from the 'artworks' collection on Firestore.
-  Stream<List<ArtPost>> getCategoryFeedPosts({required String category}) {
-    return _db
-        .collection('artworks') // Always target the main collection
-        .where('category', isEqualTo: category) // Filter the documents by category
-        .where('isDeactivated', isEqualTo: false)
-        .orderBy('createdAt', descending: true) // Order the filtered results
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList();
-    });
-  }
-
   /// Get a list of all the art posts [List<ArtPost>] of a specific user, by passing
   /// it's [userID] to the method.
   ///
@@ -333,21 +300,20 @@ class DatabaseRepository {
     });
   }
 
+  /// Increment the user's 'posts' field. Also update the 'lastUploadAt' and 'hasActivePosts' fields
   Future<void> incrementUserPostCounter(String targetUid) async {
     await _db.collection('users').doc(targetUid).update({
-      'posts': FieldValue.increment(1)
+      'posts': FieldValue.increment(1),
+      // Save last time the user has uploaded
+      'lastUploadAt': FieldValue.serverTimestamp(),
+      // He just uploaded, so this guarantees the he has at least one active post:
+      'hasActivePosts': true,
     });
   }
 
   Future<void> addArtistPointsForUploading(String targetUid) async {
     await _db.collection('users').doc(targetUid).update({
       'artist_points': FieldValue.increment(upload_artpost_artist_points_reward)
-    });
-  }
-
-  Future<void> decrementUserPostCounter(String targetUid) async {
-    await _db.collection('users').doc(targetUid).update({
-      'posts': FieldValue.increment(-1)
     });
   }
 
@@ -383,13 +349,23 @@ class DatabaseRepository {
         final data = artworkDocumentSnapshot.data() as Map<String, dynamic>;
 
         // Get reports count of the artpost and increment it
-        final int currentReports = data['reportCount'] ?? "ERROR";
+        final int currentReports = data['reportCount'] ?? 0;
         final int newReportCount = currentReports + 1;
 
-        // THE THRESHOLD: If it hits 5 reports, auto-deactivate!
+        // THE THRESHOLD: If it hits 5 reports, auto-deactivate
         final bool shouldDeactivate = newReportCount >= 5;
 
-        // Build the Report Document (The Evidence Locker)
+        DocumentSnapshot? userSnapshot;
+        DocumentReference? userRef;
+
+        if (shouldDeactivate) {
+          // get User Document of Reported User
+          userRef = _db.collection('users').doc(data['userId']);
+          // read the document
+          userSnapshot = await transaction.get(userRef);
+        }
+
+        // Build the Report Document
         final Map<String, dynamic> reportData = {
           "reportId": reportRef.id,
           "artworkId": artworkId,
@@ -415,6 +391,21 @@ class DatabaseRepository {
           'reportCount': newReportCount,
           'isDeactivated': shouldDeactivate,
         });
+
+        // If the post is about to get deactivated, and we have the User Document of the Reported User
+        // And we have also have the read data from the document in 'userSnapshot':
+        // We store the userData, and store the current number of active posts of user
+        if (shouldDeactivate && userRef != null && userSnapshot != null) {
+          final userData = userSnapshot.data() as Map<String, dynamic>?;
+          final int currentPosts = userData?['posts'] ?? 0;
+
+          // decrease from user's 'posts' count and update 'hasActivePosts' if
+          // he has no more available active posts
+          transaction.update(userRef, {
+            'posts': FieldValue.increment(-1),
+            'hasActivePosts': (currentPosts - 1) > 0,
+          });
+        }
       });
 
       print("Report successfully submitted!");
@@ -441,15 +432,18 @@ class DatabaseRepository {
   // POST MANAGEMENT & MODERATION
   // ============================================================================
 
-  /// Deletes a post entirely from the database and deducts the upload points
-  Future<void> deletePost(String artworkId, String ownerUid) async {
+  /// Deletes a post entirely from the database, deducts the upload points, decrements from number of posts of user.
+  /// [currentPostCount] is passed directly from the UI state to save a database read.
+  Future<void> deletePost(String artworkId, String ownerUid, int currentPostCount) async {
     try {
       // Delete the actual post
       await _db.collection('artworks').doc(artworkId).delete();
 
-      // Deduct the points from the user who uploaded it
+      // Deduct the points from the user who uploaded it and decrement from 'posts' and update 'hasActivePosts'
       await _db.collection('users').doc(ownerUid).update({
-        'artist_points': FieldValue.increment(-upload_artpost_artist_points_reward)
+        'artist_points': FieldValue.increment(-upload_artpost_artist_points_reward),
+        'posts': FieldValue.increment(-1), // Safe atomic decrement
+        'hasActivePosts': (currentPostCount - 1) > 0, // Automatically flips to false if user hits 0 active posts
       });
     } catch (e) {
       throw Exception("Failed to delete post: $e");
@@ -457,10 +451,16 @@ class DatabaseRepository {
   }
 
   /// ADMIN: Forces a post to be deactivated and hidden from the public feed
-  Future<void> adminDeactivatePost(String artworkId) async {
+  Future<void> adminDeactivatePost(String artworkId, String ownerUid, int currentPostCount) async {
     try {
+      // mark artwork as deactivated
       await _db.collection('artworks').doc(artworkId).update({
         'isDeactivated': true,
+      });
+
+      await _db.collection('users').doc(ownerUid).update({
+        'posts': FieldValue.increment(-1),
+        'hasActivePosts': (currentPostCount - 1) > 0, // mark if he has any active posts left
       });
     } catch (e) {
       throw Exception("Failed to deactivate post: $e");
@@ -468,11 +468,16 @@ class DatabaseRepository {
   }
 
   /// ADMIN: Reactivates a post and resets its report counter to 0
-  Future<void> adminReactivatePost(String artworkId) async {
+  Future<void> adminReactivatePost(String artworkId, String ownerUid) async {
     try {
       await _db.collection('artworks').doc(artworkId).update({
         'isDeactivated': false,
-        'reportCount': 0, // Forgive and forget!
+        'reportCount': 0,
+      });
+
+      await _db.collection('users').doc(ownerUid).update({
+        'posts': FieldValue.increment(1), // get his incrementation of posts back
+        'hasActivePosts': true, // we just reactivated post, so he has active posts for sure
       });
     } catch (e) {
       throw Exception("Failed to reactivate post: $e");
