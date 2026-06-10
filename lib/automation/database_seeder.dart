@@ -32,6 +32,7 @@ class DatabaseSeeder {
   }
 
 
+  // return [count] generated users
   Future<List<Map<String, dynamic>>> _seedUsers(int count) async {
     print("Generating $count fake users...");
     // store users data in 'users' list.
@@ -53,18 +54,20 @@ class DatabaseSeeder {
 
       // Define user data
       Map<String, dynamic> userData = {
-        "uid": uid,
-        "username": username,
-        "displayName": _faker.person.name(),
-        "bio": _faker.lorem.sentence(),
-        // Robohash generates a unique robot/monster avatar based on the text you pass it within link
+        "artist_points": randomPoints,
         "avatarUrl": "https://robohash.org/$uid?set=set4",
+        "bio": _faker.lorem.sentence(),
         "createdAt": FieldValue.serverTimestamp(),
-        "rank": 'rankless',
+        "displayName": _faker.person.name(),
         "following": 0,
         "followers": 0,
+        "hasActivePosts": false,
+        "lastUploadAt": null,
+        // Robohash generates a unique robot/monster avatar based on the text you pass it within link
+        "rank": 'rankless',
         "posts": 0,
-        "artist_points": randomPoints,
+        "username": username,
+        "uid": uid,
       };
 
       // Add the user to the list of created users
@@ -89,6 +92,8 @@ class DatabaseSeeder {
   }
 
 
+  // Generates [count] fake artposts for the given [users]. It takes the users randomly.
+  // So some users may have more or none posts assigned to them.
   Future<void> _seedPosts(int count, List<Map<String, dynamic>> users) async {
     print("Generating $count fake art posts...");
     // Initialise WriteBatch
@@ -113,8 +118,8 @@ class DatabaseSeeder {
         'authorName': randomAuthor['displayName'],
         'authorUsername': randomAuthor['username'],
         'authorAvatar': randomAuthor['avatarUrl'],
-        'createdAt': FieldValue.serverTimestamp(), // Fixed field name
-        'likes': _random.nextInt(500), // Kept random so you can test popular posts
+        'createdAt': FieldValue.serverTimestamp(),
+        'likes': _random.nextInt(500),
         'isDeactivated': false,
         'reportCount': _random.nextInt(6),
       };
@@ -123,8 +128,12 @@ class DatabaseSeeder {
       batch.set(postRef, postData);
 
       // Update the author's post count and reward him artist points for uploading
+      // also update the hasActivePosts and timestamp the lastUploadAt
       DocumentReference userRef = _db.collection('users').doc(randomAuthor['uid']);
+      // update the fields in userRef Document
       batch.update(userRef, {
+        'hasActivePosts': true,
+        'lastUploadAt': FieldValue.serverTimestamp(), // mark the moment of upload
         'posts': FieldValue.increment(1),
         'artist_points': FieldValue.increment(upload_artpost_artist_points_reward),
       });

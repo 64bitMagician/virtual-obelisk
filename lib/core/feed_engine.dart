@@ -34,16 +34,21 @@ class FeedEngine {
       // In the feature we might store a lastActive property to filter dead accounts:
       // ".where('lastActive', isGreaterThan: lastWeek)" or something like that
 
-      // For now we grab the 100 most recently signed up users.
+      // We will get 100 different users, which have at least one active post,
+      // and in the order of the users that have most recently uploaded.
+      // And also, if there is a user that has uploaded recently, and had
+      // posts (including the one uploaded), but they all got deactivated, it won't include that user.
       final snapshotOfUsersGathered = await _db.collection('users')
-          .where('posts', isGreaterThanOrEqualTo: 1) // they have uploaded at least one post
-          .orderBy('posts')
-          .orderBy('createdAt', descending: true)
+          .where('hasActivePosts', isEqualTo: true)
+          .orderBy('lastUploadAt', descending: true)
           .limit(100)
           .get();
 
       // Map data to user model object. Contain the users in a list '_userPool'
       _userPool = snapshotOfUsersGathered.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      // We shuffle the pool anyway (further randomness),
+      // even tough we have randomness in picking a lucky user
+      _userPool.shuffle(_random);
     } catch (e) {
       print("Error fetching user pool and mapping it to list: $e");
     }
