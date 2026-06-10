@@ -207,19 +207,7 @@ class FeedEngine {
       newBatch.add(selectedPost);
     }
 
-    // if by the smallest chance, the batch has no ArtPost instances because there were no users
-    // that had uploaded any post (or simply all available posts have already been seen): then we return null
-    // Returning null can be used to indicate no more available posts to fetch message to user
-    // This does not necessarily mean that there really are no more posts available
-    // It might mean the unfortunate case that from all the tries to fill our batch,
-    // all had received 'null' instead of a post (all fetched users did not upload any post at all/ or any post for a specific category/
-    // or a combination of that and the final ending mark that posts that have already been seen for all users)
-    // but this does not mean that for some more tries, for rest of the available users that we haven't tried, we wouldn't have found users that have uploaded.
-    // And this scenario is the more likely as the number of users with no posts increases.
-    // This is why it would be crucial in the future to change the pool method to fetched only users
-    // that have uploaded (which means have a field in users Documents that specifies which categories they uploaded)
-    // It would massively increase the chance to find posts for the batch.
-    // That's because it would exclude ineligible users that have not uploaded at all
+
     if (newBatch.isEmpty) return null;
 
     // otherwise we can return the batch of ArtPost instances
