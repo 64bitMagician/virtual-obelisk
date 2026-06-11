@@ -232,7 +232,7 @@ class _MediaReaderState extends State<MediaReader> {
       } else {
         return const Center(
           child: Text(
-            "No art found yet! Be the first to upload. 🎉",
+            "No art found yet. Be the first to upload.",
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
         );

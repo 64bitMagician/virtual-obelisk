@@ -19,6 +19,17 @@ class FeedEngine {
   // List for storing the fetched users:
   List<UserModel> _userPool = [];
 
+  // Keep a marker to the current last user document in the user pool
+  // Because the query is sorted by lastUploadAt, _lastUserDoc knows exactly what its lastUploadAt timestamp is,
+  // and it knows its unique Document ID.
+  // So it's like the query fetches the documents, but since we configured it to start after the last document, it will only take in consideration 100
+  // documents from that point of fetching (the last document) forward.
+  DocumentSnapshot? _lastUserDoc;
+
+  // keep track of wether the pool has fetched all possible users or not
+  bool _hasMoreUsersInDB = true;
+
+  // Keep track of users that can no longer provide posts for a given category/home_feed.
   final Map<String, Set<String>> _ineligibleUsersMap = {};
   // Keep track of post that the user has already seen:
   // We do this to prevent the user from seeing the same post again in the current
@@ -27,28 +38,52 @@ class FeedEngine {
   // Used for randomness factor:
   final Random _random = Random();
 
-  /// Initializes/Re-Initializes the "Pool" of potential users ([UserModel] instances).
-  /// Since we will do the test to less than 100 users, there is no need for more advanced pick user algorithms yet
+  /// Initializes/Append_to the "Pool" of potential users ([UserModel] instances).
   Future<void> _refreshUserPool() async {
-    try {
-      // In the feature we might store a lastActive property to filter dead accounts:
-      // ".where('lastActive', isGreaterThan: lastWeek)" or something like that
+    if (!_hasMoreUsersInDB) return;
 
+    try {
       // We will get 100 different users, which have at least one active post,
-      // and in the order of the users that have most recently uploaded.
+      // and in the order of the users that have most recently uploaded (this means an very good post
+      // won't be seen if the user has not been recently active with uploading on the platform).
       // And also, if there is a user that has uploaded recently, and had
       // posts (including the one uploaded), but they all got deactivated, it won't include that user.
-      final snapshotOfUsersGathered = await _db.collection('users')
+      Query query = _db.collection('users')
           .where('hasActivePosts', isEqualTo: true)
           .orderBy('lastUploadAt', descending: true)
-          .limit(100)
-          .get();
+          .limit(100);
+
+      // if _lastUserDoc is not null, it means that we had previously initialized the pool
+      // so now that the _refreshUserPool() has been called again, we are now appending to
+      // the pool, not re-initializing
+      // thus, we will get the next 100 users that meet the conditions of the query
+      // this makes the feed infinite, the pool appends to itself
+      if (_lastUserDoc != null) {
+        query = query.startAfterDocument(_lastUserDoc!);
+      }
+
+      // get the users
+      final snapshotOfUsersGathered = await query.get();
+
+      // check if there are no more users we can fetch and mark
+      if (snapshotOfUsersGathered.docs.isEmpty) {
+        _hasMoreUsersInDB = false;
+        return;
+      }
+
+      // get last doc of the last user in the snapshot
+      // query will continue from this one to query next
+      _lastUserDoc = snapshotOfUsersGathered.docs.last;
 
       // Map data to user model object. Contain the users in a list '_userPool'
-      _userPool = snapshotOfUsersGathered.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+      List<UserModel> fetchedUsers = snapshotOfUsersGathered.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+
       // We shuffle the pool anyway (further randomness),
       // even tough we have randomness in picking a lucky user
-      _userPool.shuffle(_random);
+      fetchedUsers.shuffle(_random);
+
+      // append to pool of users
+      _userPool.addAll(fetchedUsers);
     } catch (e) {
       print("Error fetching user pool and mapping it to list: $e");
     }
@@ -59,13 +94,13 @@ class FeedEngine {
   ///
   UserModel? _pickWeightedUser(String? category) {
     String contextKey = category ?? 'HOME'; // if no category provided, we will consider the HOME FEED to filter the ineligible users
-    // we get the set of all ineligible users that are excluded to futher be displayed by the algorithm for the given [category/or HOME FEED]
+    // we get the set of all ineligible users that are excluded from being displayed by the algorithm for the given [category/HOME_FEED]
     Set<String> currentlyIneligible = _ineligibleUsersMap[contextKey] ?? {};
 
     // Make a list of available users. Available users are users that are not part of the currentlyIneligible list.
     // An ineligible user means a user that in a previous try, he was not able to return any post because either:
-    //  - he did not upload any posts
-    //  - he did not upload any post for a required category
+    //  - he did not upload any active posts
+    //  - he did not upload any active post for a required category
     //  - all his available post have already been consumed/processed/displayed (they exist in _seenPostIds)
     List<UserModel> availableUsers = _userPool.where((user) => !currentlyIneligible.contains(user.uid)).toList();
 
@@ -119,8 +154,8 @@ class FeedEngine {
   /// Any posts that have already been selected won't be selected again.
   Future<ArtPost?> _pickWeightedPost(String userId, [String? category]) async {
     try {
-      // Create a query that points to all artworks of the given user
-      Query query = _db.collection('artworks').where('userId', isEqualTo: userId);
+      // Create a query that points to all active artposts of the given user
+      Query query = _db.collection('artworks').where('userId', isEqualTo: userId).where('isDeactivated', isEqualTo: false);
 
       // If 'category' parameter has been provided (just the query changes, the further logic does not):
       //  Update the query to pont to all artworks of the given user that belong to the given category
@@ -184,12 +219,18 @@ class FeedEngine {
 
     while (newBatch.length < batchSize) {
       // pick a user based on his weight (his AP chance)
-      final selectedUser = _pickWeightedUser(category);
+      UserModel? selectedUser = _pickWeightedUser(category);
 
-      // If selectedUser is null, it means EVERY user in _userPool is now inside _ineligibleUsersMap for this context.
+      // If selectedUser is null, it means every user in _userPool is now inside _ineligibleUsersMap for this context.
       // There is mathematically no unseen art left to fetch. We must break the loop.
       if (selectedUser == null) {
-        break;
+        if (_hasMoreUsersInDB) { // if we can further query users
+          await _refreshUserPool(); // we append to the pool of users
+          selectedUser = _pickWeightedUser(category); // and try selecting a user again
+        }
+        if (selectedUser == null) {
+          break;
+        }
       }
 
       // pick a post of user's, based on the weight of post (ammount of likes chance)
