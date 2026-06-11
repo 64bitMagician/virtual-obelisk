@@ -148,7 +148,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                               Icon(Icons.brush, size: 80, color: Colors.white), // Logo
                               SizedBox(height: 20),
                               Text( // App Name
-                                "LibArt",
+                                "Virtual Obelisk",
                                 style: TextStyle( // styling of app name text
                                   fontFamily: 'serif',
                                   fontSize: 48,
@@ -157,7 +157,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                                 ),
                               ),
                               Text( // some more suggestive text and it's style
-                                "Where creativity connects.",
+                                "Digital Museum of Arts",
                                 style: TextStyle(color: Colors.white70, fontSize: 18),
                               ),
                             ],

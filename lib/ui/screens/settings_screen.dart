@@ -132,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // Show an about dialog
               showAboutDialog(
                 context: context,
-                applicationName: 'My Awesome App',
+                applicationName: 'Virtual Obelisk',
                 applicationVersion: '1.0.0',
                 applicationIcon: const Icon(Icons.flutter_dash),
                 applicationLegalese: '© 2026 My Company',

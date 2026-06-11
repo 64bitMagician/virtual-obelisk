@@ -1,3 +1,4 @@
+import 'package:art_platform/ui/screens/email_verification_screen.dart';
 import 'package:art_platform/ui/screens/profile_setup_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,7 +35,7 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>( // Data passing through the stream is of type User (Can be Null)
-      stream: AuthRepository().authStateChanges, // Notifies about changes to the user's sign-in state (such as sign-in or sign-out).
+      stream: FirebaseAuth.instance.userChanges(), // Notifies about changes to the user's sign-in state (such as sign-in or sign-out), as well as user's data (like email verification status) updates
       builder: (context, snapshotUser) {
         if (snapshotUser.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -52,8 +53,17 @@ class AuthGate extends StatelessWidget {
         // to us at the construction of 'this' widget. The Widget we want to display if
         // the user passes the authentication Gate
 
+        final user = snapshotUser.data!;
+
+        // if user email not verified
+        if (!user.emailVerified) {
+          // return the user the email verification screen
+          return const EmailVerificationScreen();
+        }
+
         // A future builder will determine what to display while the fetching of seeing if the
         // user has profile is occuring
+        // This is to check if the user has a profile made, if not, we will return him to the profile setup screen
         return FutureBuilder<bool>(
           future: _db.hasProfile(snapshotUser.data!.uid),
           builder: (context, profileSnapshot) {
