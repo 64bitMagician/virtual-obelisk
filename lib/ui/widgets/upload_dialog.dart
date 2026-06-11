@@ -294,7 +294,7 @@ class _UploadDialogState extends State<UploadDialog> {
           children: [
             // 1. PINNED TITLE (Always visible at the top)
             Text(
-              "Upload Masterpiece",
+              "Upload Dialog",
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),

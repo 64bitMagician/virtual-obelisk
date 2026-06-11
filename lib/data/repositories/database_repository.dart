@@ -436,14 +436,25 @@ class DatabaseRepository {
   /// [currentPostCount] is passed directly from the UI state to save a database read.
   Future<void> deletePost(String artworkId, String ownerUid, int currentPostCount) async {
     try {
-      // Delete the actual post
-      await _db.collection('artworks').doc(artworkId).delete();
+      final artworkRef = _db.collection('artworks').doc(artworkId);
+      final likesRef = artworkRef.collection('likes');
 
-      // Deduct the points from the user who uploaded it and decrement from 'posts' and update 'hasActivePosts'
+      final likesSnapshot = await likesRef.get();
+
+      final batch = _db.batch();
+
+      for (var doc in likesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      batch.delete(artworkRef);
+
+      await batch.commit();
+
       await _db.collection('users').doc(ownerUid).update({
         'artist_points': FieldValue.increment(-upload_artpost_artist_points_reward),
-        'posts': FieldValue.increment(-1), // Safe atomic decrement
-        'hasActivePosts': (currentPostCount - 1) > 0, // Automatically flips to false if user hits 0 active posts
+        'posts': FieldValue.increment(-1),
+        'hasActivePosts': (currentPostCount - 1) > 0,
       });
     } catch (e) {
       throw Exception("Failed to delete post: $e");

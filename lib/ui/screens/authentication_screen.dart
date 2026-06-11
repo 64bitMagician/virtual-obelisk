@@ -193,7 +193,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                       const Icon(Icons.brush, size: 60, color: Colors.deepPurple),
                       const SizedBox(height: 16),
                       Text( // App Name + style
-                        "LibArt",
+                        "Virtual Obelisk",
                         style: Theme
                             .of(context)
                             .textTheme
