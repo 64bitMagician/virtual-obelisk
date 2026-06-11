@@ -6,6 +6,11 @@ import 'package:go_router/go_router.dart';
 class CategoriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // get width of user's screen
+    final screenWidth = MediaQuery.of(context).size.width;
+    // choose ammount of tiles to display on row based on screenWidth
+    final int tilesPerRow = screenWidth < 600 ? 2 : 4;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Explore Art Types', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -15,8 +20,8 @@ class CategoriesScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,     // nb of collumns
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: tilesPerRow,     // nb of collumns
             crossAxisSpacing: 16,       // Space between cards
             mainAxisSpacing: 16,
             childAspectRatio: 1.1,      // Aspect ratio of the cards

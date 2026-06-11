@@ -8,33 +8,39 @@ enum FolderPathEnum {artworks, coverart, thumbnail, avatars}
 
 enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED, REPORTED_ARTPOSTS_FEED, CHAIN_NODE_FEED}
 
-// ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION
+// ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION. IF CHANGING ORTHER ALSO CHANGE TO art_category.dart
 // ! IF YOU WANT TO ADD A NEW ART CATEGORY, YOU MUST ALSO PROVIDE THE DISPLAY NAME IN THE MAP OBJECT TYPE BELLOW
 const List<String> artCategories =  [
-  "drawing",
-  "painting",
+  "ascii_art",
+  "dance",
   "digitalart",
-  "pixelart",
+  "drawing",
   "graffiti",
-  "photography",
-  "videoart",
+  "lyrics",
   "music",
+  "painting",
+  "photography",
+  "pixelart",
   "poetry",
-  "prose"
+  "prose",
+  "videoart",
 ];
 
 // ! THIS REPRESENTS HOW THE CATEGORY NAME WILL BE DISPLAYED WITHIN THE APP
 const Map<String, String> artCategoriesDisplayName = {
-  "drawing" : "Drawing",
-  "painting" : "Painting",
+  "ascii_art" : "ASCII_ART",
+  "dance" : "Artistic Dance",
   "digitalart" : "Digital Art",
-  "pixelart" : "Pixel Art",
+  "drawing" : "Drawing",
   "graffiti" : "Graffiti",
-  "photography" : "Photography",
+  "lyrics" : "Lyrics",
   "music" : "Music",
+  "painting" : "Painting",
+  "photography" : "Photography",
+  "pixelart" : "Pixel Art",
   "poetry" : "Poetry",
-  "videoart" : "Video Art",
   "prose" : "Prose",
+  "videoart" : "Video Art",
 };
 
 // Artist Point Reward Values:
