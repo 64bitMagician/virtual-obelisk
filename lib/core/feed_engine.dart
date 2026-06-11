@@ -26,10 +26,14 @@ class FeedEngine {
   // documents from that point of fetching (the last document) forward.
   DocumentSnapshot? _lastUserDoc;
 
-  // keep track of wether the pool has fetched all possible users or not
-  bool _hasMoreUsersInDB = true;
+  // keep track of weather in the last fetch we were able to fetch users for the pool
+  // if in the last fetch we were not able to fetch any users, this changes to false
+  // This mean that we can fetch the last users, and this variable will still hold true
+  // But the next fetch, the variable will turn to false, because we were not able to fetch userss
+  bool _wasAbleToFetchUsersForPool = true;
 
   // Keep track of users that can no longer provide posts for a given category/home_feed.
+  // The key is the category and the value is the set of UserIDs that are excluded from further displaying on the feed
   final Map<String, Set<String>> _ineligibleUsersMap = {};
   // Keep track of post that the user has already seen:
   // We do this to prevent the user from seeing the same post again in the current
@@ -40,7 +44,16 @@ class FeedEngine {
 
   /// Initializes/Append_to the "Pool" of potential users ([UserModel] instances).
   Future<void> _refreshUserPool() async {
-    if (!_hasMoreUsersInDB) return;
+    // ! This method can be improved in the future to directly select the user that have posts for a
+    // given category. But for that we need to keep track in User Documents what categories they have posted.
+    // This requires changes in User Documents format. And also be careful a user might have one single post
+    // in a category, and the post might get disabled/deleted, and then the category should dissapear frmo the User
+    // Document, such that that user does not get included, because he no longer has posts for that category. Cause
+    // the post has been deleted/disabled!
+
+
+    // just directly return if there are no more users to be fetched
+    if (!_wasAbleToFetchUsersForPool) return;
 
     try {
       // We will get 100 different users, which have at least one active post,
@@ -67,7 +80,7 @@ class FeedEngine {
 
       // check if there are no more users we can fetch and mark
       if (snapshotOfUsersGathered.docs.isEmpty) {
-        _hasMoreUsersInDB = false;
+        _wasAbleToFetchUsersForPool = false;
         return;
       }
 
@@ -91,19 +104,24 @@ class FeedEngine {
 
   /// Spin the wheel to pick a User based on Artist Points Percentage Chance
   /// This will return the lucky UserModel.
-  ///
+  /// If providing a [category], will not pick excluded users in that category.
+  /// If a user is picked, but has no post in that category, he will get marked in the exluded list for that category
+  /// for future filtering...
+  /// If category not provided, will not pick excluded users for home feed
   UserModel? _pickWeightedUser(String? category) {
     String contextKey = category ?? 'HOME'; // if no category provided, we will consider the HOME FEED to filter the ineligible users
     // we get the set of all ineligible users that are excluded from being displayed by the algorithm for the given [category/HOME_FEED]
     Set<String> currentlyIneligible = _ineligibleUsersMap[contextKey] ?? {};
 
     // Make a list of available users. Available users are users that are not part of the currentlyIneligible list.
-    // An ineligible user means a user that in a previous try, he was not able to return any post because either:
-    //  - he did not upload any active posts
-    //  - he did not upload any active post for a required category
-    //  - all his available post have already been consumed/processed/displayed (they exist in _seenPostIds)
+    // An ineligible user means a user that in a previous try was not able to return a post for the required category/home_feed (or had no posts at all) because:
+    //  - he does not have any active posts at all
+    //  - he does not have any active posts for the required category
+    //  - all his available posts have already been consumed/processed/displayed/seen (they exist in _seenPostIds)
     List<UserModel> availableUsers = _userPool.where((user) => !currentlyIneligible.contains(user.uid)).toList();
 
+    // if availableUsers is empty, it means that there are no more avaiable users for the given category/home_feed
+    // so we need new users to the pool, if there are any
     if (availableUsers.isEmpty) return null;
 
     // Calculate the total "weight" (Sum of all Artist Points)
@@ -167,11 +185,12 @@ class FeedEngine {
       final snapshotOfAllLuckyUserArtPosts = await query.get();
 
       // if user has no artposts for a given category (if category has been provided),
-      // or if the user has no artposts at all:
+      // or if the user has no active artposts at all:
       if (snapshotOfAllLuckyUserArtPosts.docs.isEmpty==true)
+        // we return null to signal the future exclusion of the user, mark user ineligible
         return null;
 
-      // if the user has the corresponding artposts (of a given category or not):
+      // if the user has the corresponding active artposts (of a given category or not):
 
       // Convert each artwork into an ArtPost model, and store them into a list, but:
       // - do not include already seen posts
@@ -180,8 +199,10 @@ class FeedEngine {
           .where((post) => !_seenPostIds.contains(post.id)) // the post must not exist in the list of already seen posts
           .toList();
 
-      // If there are available posts, but they've already been processed/displayed/seen (they belong to the seenedPosts list):
+      // If there are available active posts, but they've already been processed/displayed/seen
+      // (they belong to the seenedPosts list):
       if (availablePosts.isEmpty)
+        // we return null to signal the future exclusion of the users, mark user ineligible
         return null;
 
       // Just as before, we calculate the total ammount of likes from all available posts of user
@@ -222,12 +243,16 @@ class FeedEngine {
       UserModel? selectedUser = _pickWeightedUser(category);
 
       // If selectedUser is null, it means every user in _userPool is now inside _ineligibleUsersMap for this context.
-      // There is mathematically no unseen art left to fetch. We must break the loop.
+      // There is no unseen/available art left to fetch. We must break the loop.
       if (selectedUser == null) {
-        if (_hasMoreUsersInDB) { // if we can further query users
+        if (_wasAbleToFetchUsersForPool) { // if we can further query users
           await _refreshUserPool(); // we append to the pool of users
           selectedUser = _pickWeightedUser(category); // and try selecting a user again
         }
+        // if even now, we still have no available users, it means that have already extracted all possible users from the pool
+        // now _hasMoreUsersInDB is false
+        // So this means we have nothing left to display to the user
+        // We break from while loop
         if (selectedUser == null) {
           break;
         }
@@ -236,26 +261,24 @@ class FeedEngine {
       // pick a post of user's, based on the weight of post (ammount of likes chance)
       final selectedPost = await _pickWeightedPost(selectedUser.uid, category);
 
-      // if by any chance, the user has no posts (or no posts for a specififc category), we continue to next loop
-      // here is where most loops may trigger the 'continue' of the loop
+      // if the user has no posts at all or no posts for a specififc category, we continue to next loop but also:
       if (selectedPost == null) {
-        _ineligibleUsersMap.putIfAbsent(contextKey, () => {}).add(selectedUser.uid); // if user has not met the requirements to return a post, add it to ineligible list mapping
+        // the user was not able to return a post for the given category/home_feed
+        // so we mark him ineligible
+        _ineligibleUsersMap.putIfAbsent(contextKey, () => {}).add(selectedUser.uid);
         continue; // go to next loop
       }
 
       // but if we picked a user and a post of his:
       // we mark the post as seened already by adding it to the list of seened posts
-      // we do this to prevent seeing the post again for the current run of the application
-      // there is a small bug with this:
-      // the user may not actually end up surfing to this actual post in the batch
-      // so in that case he won't see the post, but the post will get marked as seened anyway
-      // and it won't appear again in his feed for the current run of the application
+      // we do this to prevent seeing the post again for the current run of the feed
       _seenPostIds.add(selectedPost.id);
       // add the post to the batch of ArtPost instances that the user will see in his feed
       newBatch.add(selectedPost);
     }
 
-
+    // When the batch is empty it means there were no more available users with available content to display
+    // we return null to signal the end of the feed for the given category/home_feed
     if (newBatch.isEmpty) return null;
 
     // otherwise we can return the batch of ArtPost instances
