@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '435347637026',
     projectId: 'art-platform-878d0',
     authDomain: 'art-platform-878d0.firebaseapp.com',
-    storageBucket: 'art-platform-878d0.firebasestorage.app',
+    storageBucket: 'art-platform-878d0',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -54,7 +54,7 @@ class DefaultFirebaseOptions {
     appId: '1:435347637026:android:f3e7be515476c111aa1b7b',
     messagingSenderId: '435347637026',
     projectId: 'art-platform-878d0',
-    storageBucket: 'art-platform-878d0.firebasestorage.app',
+    storageBucket: 'art-platform-878d0',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -62,7 +62,7 @@ class DefaultFirebaseOptions {
     appId: '1:435347637026:ios:e0f397b13a327a95aa1b7b',
     messagingSenderId: '435347637026',
     projectId: 'art-platform-878d0',
-    storageBucket: 'art-platform-878d0.firebasestorage.app',
+    storageBucket: 'art-platform-878d0',
     iosBundleId: 'com.example.artPlatform',
   );
 
@@ -71,7 +71,7 @@ class DefaultFirebaseOptions {
     appId: '1:435347637026:ios:e0f397b13a327a95aa1b7b',
     messagingSenderId: '435347637026',
     projectId: 'art-platform-878d0',
-    storageBucket: 'art-platform-878d0.firebasestorage.app',
+    storageBucket: 'art-platform-878d0',
     iosBundleId: 'com.example.artPlatform',
   );
 
@@ -81,6 +81,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '435347637026',
     projectId: 'art-platform-878d0',
     authDomain: 'art-platform-878d0.firebaseapp.com',
-    storageBucket: 'art-platform-878d0.firebasestorage.app',
+    storageBucket: 'art-platform-878d0',
   );
 }
