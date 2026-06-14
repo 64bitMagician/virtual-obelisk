@@ -11,11 +11,12 @@ import 'art_post_like_button.dart';
 import 'artpost_options_widget.dart';
 import 'package:art_platform/core/feed_engine.dart';
 
-/// [MediaReader] is required to have one of the three configurations available:
-/// [MediaReaderConfiguration.HOME_FEED],[MediaReaderConfiguration.PROFILE_FEED] or [MediaReaderConfiguration.CATEGORY_FEED].
+/// [MediaReader] is required to have one of the five configurations available:
+/// [MediaReaderConfiguration.HOME_FEED],[MediaReaderConfiguration.PROFILE_FEED], [MediaReaderConfiguration.CATEGORY_FEED]
+/// , [MediaReaderConfiguration.CHAIN_NODE_FEED] or [MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED].
 /// They are passed to the required [mediaReaderConfiguration] parameter...
 ///
-/// Since it is an enum, only one configuration is possible at the time.
+/// Since it is an enum, only one configuration is possible at a time.
 /// Depending on which Configuration you choose, there are additional parameters you need to fill.
 /// Here is a list with each Configuration and what additional parameters in requires.
 /// HOME_FEED: no additional parameters required.
@@ -23,6 +24,8 @@ import 'package:art_platform/core/feed_engine.dart';
 /// when used in conjunction with a GridView, that can detect the index of objects interacted with user gestures.
 /// This combination creates the behaviour of "you see what you clicked on..."
 /// CATEGORY_FEED: [category] - it will configure [MediaReader] to fetch only ArtPost of the passed category.
+/// CHAIN_NODE_FEED: ...
+/// REPORTED_ARTPOSTS_FEED: ...
 ///
 /// There is also an optional parameter [exitButton]. If set to true, it will add an exit button that will redirect
 /// the user to the previous page. If set to false or not set at all, the button simply won't show up.

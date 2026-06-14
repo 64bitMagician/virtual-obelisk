@@ -659,7 +659,7 @@ class DatabaseRepository {
   }
 
   /// Checks if the user has reached their daily upload limit
-  Future<bool> canUserUploadToday(String uid, {int dailyLimit = 2}) async {
+  Future<bool> canUserUploadToday(String uid, {int dailyLimit = posts_per_day_allowed}) async {
     try {
       final now = DateTime.now();
       final midnight = DateTime(now.year, now.month, now.day); // today, but midnight, because no further data provided at construction

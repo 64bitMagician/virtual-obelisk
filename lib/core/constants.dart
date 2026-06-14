@@ -44,7 +44,10 @@ const Map<String, String> artCategoriesDisplayName = {
 };
 
 // Artist Point Reward Values:
-int upload_artpost_artist_points_reward = 200;
-int gain_follower_artist_points_reward = 100;
-int get_like_artist_points_reward = 50;
+const int upload_artpost_artist_points_reward = 200;
+const int gain_follower_artist_points_reward = 100;
+const int get_like_artist_points_reward = 50;
+
+// Posts per day limit
+const int posts_per_day_allowed = 100;
 

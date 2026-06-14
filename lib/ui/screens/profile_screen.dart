@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // to much time to open the UploadDialog
 
               // Check if user can upload (did not hit the upload limit cap)
-              final canUpload = await _repository.canUserUploadToday(user!.uid, dailyLimit: 2);
+              final canUpload = await _repository.canUserUploadToday(user!.uid);
 
               // We ensure the screen still exists after the database check
               if (!context.mounted) return;

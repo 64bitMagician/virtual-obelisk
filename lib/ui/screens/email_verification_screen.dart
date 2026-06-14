@@ -83,9 +83,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                "Please check your inbox and spam folder. Once you click the link, this page will automatically update.",
+                "PLEASE CHECK INBOX AND SPAM FOLDER. Once you click the link, this page will automatically update.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: Colors.redAccent),
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(

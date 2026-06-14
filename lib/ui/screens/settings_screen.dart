@@ -135,7 +135,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 applicationName: 'Virtual Obelisk',
                 applicationVersion: '1.0.0',
                 applicationIcon: const Icon(Icons.flutter_dash),
-                applicationLegalese: '© 2026 My Company',
               );
             },
           ),
