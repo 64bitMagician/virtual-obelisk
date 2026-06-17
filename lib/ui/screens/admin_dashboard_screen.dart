@@ -1,92 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:art_platform/automation/database_seeder.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/ban_user_dialog.dart';
+import '../widgets/seed_database_dialog.dart';
+import '../widgets/admin_action_card.dart';
 
-class AdminDashboardScreen extends StatefulWidget {
+class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
-
-  @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
-}
-
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  bool _isSeeding = false;
-
-  Future<void> _runSeeder() async {
-    // Show confirmation dialog before doing anything destructive/heavy
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Seed Database?"),
-            content: const Text(
-              "This will generate 5 fake users and 10 fake art posts. ",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Yes"),
-              ),
-            ],
-          ),
-    );
-
-    // If user cancelled or dismissed the dialog, stop here.
-    if (confirm != true) return;
-
-    // 2. Start the seeding process
-    setState(() => _isSeeding = true);
-
-    // Show a temporary snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Seeding started... Check terminal for progress."),
-      ),
-    );
-
-    try {
-      final seeder = DatabaseSeeder();
-      await seeder.runSeed();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Seed Complete! Database populated."),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Seed Failed: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSeeding = false);
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin Dashboard"),
-        backgroundColor:
-            Colors.red[900], // Give the admin screen a distinct, serious color
+        backgroundColor: Colors.red[900],
         foregroundColor: Colors.white,
       ),
       body: ListView(
@@ -94,107 +20,56 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           const Text(
             "Developer Tools",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           const SizedBox(height: 16),
 
-          // THE SEEDER CARD
-          Card(
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(color: Colors.redAccent, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              leading: const Icon(
-                Icons.data_object,
-                color: Colors.redAccent,
-                size: 32,
-              ),
-              title: const Text("Populate Mock Data (Seeder)"),
-              subtitle: const Text("Generates random users and posts."),
-              trailing:
-                  _isSeeding
-                      ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.redAccent,
-                        ),
-                      )
-                      : ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withOpacity(0.1),
-                          foregroundColor: Colors.redAccent,
-                          elevation: 0,
-                        ),
-                        onPressed: _runSeeder,
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text("RUN"),
-                      ),
+          // Seeder Card
+          AdminActionCard(
+            title: "Populate Mock Data",
+            subtitle: "Generates random users and posts.",
+            icon: Icons.data_object,
+            themeColor: Colors.redAccent,
+            onTap: () => showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const SeedDatabaseDialog(),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // REPORTED ARTPOSTS
-          Card(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(color: Colors.orange.shade300, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              leading: const Icon(Icons.gavel, color: Colors.orange, size: 32),
-              title: const Text("Moderation Queue"),
-              subtitle: const Text(
-                "Review user-reported artworks, issue warnings, or remove content violating platform rules.",
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-              // Inside your Card's ListTile in admin_dashboard_screen.dart
-              onTap: () => context.push('/admin/media_reader'),
-            ),
+          // Moderation Card
+          AdminActionCard(
+            title: "Moderation Queue",
+            subtitle: "Review user-reported artworks, issue warnings, or remove content.",
+            icon: Icons.gavel,
+            themeColor: Colors.orange,
+            onTap: () => context.push('/admin/media_reader'),
           ),
 
           const SizedBox(height: 16),
 
-          // CHAIN CREATOR DASHBOARD
-          Card(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(color: Colors.deepPurple.shade300, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              leading: const Icon(Icons.link, color: Colors.deepPurpleAccent, size: 32),
-              title: const Text("Create Art Chain"),
-              subtitle: const Text(
-                "Launch a new collaborative prompt for the community. Set the theme, description, and deadline.",
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-              onTap: () => context.push('/admin/create_chain'),
+          // Art Chain Card
+          AdminActionCard(
+            title: "Create Art Chain",
+            subtitle: "Launch a new collaborative prompt for the community.",
+            icon: Icons.link,
+            themeColor: Colors.deepPurpleAccent,
+            onTap: () => context.push('/admin/create_chain'),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Ban User Card
+          AdminActionCard(
+            title: "Ban User Account",
+            subtitle: "Revoke a user's access to the platform and hide them from feeds.",
+            icon: Icons.person_off,
+            themeColor: Colors.red.shade900,
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const BanUserDialog(),
             ),
           ),
         ],
