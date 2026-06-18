@@ -42,7 +42,7 @@ class AdminDashboardScreen extends StatelessWidget {
           // Moderation Card
           AdminActionCard(
             title: "Moderation Queue",
-            subtitle: "Review user-reported artworks, issue warnings, or remove content.",
+            subtitle: "Review user-reported artworks, or remove content.",
             icon: Icons.gavel,
             themeColor: Colors.orange,
             onTap: () => context.push('/admin/media_reader'),

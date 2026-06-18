@@ -32,7 +32,7 @@ class _BanUserDialogState extends State<BanUserDialog> {
       final userDocId = snapshot.docs.first.id;
       await FirebaseFirestore.instance.collection('users').doc(userDocId).update({
         'role': 'banned',
-        'hasActivePosts': false,
+        'hasActivePosts': false, // will no longer be seen in feeds
       });
 
       if (mounted) {
