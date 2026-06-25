@@ -82,14 +82,21 @@ class _MediaReaderState extends State<MediaReader> {
     // Assign the right stream depending on MediaReader Configuration
     if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
         widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+      // These two configurations worh with the Feed Algorithm, in Batches of Future objects. It does not work on Streams
 
+      // If CATEGORY_FEED configuration is selected, the category must also be provided
       if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED && widget.category == null) {
-        throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader no value has been passed for category parameter...");
+        throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader, no value has been passed for category parameter...");
+      }
+
+      // Otherwise, if HOME_FEED configuration is selected, category must be null
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED && widget.category != null) {
+        throw Exception("MediaReader is configured for Home Feed. But at construction of MediaReader, a category has been provided, which is not allowed for Home Feed Configuration");
       }
 
       _feedEngine = FeedEngine();
       _loadMoreFeed();
-    } else {
+    } else { // these feeds do not work on the Algorithm and do not use Batches of Feature objects, rather Streams
       Stream<List<ArtPost>> stream;
 
       if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
