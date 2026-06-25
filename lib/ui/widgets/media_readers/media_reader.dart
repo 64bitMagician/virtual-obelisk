@@ -64,6 +64,10 @@ class _MediaReaderState extends State<MediaReader> {
   List<ArtPost> _posts = [];
 
   /// variable to mark if we are currently loading artworks for displaying. Used for all MediaReader Configurations, not just the Stream ones.
+  /// If we do not use this variable to trigger an animation while loading, at the very beggining of fetching the first artposts, _posts is empty
+  /// and so it will initially display "No art found", until the stream fires the artpost data, which will trigger setState and rebuild the AI
+  /// with the _posts now filled, and art displayed. But we do not want that "No art found" message there when we are about to get the artposts
+  /// in just a second.
   bool _isLoading = true;
   /// variable to mark that we are currently, in this moment, fetching artposts through the feed algorithm (only for HOME/CATEGORY FEED CONFIGURATION)
   bool _currentlyFetchingMore = false;
@@ -328,8 +332,6 @@ class _MediaReaderState extends State<MediaReader> {
           // itemBuilder rebuilds itself when the controller calls the methods to go back or forth from the current Page
           // it only does this for pages that have not already been built
           itemBuilder: (context, index) {
-            // ? index sure is passed by the controller...?
-
             // Check if this is the "Extra Slot" at the end of the feed => Display that we are either fetching for more artposts/ or we reached the end of loaded artposts
             if (index == _posts.length) {
               if (_hasReachedEnd) {
