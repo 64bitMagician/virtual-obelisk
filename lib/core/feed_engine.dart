@@ -228,7 +228,8 @@ class FeedEngine {
     }
   }
 
-  /// Generate a batch ([List] if [ArtPost] instances) of artworks for the feed
+  /// Generate a batch ([List] of [ArtPost] instances) of artworks for the feed.
+  /// Returns [Null] when no more posts are available to return a Batch from...
   Future<List<ArtPost>?> generateFeedBatch({int batchSize = 5, String? category}) async {
     // Initialize the Pool if it has not been initialized.
     if (_userPool.isEmpty) {

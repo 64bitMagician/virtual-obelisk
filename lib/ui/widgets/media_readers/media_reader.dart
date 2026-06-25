@@ -31,9 +31,12 @@ import 'package:art_platform/core/feed_engine.dart';
 /// the user to the previous page. If set to false or not set at all, the button simply won't show up.
 class MediaReader extends StatefulWidget {
   final MediaReaderConfiguration mediaReaderConfiguration;
+  /// the first post in the streamed list. Special case for Profile Screen, where you select the index through
+  /// tapping on a post from the Gallery of the Profile
   final int profilePostIndex;
   final String? category;
   final bool? exitButton;
+  /// required to not be null if mediaReaderConfiguration == PROFILE_FEED
   final String? profileUid;
   final String? chainId;
 
@@ -41,11 +44,8 @@ class MediaReader extends StatefulWidget {
     super.key,
     required this.mediaReaderConfiguration,
     this.exitButton,
-    // the first post in the streamed list. Special case for Profile Screen, where you select the index through
-    // tapping on a post from the Gallery of the Profile
     this.profilePostIndex = 0,
     this.category,
-    // required to not be null if mediaReaderConfiguration == PROFILE_FEED
     this.profileUid,
     this.chainId,
   });
@@ -57,19 +57,28 @@ class MediaReader extends StatefulWidget {
 class _MediaReaderState extends State<MediaReader> {
   final DatabaseRepository _repository = DatabaseRepository();
 
-  // Manages the content visible in PageView. Manages transition animations, etc...
+  /// Manages the content visible in PageView. Manages transition animations, etc...
   late final PageController _pageController;
 
+  /// list of [ArtPost] instances that are loaded for diplay in [MediaReader]
   List<ArtPost> _posts = [];
+
+  /// variable to mark if we are currently loading artworks for displaying. Used for all MediaReader Configurations, not just the Stream ones.
   bool _isLoading = true;
-  bool _isFetchingMore = false;
+  /// variable to mark that we are currently, in this moment, fetching artposts through the feed algorithm (only for HOME/CATEGORY FEED CONFIGURATION)
+  bool _currentlyFetchingMore = false;
+  /// variable to mark if we ran out of artworks to display (only for HOME/CATEGORY FEED CONFIGURATION)
   bool _hasReachedEnd = false;
+  /// If any errors happen, we store them in this _error variable
   String? _error;
+  /// The stream we have subscribed to listen to. Any data changes or errors in the stream will fire back and can be catched with the .listen() method
   StreamSubscription<List<ArtPost>>? _streamSubscription;
+  /// in case HOME/CATEGORY FEED CONFIGURATION is active, we rely on the feed algorithm, thus need to have [FeedEngine] instantiated to fetch artposts
   FeedEngine? _feedEngine;
 
-  // determines visibilty for widgets on top of the post (Post Info, Navigation)
+  // determines visibility for widgets on top of the post (Post Info, Navigation)
   bool _isVisible = true;
+  // timer for when to hide the widgets on top of the post
   Timer? _hideTimer;
 
   // the initial state of the HomeScreen Widget
@@ -79,7 +88,7 @@ class _MediaReaderState extends State<MediaReader> {
     // Configure it to start at received index from constructor
     _pageController = PageController(initialPage: widget.profilePostIndex);
 
-    // Assign the right stream depending on MediaReader Configuration
+    // Assign the right feed depending on MediaReader Configuration
     if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
         widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
       // These two configurations worh with the Feed Algorithm, in Batches of Future objects. It does not work on Streams
@@ -94,72 +103,101 @@ class _MediaReaderState extends State<MediaReader> {
         throw Exception("MediaReader is configured for Home Feed. But at construction of MediaReader, a category has been provided, which is not allowed for Home Feed Configuration");
       }
 
+      // If everything is good, instiantiate the feed engine
       _feedEngine = FeedEngine();
+      // and initiate the loading of the next batch of artposts
       _loadMoreFeed();
-    } else { // these feeds do not work on the Algorithm and do not use Batches of Feature objects, rather Streams
-      Stream<List<ArtPost>> stream;
+    } else { // these feeds do not work based on the Algorithm and do not use Batches of Future objects, rather Streams
+      Stream<List<ArtPost>> stream; // declare stream
 
+      // IF PROFILE_FEED CONFIGURATION => Configure stream to return posts of given [widget.profileUid] user
       if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
         if (widget.profileUid == null) throw Exception("ERROR: COULD NOT FETCH THE USER ID OF THE PROFILE YOU ARE TRYING TO ACCESS");
         stream = _repository.getUserPosts(widget.profileUid!);
-      } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED) {
+      }
+      // IF REPORTED_ARTPOSTS_FEED CONFIGURATION => Configure stream to return all deactivated artworks
+      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED){
         stream = _repository.getDeactivatedPosts();
-      } else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CHAIN_NODE_FEED) {
+      }
+      // // IF CHAIN_NODE_FEED CONFIGURATION => Configure stream to return all artposts for the given node (category), in the given chain
+      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CHAIN_NODE_FEED) {
+        // [chainId] and [category] must be provided
         if (widget.chainId == null || widget.category == null) throw Exception("Chain ID or Category is missing.");
         stream = _repository.getChainNodePosts(chainId: widget.chainId!, category: widget.category!);
       } else {
         throw Exception("Unknown MediaReaderConfiguration");
       }
 
+      // we fetch the data from the configured stream (fetch List<ArtPost> data)
       _streamSubscription = stream.listen((data) {
+        // if MediaReader is in the Widget Tree
         if (mounted) {
           setState(() {
-            _posts = data;
-            _isLoading = false;
+            _posts = data; // store the fetched artposts into our local list we use to display the posts
+            _isLoading = false; // the posts have been loaded
           });
         }
-      }, onError: (err) {
+      }, onError: (err) { // if an error has occured while listening to the stream
+        // if MediaReader is in the Widget Tree
         if (mounted) {
           setState(() {
+            // store the received error in our local variable
             _error = err.toString();
-            _isLoading = false;
+            _isLoading = false; // we are no more trying to load
           });
         }
       });
     }
 
+    // we can start the hide timer once the MediaReader hits the scene
     _startHideTimer();
   }
 
-  Future<void> _loadMoreFeed() async {
-    if (_feedEngine == null || _isFetchingMore || _hasReachedEnd) return;
 
+  Future<void> _loadMoreFeed() async {
+    // of _feedEngine has not been instantiated
+    // or if we are are already _currentlyFetchingMore artposts (the process is already undergoing) (or something wrong is happening)
+    // or if _hasReachedEnd => we can no longer fetch any artposts for the given category (may be null for HOME_FEED CONFIGURATION)
+    if (_feedEngine == null || _currentlyFetchingMore || _hasReachedEnd) return;
+
+    // if media reader is still in widget tree => we mark that we are currently fetching more
     if (mounted) {
-      setState(() => _isFetchingMore = true);
+      setState(() => _currentlyFetchingMore = true);
     }
 
     try {
+      // fetch a generated feed batch for the given category
+      // if category is null, it fetches from all existing artposts (for HOME_FEED CONFIGURATION)
       final newPosts = await Future.delayed(
-          const Duration(seconds: 1),
+          const Duration(seconds: 0),
               () => _feedEngine!.generateFeedBatch(category: widget.category)
       );
 
+      // if meadia reader still in the widget tree
       if (mounted) {
         setState(() {
+          // if no more posts were provided, it means we ran out of artposts to display
           if (newPosts == null || newPosts.isEmpty) {
-            _hasReachedEnd = true;
-          } else {
-            _posts.addAll(newPosts);
+            _hasReachedEnd = true; // mark that we reached end
+          } else { // but if we can still display stuff
+            _posts.addAll(newPosts); // add the fetched posts to the _posts that are to be displayed
           }
-          _isFetchingMore = false;
+          // finished adding the posts (or received no posts)
+          // so we mark that we are not fetching anymore
+          _currentlyFetchingMore = false;
+          // also mark we are no longer loading artposts
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e) { // if any errors occur
+      // If MediaReader still in the widget tree
       if (mounted) {
         setState(() {
+          // store the error in our local variable
           _error = e.toString();
-          _isFetchingMore = false;
+          // we are not longer currentlyFetchingMore artposts from the algorithm
+          _currentlyFetchingMore = false;
+          // we are not longer loading, we stopped
           _isLoading = false;
         });
       }
@@ -200,7 +238,7 @@ class _MediaReaderState extends State<MediaReader> {
     super.dispose();
   }
 
-  // The visibal part of the widget
+  // The visual part of the widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,6 +253,7 @@ class _MediaReaderState extends State<MediaReader> {
   }
 
   Widget _buildContent() {
+    // If no artposts have been loaded so far, and we also have to marker to load
     if (_isLoading && _posts.isEmpty) {
       // Loading Animation while fetching post list
       return const Center(child: CircularProgressIndicator());
@@ -231,7 +270,10 @@ class _MediaReaderState extends State<MediaReader> {
       );
     }
 
+    // _hasReachedEnd only is true for HOME/CATEGORY FEEDS:
+    // if there are no loaded posts and we were not able to fetch any
     if (_posts.isEmpty && _hasReachedEnd) {
+      // If the MediaReader was configured for CATEGORY_FEED => Display Custom Message
       if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
         return const Center(
           child: Text(
@@ -240,6 +282,7 @@ class _MediaReaderState extends State<MediaReader> {
           ),
         );
       } else {
+        // For any other MediaReader Configurations that rely on the Feed Algorithm
         return const Center(
           child: Text(
             "No art found yet. Be the first to upload.",
@@ -249,12 +292,13 @@ class _MediaReaderState extends State<MediaReader> {
       }
     }
 
+    // For Streams: if no posts were loaded
     if (_posts.isEmpty) {
       // if we have a list containing null, or empty list
       return const Center(child: Text("No art found.", style: TextStyle(color: Colors.white)));
     }
 
-    // Now we return (rebuild) with the new post fetched
+    // But if we have loaded _posts, we can return them:
     return Stack(
       children: [
         PageView.builder(
@@ -263,15 +307,17 @@ class _MediaReaderState extends State<MediaReader> {
           // ammount of posts (does not build all of them, only the current one and maybe previous and next pages to prevent loading times)
           // it also keeps previously loaded pages built (maybe there is a limit...)
 
-          // Determine the size. Add 1 extra slot if we are fetching OR if we reached the end
-          itemCount: _posts.length + ((_isFetchingMore || _hasReachedEnd) ? 1 : 0),
+          // Determine the size. Add 1 extra slot if we are fetching or if we reached the end (only applies for configurations that rely on feed algorithm)
+          itemCount: _posts.length + ((_currentlyFetchingMore || _hasReachedEnd) ? 1 : 0),
 
           onPageChanged: (index) {
+            // if page changed, reset the hide timer, mark that the ui should stay visible
             if (!_isVisible) {
               setState(() => _isVisible = true);
             }
             _startHideTimer();
 
+            // If we on HOME/CATEGORY FEED, when we are 2 artposts away from end of loaded posts, start loading the next batch to save time
             if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
                 widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
               if (index >= _posts.length - 2) {
@@ -284,7 +330,7 @@ class _MediaReaderState extends State<MediaReader> {
           itemBuilder: (context, index) {
             // ? index sure is passed by the controller...?
 
-            // Check if this is the "Extra Slot" at the end of the feed
+            // Check if this is the "Extra Slot" at the end of the feed => Display that we are either fetching for more artposts/ or we reached the end of loaded artposts
             if (index == _posts.length) {
               if (_hasReachedEnd) {
                 return const Center(
@@ -294,13 +340,13 @@ class _MediaReaderState extends State<MediaReader> {
                       Icon(Icons.check_circle_outline, size: 64, color: Colors.grey),
                       SizedBox(height: 16),
                       Text(
-                        "You've seen all the artworks that have been uploaded!",
+                        "You've seen all latest active artists",
                         style: TextStyle(color: Colors.white70, fontSize: 16, fontStyle: FontStyle.italic),
                       ),
                     ],
                   ),
                 );
-              } else if (_isFetchingMore) {
+              } else if (_currentlyFetchingMore) {
                 return const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -308,7 +354,7 @@ class _MediaReaderState extends State<MediaReader> {
                       CircularProgressIndicator(color: Colors.deepPurpleAccent),
                       SizedBox(height: 16),
                       Text(
-                        "Curating your next masterpieces...",
+                        "Fetching more artworks...",
                         style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
                       ),
                     ],
@@ -349,13 +395,13 @@ class _MediaReaderState extends State<MediaReader> {
                   ),
                 ),
 
-                // The Admin Report Panel (Positioned on the Right)
-                // It ONLY renders if we are in the Moderation Queue (ADMIN DASHBOARD -> REPORT FEED SECTION)
+                // The Admin Report Panel
+                // It only renders if we are in the Moderation Queue (ADMIN DASHBOARD -> REPORT FEED SECTION)
                 if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED)
                   Positioned(
-                    top: 80, // Placed below the top UI buttons
-                    right: 16, // Snug against the right edge
-                    bottom: 100, // Leaves room so it doesn't cover PostInfo
+                    top: 80,
+                    right: 16,
+                    bottom: 100,
                     child: AdminReportOverlay(
                       artworkId: _posts[index].id,
                       isVisible: _isVisible,
