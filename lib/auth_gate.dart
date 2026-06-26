@@ -3,9 +3,9 @@ import 'package:art_platform/ui/screens/profile_setup_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../data/repositories/auth_repository.dart';
-import 'screens/authentication_screen.dart';
-import '../data/repositories/database_repository.dart';
+import 'data/repositories/auth_repository.dart';
+import 'ui/screens/authentication_screen.dart';
+import 'data/repositories/database_repository.dart';
 
 /// This [AuthGate] widget acts like a Security Guard (or Bouncer) for our application.
 /// It sits between the user and the screens they want to access.

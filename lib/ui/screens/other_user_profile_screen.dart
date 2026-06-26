@@ -1,6 +1,6 @@
 import 'package:art_platform/ui/widgets/profile_screen_widgets/follow_button.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_art_post.dart';
-import 'package:art_platform/ui/widgets/profile_header.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/profile_header.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';

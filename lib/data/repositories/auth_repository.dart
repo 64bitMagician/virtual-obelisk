@@ -1,4 +1,4 @@
-import 'package:art_platform/ui/auth_gate.dart';
+import 'package:art_platform/auth_gate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

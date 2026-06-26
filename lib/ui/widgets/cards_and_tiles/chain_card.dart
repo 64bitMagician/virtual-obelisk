@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../data/models/chain.dart';
+import '../../../data/models/chain.dart';
 
 class ChainCard extends StatelessWidget {
   final Chain chain;

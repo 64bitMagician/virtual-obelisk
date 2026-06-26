@@ -1,6 +1,6 @@
 import 'package:art_platform/ui/widgets/profile_screen_widgets/gallery_art_post.dart';
-import 'package:art_platform/ui/widgets/upload_dialog.dart';
-import 'package:art_platform/ui/widgets/profile_header.dart';
+import 'package:art_platform/ui/widgets/dialogs/upload_dialog.dart';
+import 'package:art_platform/ui/widgets/profile_screen_widgets/profile_header.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';

@@ -4,8 +4,8 @@ import 'package:art_platform/data/models/art_chain.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/core/constants.dart';
-import 'package:art_platform/ui/widgets/upload_dialog.dart';
-import '../widgets/media_readers/media_reader.dart';
+import 'package:art_platform/ui/widgets/dialogs/upload_dialog.dart';
+import '../widgets/media_reader_and_widgets/media_reader.dart';
 import '../widgets/profile_screen_widgets/gallery_art_post.dart';
 
 

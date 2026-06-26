@@ -77,7 +77,6 @@ class ResponsiveScaffold extends StatelessWidget {
     );
   }
 
-  // --- DYNAMIC DESTINATION LISTS ---
 
   List<NavigationDestination> _buildPhoneDestinations(bool isAdmin) {
     List<NavigationDestination> destinations = [

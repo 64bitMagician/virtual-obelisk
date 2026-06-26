@@ -1,4 +1,4 @@
-import 'package:art_platform/ui/widgets/simple_stuff/exit_reader_button.dart';
+import 'package:art_platform/ui/widgets/media_reader_and_widgets/exit_reader_button.dart';
 import 'package:flutter/material.dart';
 
 class MediaNavigator extends StatelessWidget {

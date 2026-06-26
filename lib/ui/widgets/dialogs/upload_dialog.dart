@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/data/models/art_post.dart';
-import 'package:art_platform/tools/mimeFileDetector.dart';
+import 'package:art_platform/core/mimeFileDetector.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cross_file/cross_file.dart';
-import '../../data/repositories/storage_repository.dart';
-import '../../data/repositories/database_repository.dart';
+import '../../../data/repositories/storage_repository.dart';
+import '../../../data/repositories/database_repository.dart';
 
 class UploadDialog extends StatefulWidget {
   final String? chainId;

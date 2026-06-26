@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../widgets/ban_user_dialog.dart';
-import '../widgets/seed_database_dialog.dart';
-import '../widgets/admin_action_card.dart';
+import '../widgets/dialogs/ban_user_dialog.dart';
+import '../widgets/dialogs/seed_database_dialog.dart';
+import '../widgets/cards_and_tiles/admin_action_card.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});

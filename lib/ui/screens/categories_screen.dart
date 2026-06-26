@@ -1,4 +1,4 @@
-import 'package:art_platform/ui/widgets/category_tile.dart';
+import 'package:art_platform/ui/widgets/cards_and_tiles/category_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_category.dart';
 import 'package:go_router/go_router.dart';

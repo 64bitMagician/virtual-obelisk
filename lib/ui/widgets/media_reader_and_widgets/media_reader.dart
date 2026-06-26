@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:art_platform/core/constants.dart';
-import 'package:art_platform/ui/widgets/media_readers/media_navigator.dart';
-import 'package:art_platform/ui/widgets/media_readers/post_info.dart';
+import 'package:art_platform/ui/widgets/media_reader_and_widgets/media_navigator.dart';
+import 'package:art_platform/ui/widgets/media_reader_and_widgets/post_info.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/repositories/database_repository.dart';
-import 'package:art_platform/ui/widgets/media/art_post_representation.dart';
+import 'package:art_platform/ui/widgets/media_representation/art_post_representation.dart';
 import 'admin_report_overlay.dart';
 import 'art_post_like_button.dart';
 import 'artpost_options_widget.dart';

@@ -1,7 +1,7 @@
-import 'package:art_platform/ui/widgets/media/audio_reader_widget.dart';
-import 'package:art_platform/ui/widgets/media/image_reader_widget.dart';
-import 'package:art_platform/ui/widgets/media/text_reader_widget.dart';
-import 'package:art_platform/ui/widgets/media/video_reader_widget.dart';
+import 'package:art_platform/ui/widgets/media_representation/audio_reader_widget.dart';
+import 'package:art_platform/ui/widgets/media_representation/image_reader_widget.dart';
+import 'package:art_platform/ui/widgets/media_representation/text_reader_widget.dart';
+import 'package:art_platform/ui/widgets/media_representation/video_reader_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/data/models/art_post.dart';
 

@@ -1,5 +1,5 @@
 import 'package:art_platform/data/repositories/database_repository.dart';
-import 'package:art_platform/ui/widgets/profile_screen_widgets/connections_dialog.dart';
+import 'package:art_platform/ui/widgets/dialogs/connections_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/rank_progress_bar.dart';
 
