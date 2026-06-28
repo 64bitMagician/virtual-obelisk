@@ -29,19 +29,16 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
 
   Future<void> _initVideo() async {
     try {
-      // Initialize the controller with the video URL
       _controller = VideoPlayerController.networkUrl(Uri.parse(widget.post.mediaUrl));
 
       await _controller.initialize();
 
-      // We set it to loop automatically for a smooth feed experience
       await _controller.setLooping(true);
 
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
-        // Auto-play the video as soon as it loads!
         _controller.play();
       }
     } catch (e) {
@@ -56,7 +53,6 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
     super.dispose();
   }
 
-  // Helper method to format Duration into mm:ss
   String _formatDuration(Duration duration) {
     String minutes = duration.inMinutes.toString();
     String seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
@@ -81,10 +77,8 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
       );
     }
 
-    // Show the Thumbnail (or a loading spinner) while the video downloads the first few bytes
     if (!_isInitialized) {
       return Container(
-        // Force the container to take up the entire screen
         width: double.infinity,
         height: double.infinity,
         color: Colors.black,
@@ -101,8 +95,6 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
       );
     }
 
-    // The Video is ready to play!
-    // The Video is ready to play!
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -110,14 +102,11 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. THE ACTUAL VIDEO (Bottom Layer)
           AspectRatio(
             aspectRatio: _controller.value.aspectRatio,
             child: VideoPlayer(_controller),
           ),
 
-          // 2. THE INVISIBLE "GLASS SHIELD" (Middle Layer)
-          // This sits ON TOP of the video and catches all taps before the native player can steal them!
           Positioned.fill(
             child: GestureDetector(
               onTap: _togglePlayPause,
@@ -125,19 +114,16 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
               child: Container(
                 color: Colors.transparent,
 
-                // We now listen to the controller's exact state 60 times a second!
                 child: ValueListenableBuilder(
                   valueListenable: _controller,
                   builder: (context, VideoPlayerValue value, child) {
 
-                    // SCENARIO A: The video is actively downloading a new chunk (User just skipped ahead)
                     if (value.isBuffering) {
                       return const Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       );
                     }
 
-                    // SCENARIO B: The video is fully paused and ready
                     if (!value.isPlaying) {
                       return Center(
                         child: Container(
@@ -154,17 +140,13 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
                       );
                     }
 
-                    // SCENARIO C: The video is playing smoothly
-                    return const SizedBox.shrink(); // Shows nothing!
+                    return const SizedBox.shrink();
                   },
                 ),
               ),
             ),
           ),
 
-          // 3. THE PROGRESS BAR (Top Layer)
-          // Because this is written AFTER the glass shield in the list,
-          // it sits on top! This guarantees the user can still drag the slider.
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500),
             bottom: widget.postInformationVisible ? 40 : -100,

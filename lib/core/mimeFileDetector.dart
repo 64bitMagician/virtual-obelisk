@@ -1,9 +1,6 @@
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:mime/mime.dart';
 
-// Assuming you have your enum defined somewhere:
-// enum MediaType { image, audio, video, text }
-
 /// This method returns the [MediaType] corresponding to a file. You simply give it the name of the file.
 ///
 /// I believe it determines the MIME type based on the format at the end of file name (EX: .png, .was, .mp3 ...)

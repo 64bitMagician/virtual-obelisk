@@ -19,7 +19,7 @@ class AdminDashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         children: [
           const Text(
-            "Developer Tools",
+            "Admin Tools",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           const SizedBox(height: 16),

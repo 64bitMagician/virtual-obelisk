@@ -22,19 +22,17 @@ class ConnectionsDialog extends StatelessWidget {
         width: 400,
         height: 500,
         child: StreamBuilder<QuerySnapshot>(
-          // Listen to the subcollection (followers or following)
           stream: FirebaseFirestore.instance
               .collection('users')
               .doc(profileUid)
               .collection(collectionName)
-              .orderBy('timestamp', descending: true) // Show newest first
+              .orderBy('timestamp', descending: true)
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // if snapshot null or there is no docs data in the collection
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return const Center(child: Text("No users found."));
             }
@@ -79,8 +77,8 @@ class ConnectionsDialog extends StatelessWidget {
                       ),
                       title: Text(username),
                       onTap: () {
-                        context.pop(); // Close the dialog
-                        context.push("/user_profile/$username"); // Go to their profile
+                        context.pop();
+                        context.push("/user_profile/$username");
                       },
                     );
                   },

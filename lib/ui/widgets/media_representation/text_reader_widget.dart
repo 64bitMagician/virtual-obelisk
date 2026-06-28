@@ -24,12 +24,10 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
   bool _isLoading = true;
   bool _isError = false;
 
-  // Pagination State
   List<String> _pages = [];
   int _currentPage = 0;
   final PageController _pageController = PageController();
 
-  // Typography Settings
   final TextStyle _textStyle = const TextStyle(
     color: Colors.white70,
     fontSize: 18,
@@ -37,7 +35,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
     letterSpacing: 0.3,
   );
 
-  // Caches the screen size so we don't recalculate math during page-turn animations!
   Size? _lastCalculatedSize;
 
   @override
@@ -51,10 +48,8 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
       final response = await http.get(Uri.parse(widget.post.mediaUrl));
 
       if (response.statusCode == 200) {
-        // Force UTF-8 decoding and replace invisible tabs with 4 physical spaces
         String decodedText = utf8.decode(response.bodyBytes).replaceAll('\t', '    ');
 
-        // The Text Normalizer!
         List<String> lines = decodedText.split('\n');
         for (int i = 0; i < lines.length; i++) {
           if (lines[i].trim().isNotEmpty && lines[i].startsWith(RegExp(r'[ \t]+'))) {
@@ -83,7 +78,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
     }
   }
 
-  // Analyzes the text to determine if it's a poem or prose
   TextAlign _determineAlignment(String text) {
     final lines = text.split('\n');
     int totalCharacters = 0;
@@ -102,7 +96,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
     return averageLineLength < 45 ? TextAlign.center : TextAlign.left;
   }
 
-  // --- THE PAGINATION ALGORITHM ---
   void _calculatePages(Size availableSize, BuildContext context) {
     if (_fullTextContent == null || availableSize.height <= 0) return;
 
@@ -114,7 +107,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
 
     while (startOffset < _fullTextContent!.length) {
 
-      // Clean up the startOffset BEFORE we run the math so TextPainter is perfectly accurate
       while (startOffset < _fullTextContent!.length &&
           (_fullTextContent![startOffset] == '\n' || _fullTextContent![startOffset] == '\r')) {
         startOffset++;
@@ -158,7 +150,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
         }
       }
 
-      // Typography Backtracking Logic
       if (bestEnd < _fullTextContent!.length) {
         String currentSlice = _fullTextContent!.substring(startOffset, bestEnd);
 
@@ -184,7 +175,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
         }
       }
 
-      // Use .trimRight() to protect our beautiful new leading indents!
       newPages.add(_fullTextContent!.substring(startOffset, bestEnd).trimRight());
       startOffset = bestEnd;
 
@@ -266,13 +256,12 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
 
-                        // --- LEFT ARROW ---
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
                           opacity: _currentPage > 0 ? 1.0 : 0.3,
                           child: GestureDetector(
                             onTap: _currentPage > 0 ? () {
-                              widget.callStartHideTimer(); // RESET TIMER!
+                              widget.callStartHideTimer();
                               _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             } : null,
                             child: Container(
@@ -285,7 +274,6 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
 
                         const SizedBox(width: 16),
 
-                        // --- PAGE INDICATOR ---
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
@@ -300,13 +288,12 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
 
                         const SizedBox(width: 16),
 
-                        // --- RIGHT ARROW ---
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
                           opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.3,
                           child: GestureDetector(
                             onTap: _currentPage < _pages.length - 1 ? () {
-                              widget.callStartHideTimer(); // RESET TIMER!
+                              widget.callStartHideTimer();
                               _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                             } : null,
                             child: Container(

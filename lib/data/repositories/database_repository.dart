@@ -66,7 +66,7 @@ class DatabaseRepository {
         'createdAt': FieldValue.serverTimestamp(), // create a timestamp for when this document/post was added
         'description': description, // received as method parameter
         'isDeactivated': false,
-        'likes': 0, //! number of likes currently hardcoded
+        'likes': 0, // number of likes currently hardcoded
         'mediaType': mediaType,
         'mediaUrl': mediaUrl, // received as method parameter
         'reportCount': 0,
@@ -183,10 +183,6 @@ class DatabaseRepository {
       // From users Firebase Collection, we get the document of the passed uid (User ID)
       // and merge the newly created data in 'updates' with the already existing document of the user
       await _db.collection('users').doc(uid).set(updates, SetOptions(merge: true));
-
-      //* By this point, the user document should be updated with the new data
-      //* Only problem is, that we also need to change the data of all posts uploaded by this user
-      //* The posts have the old user data displaying, and we need to replace it with the new user data
 
       // if displayName or avatarUrl are not null:
       // within the artworks collection in Firestore, we get the list (QuerySnapshot<>) of all the Documents/Posts of our User (uid)
@@ -317,9 +313,6 @@ class DatabaseRepository {
     });
   }
 
-  // ============================================================================
-  // REPORTING SYSTEM
-  // ============================================================================
 
   /// Submit a report, as an authenticated user, for a specific artpost. Required [artworkId] and [reason] selection.
   Future<void> submitReport({
@@ -428,10 +421,6 @@ class DatabaseRepository {
     });
   }
 
-  // ============================================================================
-  // POST MANAGEMENT & MODERATION
-  // ============================================================================
-
   /// Deletes a post entirely from the database, deducts the upload points, decrements from number of posts of user.
   /// [currentPostCount] is passed directly from the UI state to save a database read.
   Future<void> deletePost(String artworkId, String ownerUid, int currentPostCount) async {
@@ -517,10 +506,6 @@ class DatabaseRepository {
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  // ============================================================================
-  // LIKES SYSTEM
-  // ============================================================================
-
   /// Stream to check if the current user has liked this specific post
   Stream<bool> hasUserLikedPost(String artworkId, String userId) {
     return _db
@@ -577,9 +562,6 @@ class DatabaseRepository {
     }
   }
 
-  // ============================================================================
-  // CHAINS SYSTEM
-  // ============================================================================
 
   /// ADMIN ONLY: Creates a new ArtChain prompt
   Future<void> createChain({

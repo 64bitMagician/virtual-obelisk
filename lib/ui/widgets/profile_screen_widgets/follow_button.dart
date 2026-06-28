@@ -28,7 +28,6 @@ class _FollowButtonState extends State<FollowButton> {
     if (currentUid == null) return;
 
     try {
-      // Calls your backend to see if the current user already follows this profile
       bool isFollowing = await _repo.isFollowing(currentUid!, widget.targetUid);
       if (mounted) {
         setState(() {
@@ -45,7 +44,6 @@ class _FollowButtonState extends State<FollowButton> {
   Future<void> _toggleFollow() async {
     if (currentUid == null) return;
 
-    // Instantly update UI for immediate user feedback
     setState(() {
       _isLoading = true;
     });
@@ -57,7 +55,6 @@ class _FollowButtonState extends State<FollowButton> {
         await _repo.followUser(currentUid!, widget.targetUid);
       }
 
-      // Update state upon success
       if (mounted) {
         setState(() {
           _isFollowing = !_isFollowing;
@@ -66,7 +63,6 @@ class _FollowButtonState extends State<FollowButton> {
       }
     } catch (e) {
       print("Error toggling follow: $e");
-      // Revert loading state if it failed
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +83,7 @@ class _FollowButtonState extends State<FollowButton> {
     }
 
     return SizedBox(
-      width: 200, // Make the button nice and wide
+      width: 200,
       height: 40,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(

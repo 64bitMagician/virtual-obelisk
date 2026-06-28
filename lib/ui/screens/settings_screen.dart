@@ -9,11 +9,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Local state for the toggle switches
   bool _isDarkMode = false;
   bool _notificationsEnabled = true;
 
-  // Connection with Firebase Authentication SDK
   final AuthRepository _authRepo = AuthRepository();
 
   @override
@@ -24,7 +22,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
-          // --- Account Section ---
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
@@ -32,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue, // You can match this to your app's theme
+                color: Colors.blue,
               ),
             ),
           ),
@@ -42,7 +39,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text('Update your personal details'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Navigate to Profile Screen
             },
           ),
           ListTile(
@@ -50,13 +46,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Password & Security'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Navigate to Security Screen
             },
           ),
 
           const Divider(),
 
-          // --- Preferences Section ---
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
@@ -76,7 +70,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _isDarkMode = value;
               });
-              // TODO: Wire this up to your ThemeProvider or state management
             },
           ),
           SwitchListTile(
@@ -87,7 +80,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _notificationsEnabled = value;
               });
-              // TODO: Update notification preferences in backend/local storage
             },
           ),
           ListTile(
@@ -98,13 +90,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
             onTap: () {
-              // TODO: Open Language picker
             },
           ),
 
           const Divider(),
 
-          // --- Support & About Section ---
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
@@ -121,7 +111,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Help & Support'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Navigate to Support
             },
           ),
           ListTile(
@@ -129,7 +118,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('About App'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // Show an about dialog
               showAboutDialog(
                 context: context,
                 applicationName: 'Virtual Obelisk',
@@ -141,7 +129,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
 
-          // Log Out Button
           Center(
             child: TextButton.icon(
               onPressed: () async => await _authRepo.signOut(),

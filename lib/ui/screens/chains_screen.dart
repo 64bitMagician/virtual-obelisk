@@ -57,14 +57,13 @@ class ChainsScreen extends StatelessWidget {
             style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
-          Text("Check back later for new community prompts!", style: TextStyle(color: Colors.grey)),
+          Text("Check back later for new community prompts", style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
 
   Widget _buildChainCard(BuildContext context, ArtChain chain) {
-    // Calculate days remaining
     final int daysLeft = chain.expiresAt.difference(DateTime.now()).inDays;
     final String timeText = chain.isClosed
         ? "Closed"
@@ -78,14 +77,12 @@ class ChainsScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        // This will navigate to the Detail Screen
         onTap: () => context.push('/chains/${chain.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // HEADER: Title & Status Badge
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -118,7 +115,6 @@ class ChainsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // DESCRIPTION
               Text(
                 chain.description,
                 maxLines: 3,
@@ -129,7 +125,6 @@ class ChainsScreen extends StatelessWidget {
               const Divider(),
               const SizedBox(height: 8),
 
-              // THE RECIPE (categories required)
               const Text("Required Sequence:", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 8),
               Wrap(
@@ -145,14 +140,12 @@ class ChainsScreen extends StatelessWidget {
     );
   }
 
-  // Helper method to draw the chips and arrows
   List<Widget> _buildSequenceChips(List<String> nodes) {
     List<Widget> widgets = [];
     for (int i = 0; i < nodes.length; i++) {
       final categoryKey = nodes[i];
       final displayName = artCategoriesDisplayName[categoryKey] ?? categoryKey;
 
-      // The Category Chip
       widgets.add(
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -168,7 +161,6 @@ class ChainsScreen extends StatelessWidget {
         ),
       );
 
-      // Add an arrow after the chip (unless it's the very last one)
       if (i < nodes.length - 1) {
         widgets.add(const Padding(
           padding: EdgeInsets.symmetric(horizontal: 2.0),

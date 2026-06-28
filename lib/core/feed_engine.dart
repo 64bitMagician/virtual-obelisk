@@ -44,12 +44,12 @@ class FeedEngine {
 
   /// Initializes/Append_to the "Pool" of potential users ([UserModel] instances).
   Future<void> _refreshUserPool() async {
-    // ! This method can be improved in the future to directly select the user that have posts for a
+    // This method can be improved in the future to directly select the user that have posts for a
     // given category. But for that we need to keep track in User Documents what categories they have posted.
     // This requires changes in User Documents format. And also be careful a user might have one single post
     // in a category, and the post might get disabled/deleted, and then the category should dissapear frmo the User
     // Document, such that that user does not get included, because he no longer has posts for that category. Cause
-    // the post has been deleted/disabled!
+    // the post has been deleted/disabled
 
 
     // just directly return if there are no more users to be fetched

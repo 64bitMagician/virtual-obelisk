@@ -63,7 +63,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       // Note: That would generate two profiles with the same username, which we do not want.
 
       await _db.runTransaction((transaction) async {
-        //
         final usernameDoc = await transaction.get(usernameRef);
 
         // If it exists it throwh error
@@ -142,7 +141,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             children: [
               const SizedBox(height: 20),
 
-              TextFormField( // username text field
+              TextFormField(
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: "Username",

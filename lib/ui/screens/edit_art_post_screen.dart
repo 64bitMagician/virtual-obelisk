@@ -20,7 +20,6 @@ class _EditArtPostScreenState extends State<EditArtPostScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
 
-  // Category State Variables
   String? _selectedCategory;
   final List<String> _categories = artCategories;
   final Map<String, String> _categoryDisplayNames = artCategoriesDisplayName;
@@ -111,11 +110,9 @@ class _EditArtPostScreenState extends State<EditArtPostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title and Category side-by-side
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title Field
                   Expanded(
                     flex: 3,
                     child: TextFormField(
@@ -130,7 +127,6 @@ class _EditArtPostScreenState extends State<EditArtPostScreen> {
                   ),
                   const SizedBox(width: 16),
 
-                  // Category Dropdown
                   Expanded(
                     flex: 2,
                     child: DropdownMenu<String>(
@@ -154,8 +150,6 @@ class _EditArtPostScreenState extends State<EditArtPostScreen> {
                   ),
                 ],
               ),
-
-              // No extra SizedBox needed because maxLength provides natural padding
 
               TextFormField(
                 controller: _descriptionController,

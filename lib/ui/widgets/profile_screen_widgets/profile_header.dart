@@ -1,4 +1,3 @@
-import 'package:art_platform/data/repositories/database_repository.dart';
 import 'package:art_platform/ui/widgets/dialogs/connections_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:art_platform/ui/widgets/profile_screen_widgets/rank_progress_bar.dart';
@@ -26,7 +25,6 @@ class ProfileHeader extends StatelessWidget {
   // Visual Part of the Profile Header
   @override
   Widget build(BuildContext context) {
-    // Fetch points to drive both the Progress Bar and the Avatar Border!
     final int userPoints = userData['artist_points'] ?? -1;
     // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
     final String rank = userData['rank'] ?? 'rankless';
@@ -59,14 +57,12 @@ class ProfileHeader extends StatelessWidget {
               // within it's available area
               if(onAvatarTap!=null)
                 Positioned(
-                  // The position is relative to the property
-                  // Ex: bottom: 0 is at the botton while bottom: 100 means 100 pixels above the bottom
                   bottom: 0, // at the far bottom
                   right: 0, // at the far right
                   child: CircleAvatar(
                     radius: 15, // camera icon size
-                    backgroundColor: Theme.of(context).primaryColor, // fetch theme color
-                    child: const Icon(Icons.camera_alt, size: 18, color: Colors.white), // camera icon
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
                   ),
                 ),
             ],
@@ -88,7 +84,7 @@ class ProfileHeader extends StatelessWidget {
         // Button to edit user profile
         if(onEditProfile!=null)
           OutlinedButton.icon(
-            onPressed: onEditProfile, // Use member callback function
+            onPressed: onEditProfile,
             icon: const Icon(Icons.edit, size: 16),
             label: const Text("Edit Profile"),
           ),
@@ -104,7 +100,7 @@ class ProfileHeader extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Display number of Posts, Followers and Following
+        // Display number of Posts, Followers and Followings
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -127,7 +123,6 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  // Helper method to sync the Avatar border color with the RankProgressBar logic!
   Color _getDynamicAvatarColor(int points) {
     // iterate through the ranks
     for (int i = 0; i < RankProgressBar.ranks.length; i++) {

@@ -20,14 +20,13 @@ class ChainDetailScreen extends StatelessWidget {
     final DatabaseRepository repo = DatabaseRepository();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // Dark background matching your theme
+      backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
         title: const Text("Collaboration Details"),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
       ),
-      // Fetch the Chain Details
       body: StreamBuilder<ArtChain>(
         stream: repo.getChainById(chainId),
         builder: (context, chainSnapshot) {
@@ -40,7 +39,6 @@ class ChainDetailScreen extends StatelessWidget {
 
           final chain = chainSnapshot.data!;
 
-          // Fetch the ArtPosts assigned to this chain
           return StreamBuilder<List<ArtPost>>(
             stream: repo.getPostsForChain(chainId),
             builder: (context, postSnapshot) {
@@ -51,7 +49,6 @@ class ChainDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // HEADER
                     Text(
                       chain.title,
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
@@ -86,12 +83,10 @@ class ChainDetailScreen extends StatelessWidget {
                     const Divider(color: Colors.white24),
                     const SizedBox(height: 24),
 
-                    // TIMELINE
                     ...List.generate(chain.categoryNodes.length, (index) {
                       final categoryKey = chain.categoryNodes[index];
                       final categoryName = artCategoriesDisplayName[categoryKey] ?? categoryKey.toUpperCase();
 
-                      // Filter the posts that belong to this specific node category
                       final nodePosts = posts.where((p) => p.category == categoryKey).toList();
 
                       return _buildTimelineNode(
@@ -114,7 +109,6 @@ class ChainDetailScreen extends StatelessWidget {
     );
   }
 
-  // Visual widget for each step/category in the chain
   Widget _buildTimelineNode({
     required BuildContext context,
     required String chainId,
@@ -128,7 +122,6 @@ class ChainDetailScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left side: The timeline line and dynamic action dot
           Column(
             children: [
               _buildTimelineAvatar(context, chainId, categoryKey, isClosed, posts.isNotEmpty),
@@ -144,7 +137,6 @@ class ChainDetailScreen extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // Right side: The content box
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(bottom: 32),
@@ -163,13 +155,11 @@ class ChainDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Gallery of uploaded content or empty state
                   if (posts.isEmpty)
                     const Text("Waiting for artists to contribute...", style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic))
                   else
                     SizedBox(
                       height: 120,
-                      // ScrollConfiguration enables Mouse Dragging on Desktop/Web
                       child: ScrollConfiguration(
                         behavior: ScrollConfiguration.of(context).copyWith(
                           dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
@@ -185,7 +175,6 @@ class ChainDetailScreen extends StatelessWidget {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: InkWell(
-                                  // OPEN THE MEDIA READER
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -194,7 +183,7 @@ class ChainDetailScreen extends StatelessWidget {
                                           mediaReaderConfiguration: MediaReaderConfiguration.CHAIN_NODE_FEED,
                                           chainId: chainId,
                                           category: categoryKey,
-                                          profilePostIndex: i, // Starts the reader at the exact post they clicked
+                                          profilePostIndex: i,
                                           exitButton: true,
                                         ),
                                       ),
@@ -217,9 +206,7 @@ class ChainDetailScreen extends StatelessWidget {
     );
   }
 
-  // TIMELINE AVATAR
   Widget _buildTimelineAvatar(BuildContext context, String chainId, String categoryKey, bool isClosed, bool hasPosts) {
-    // If the chain is closed, show a checkmark (if filled) or a lock (if empty).
     if (isClosed) {
       return CircleAvatar(
         backgroundColor: hasPosts ? Colors.deepPurpleAccent : Colors.white12,
@@ -229,7 +216,6 @@ class ChainDetailScreen extends StatelessWidget {
         ),
       );
     }
-    // If the chain is open, always show a clickable Plus button
     else {
       return InkWell(
         customBorder: const CircleBorder(),
@@ -238,7 +224,7 @@ class ChainDetailScreen extends StatelessWidget {
             context: context,
             builder: (context) => UploadDialog(
               chainId: chainId,
-              allowedCategories: [categoryKey], //RESTRICTS UPLOAD TO EXACTLY THIS CATEGORY
+              allowedCategories: [categoryKey],
             ),
           );
         },

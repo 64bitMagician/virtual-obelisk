@@ -32,7 +32,7 @@ class _BanUserDialogState extends State<BanUserDialog> {
       final userDocId = snapshot.docs.first.id;
       await FirebaseFirestore.instance.collection('users').doc(userDocId).update({
         'role': 'banned',
-        'hasActivePosts': false, // will no longer be seen in feeds
+        'hasActivePosts': false,
       });
 
       if (mounted) {
@@ -70,7 +70,7 @@ class _BanUserDialogState extends State<BanUserDialog> {
           TextField(
             controller: _usernameController,
             decoration: const InputDecoration(
-              hintText: "e.g., cool_artist_99",
+              hintText: "EX: cool_artist_99",
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.person),
             ),

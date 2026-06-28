@@ -44,7 +44,6 @@ class _PostInfoState extends State<PostInfo> {
         duration: const Duration(milliseconds: 500),
         opacity: actuallyVisible ? 1.0 : 0.0,
 
-        // IgnorePointer prevents the widget from eating clicks when it fades out
         child: IgnorePointer(
           ignoring: !actuallyVisible,
           child: Container(
@@ -62,7 +61,6 @@ class _PostInfoState extends State<PostInfo> {
               mainAxisSize: MainAxisSize.min,
               children: [
 
-                // 1. THE DRAGGER BUTTON
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0, bottom: 16.0),
                   child: GestureDetector(
@@ -95,7 +93,6 @@ class _PostInfoState extends State<PostInfo> {
                   ),
                 ),
 
-                // 2. THE POST INFO
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -107,12 +104,10 @@ class _PostInfoState extends State<PostInfo> {
                     ),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      // This stops the text from being squished into a tall, narrow tower on phones.
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- TITLE ---
                           Text(
                             widget.post.title,
                             style: const TextStyle(
@@ -123,10 +118,7 @@ class _PostInfoState extends State<PostInfo> {
                           ),
                           const SizedBox(height: 8),
 
-                          // --- AUTHOR INFO ---
                           GestureDetector(
-                            // behavior: HitTestBehavior.opaque ensures that tapping the empty space
-                            // between the avatar and the text still triggers the click!
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
                               context.push("/user_profile/${widget.post.authorUsername}");
@@ -145,7 +137,6 @@ class _PostInfoState extends State<PostInfo> {
                                   style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 18,
-                                    // Optional: Add an underline so users know it's a clickable link
                                     decoration: TextDecoration.underline,
                                     decorationColor: Colors.white70,
                                   ),
@@ -154,7 +145,6 @@ class _PostInfoState extends State<PostInfo> {
                             ),
                           ),
 
-                          // --- DESCRIPTION ---
                           if (widget.post.description.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             Padding(

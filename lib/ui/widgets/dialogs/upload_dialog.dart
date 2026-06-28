@@ -24,27 +24,22 @@ class _UploadDialogState extends State<UploadDialog> {
 
   double _uploadProgress = 0.0;
 
-  // Connections to Storage and Firestore Firebase
   final StorageRepository _storageRepo = StorageRepository();
   final DatabaseRepository _dbRepo = DatabaseRepository();
 
   final ScrollController _formScrollController = ScrollController();
 
-  // Image Picker for picking image from local machine
   String? _selectedFileName;
   bool _isUploading = false;
   XFile? _fileInstance;
   Uint8List? _fileAsBytes;
   MediaType? _mediaType;
 
-  // --- THUMBNAIL STATE VARIABLES ---
   XFile? _additionalMediaInstance;
   Uint8List? _additionalMediaBytes;
   String? _additionalMediaFileName;
 
-  // Added state variables for category selection
   String? _selectedCategory;
-  // list passed by reference to 'artCategories' constant from "constants.dart"
   late final List<String> _categories;
   final Map<String, String> _categoryDisplayNames = artCategoriesDisplayName;
 
@@ -54,10 +49,8 @@ class _UploadDialogState extends State<UploadDialog> {
   @override
   void initState() {
     super.initState();
-    // If a specific list was passed, use it. Otherwise, default to ALL categories.
     _categories = widget.allowedCategories ?? artCategories;
 
-    // If the chain only allows ONE category, auto-select it for the user!
     if (_categories.length == 1) {
       _selectedCategory = _categories.first;
     }
@@ -72,7 +65,6 @@ class _UploadDialogState extends State<UploadDialog> {
   }
 
   Future<void> _pickThumbnail() async {
-    // FIX: Removed .platform for v11 compatibility!
     FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.image,
       withData: true,
@@ -80,7 +72,6 @@ class _UploadDialogState extends State<UploadDialog> {
 
     if (result != null) {
       PlatformFile pickedFile = result.files.first;
-      // FIX: Added the '!' to tell Dart the bytes are definitely not null
       Uint8List bytesContent = pickedFile.bytes!;
 
       XFile file = XFile.fromData(
@@ -97,10 +88,8 @@ class _UploadDialogState extends State<UploadDialog> {
     }
   }
 
-  // picks an image from local machine and stores the byte data and name of that image
-  // within the state variables of our UploadDialogState object
+
   Future<void> _pickMainFile() async {
-    // 1. Open the file browser but ONLY allow specific extensions!
     FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: [
@@ -116,24 +105,18 @@ class _UploadDialogState extends State<UploadDialog> {
       withData: true,
     );
 
-    // if we managed to get a file
     if (result != null) {
       PlatformFile pickedFile = result.files.first;
-      // Get new data from the new file so you assign it to member variables in setState()
-      // get file as bytes
       Uint8List bytesContent = pickedFile.bytes!;
 
-      // convert to XFile
       XFile file = XFile.fromData(
         bytesContent,
         name: pickedFile.name,
         path: pickedFile.path,
       );
 
-      // get the new media type of the new file
       final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
 
-      // determine the icon to display
       IconData icon = Icons.question_mark;
       if (newMediaType == MediaType.audio)
         icon = Icons.audio_file_outlined;
@@ -142,16 +125,14 @@ class _UploadDialogState extends State<UploadDialog> {
       else if (newMediaType == MediaType.text)
         icon = Icons.text_snippet_outlined;
 
-      // new state data: selected file name, and the binary data of the file
       setState(() {
         _fileInstance = file;
-        _selectedFileName = file.name; // set name of file
+        _selectedFileName = file.name;
         _fileAsBytes = bytesContent;
         // get MediaType of file
         _mediaType = newMediaType;
         suggestiveFileTypeIcon = icon;
 
-        // You picked a new file, so you want to reset the data of the additionalMedia
           _additionalMediaInstance = null;
           _additionalMediaFileName = null;
           _additionalMediaBytes = null;
@@ -177,9 +158,6 @@ class _UploadDialogState extends State<UploadDialog> {
 
     try {
       print("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
-
-      // We upload the Post through our storageRepo method which requires the post as byte object
-      // We also provide a unique name for differentiation between Post Documents
 
       mainFileDownloadUrl = await _storageRepo.uploadMedia(
         _fileInstance,
@@ -217,7 +195,6 @@ class _UploadDialogState extends State<UploadDialog> {
       );
       print("Main File Data saved to Firestore");
 
-      // Display SnackBar Message
       if (mounted) {
         context.pop(); // Close the dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -228,8 +205,6 @@ class _UploadDialogState extends State<UploadDialog> {
         );
       }
     } catch (e) {
-      // DELETE potential orphan files
-      // In case firestore document fails to create, but the storage uploads had executed
       if (mainFileDownloadUrl != null) {
         await _storageRepo.deleteMediaFromUrl(mainFileDownloadUrl);
       }
@@ -238,7 +213,6 @@ class _UploadDialogState extends State<UploadDialog> {
         await _storageRepo.deleteMediaFromUrl(additionalMediaDownloadUrl);
       }
 
-      // Present error message to user
       if (mounted) {
         print("UPLOAD ERROR: $e");
         ScaffoldMessenger.of(context).showSnackBar(
@@ -280,7 +254,6 @@ class _UploadDialogState extends State<UploadDialog> {
     }
   }
 
-  // The Visual Dialog
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -292,16 +265,14 @@ class _UploadDialogState extends State<UploadDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. PINNED TITLE (Always visible at the top)
             Text(
               "Upload Dialog",
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
 
-            // 2. SCROLLABLE FORM AREA
             Flexible(
-              child: Scrollbar( // Force the scrollbar to stay visible!
+              child: Scrollbar(
                 controller: _formScrollController,
                 thumbVisibility: true,
                 thickness: 6.0,
@@ -324,7 +295,7 @@ class _UploadDialogState extends State<UploadDialog> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: _fileInstance == null
-                              ? const Column( // if no file yet provided
+                              ? const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.cloud_upload, size: 48, color: Colors.deepPurple),
@@ -332,7 +303,7 @@ class _UploadDialogState extends State<UploadDialog> {
                               Text("Click to select Art"),
                             ],
                           )
-                        : Column( // if file data has been provided
+                        : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Expanded(
@@ -354,7 +325,6 @@ class _UploadDialogState extends State<UploadDialog> {
 
                       const SizedBox(height: 16),
 
-                      // --- DYNAMIC THUMBNAIL PICKER ---
                       if (_mediaType == MediaType.audio || _mediaType == MediaType.video) ...[
                         _mediaType == MediaType.audio
                             ? const Text("Add Cover Art (Optional)", style: TextStyle(fontWeight: FontWeight.bold))
@@ -399,11 +369,9 @@ class _UploadDialogState extends State<UploadDialog> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Title and Category side-by-side
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title Field takes up 3/5 of the space
                           Expanded(
                             flex: 3,
                             child: TextField(
@@ -417,13 +385,12 @@ class _UploadDialogState extends State<UploadDialog> {
                           ),
                           const SizedBox(width: 16),
 
-                          // Category Dropdown takes up 2/5 of the space
                           Expanded(
                             flex: 2,
                             child: DropdownMenu<String>(
                               initialSelection: _selectedCategory,
-                              label: const Text("Category"), // Looks identical to the TextField label!
-                              expandedInsets: EdgeInsets.zero, // Forces it to fill the Expanded width
+                              label: const Text("Category"),
+                              expandedInsets: EdgeInsets.zero,
                               enableSearch: true,
                               menuHeight: 250,
                               dropdownMenuEntries: _categories.map<DropdownMenuEntry<String>>((String category) {
@@ -442,9 +409,6 @@ class _UploadDialogState extends State<UploadDialog> {
                         ],
                       ),
 
-                      // Removed the SizedBox(height: 16) here because the maxLength counter
-                      // on the title field already provides natural padding!
-
                       TextField(
                         controller: _descriptionController,
                         maxLines: 3,
@@ -462,7 +426,6 @@ class _UploadDialogState extends State<UploadDialog> {
 
             const SizedBox(height: 24),
 
-            // 3. PINNED ACTION BUTTONS (Always visible at the bottom)
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -501,7 +464,6 @@ class _UploadDialogState extends State<UploadDialog> {
     const int maxDescriptionLength = 1000;
     const int maxFileSizeBytes = 4000 * 1024 * 1024; // 4 GB
 
-    // Title validation
     if (_titleController.text.trim().isEmpty) {
       return "Please enter a title.";
     }
@@ -511,39 +473,33 @@ class _UploadDialogState extends State<UploadDialog> {
       return "Title is too long (max $maxTitleLength characters).";
     }
 
-    // Description validation
     final description = _descriptionController.text.trim();
     if (description.length > maxDescriptionLength) {
       return "Description is too long (max $maxDescriptionLength characters).";
     }
 
-    // Category validation
     if (_selectedCategory == null) {
       return "Please select a category.";
     }
 
-    // Main file validation
     if (_fileInstance == null) {
       return "Please select a file to upload.";
     }
 
-    // Media type validation
     if (_mediaType == null) {
       return "Unsupported media type.";
     }
 
-    // File size validation
     if (_fileAsBytes != null && _fileAsBytes!.length > maxFileSizeBytes) {
       return "File is too large. Maximum size is 4GB.";
     }
 
-    // Additional media validation
     if (_additionalMediaInstance != null &&
         !(_mediaType == MediaType.audio || _mediaType == MediaType.video)) {
       return "Additional media is only allowed for audio or video posts.";
     }
 
-    return null; // everything is valid
+    return null;
   }
 
 }

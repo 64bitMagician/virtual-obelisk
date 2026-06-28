@@ -8,7 +8,7 @@ enum MediaType { image, audio, video, text }
 /// !THIS IS NOT THE VISUAL REPRESENTATION OF THE POST!
 /// !FOR THAT, CHECK art_post_card.dart
 class ArtPost {
-  final String additionalMediaUrl; // cover art for audio, or thumbnail for videos
+  final String additionalMediaUrl;
   final String authorAvatar;
   final String authorName;
   final String authorUsername;
@@ -66,9 +66,6 @@ class ArtPost {
         default: return MediaType.image;
       }
     }
-
-    // Note: Pro Tip: When you upload a post using FieldValue.serverTimestamp(), there is a split second where the local cache reads it as null before
-    // the server responds with the real time. We add a safe fallback to DateTime.now() to prevent crashes during that microsecond
 
     //Safely convert Firebase Timestamp to Dart DateTime
     DateTime postDate = DateTime.now(); // Safe fallback

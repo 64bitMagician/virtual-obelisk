@@ -19,7 +19,6 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _lifespanController = TextEditingController(text: "7");
 
-  // Now accepts nulls! (Null means an empty slot was added but not selected yet)
   final List<String?> _chainNodes = [];
 
   final List<String> _categories = artCategories;
@@ -35,21 +34,17 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
     super.dispose();
   }
 
-  // Returns only categories that haven't been picked yet
   List<String> _getAvailableCategories(int currentIndex) {
     return _categories.where((category) {
-      // Show it if it's not in the list, or if it's the one currently selected in this specific node
       return !_chainNodes.contains(category) || _chainNodes[currentIndex] == category;
     }).toList();
   }
 
   Future<void> _submitChain() async {
-    // This will automatically validate all Dropdowns and TextFields
     if (!_formKey.currentState!.validate()) return;
 
-    // Don't allow completely empty chains
     if (_chainNodes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You must add at least one category node to the chain!")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You must add at least one category node to the chain")));
       return;
     }
 
@@ -58,19 +53,18 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
     try {
       final int days = int.parse(_lifespanController.text.trim());
 
-      // Convert List<String?> to a strict List<String>
       final List<String> finalSequence = _chainNodes.whereType<String>().toList();
 
       await _repo.createChain(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         lifespanDays: days,
-        categoryNodes: finalSequence, // Pass the clean sequence to the backend
+        categoryNodes: finalSequence,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Art Chain Launched Successfully!"), backgroundColor: Colors.green),
+          const SnackBar(content: Text("Art Chain Launched Successfully"), backgroundColor: Colors.green),
         );
         context.pop();
       }
@@ -128,7 +122,6 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
               const Text("Define the exact order of art categories. You cannot use the same category twice.", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 16),
 
-              // THE NODE BUILDER LIST
               if (_chainNodes.isNotEmpty)
                 ListView.separated(
                   shrinkWrap: true,
@@ -139,7 +132,7 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
                     final availableCategories = _getAvailableCategories(index);
 
                     return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start, // Aligns icon with top of dropdown
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0, right: 12.0),
@@ -186,8 +179,6 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
 
               const SizedBox(height: 16),
 
-              // THE "ADD NODE" BUTTON
-              // Only show the button if we haven't run out of available categories!
               if (_chainNodes.length < _categories.length)
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -196,7 +187,6 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
                   ),
                   onPressed: () {
                     setState(() {
-                      // Add an empty slot to the list
                       _chainNodes.add(null);
                     });
                   },
@@ -206,7 +196,6 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
 
               const SizedBox(height: 48),
 
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 50,

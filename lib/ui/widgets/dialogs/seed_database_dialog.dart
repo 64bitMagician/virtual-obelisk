@@ -45,8 +45,7 @@ class _SeedDatabaseDialogState extends State<SeedDatabaseDialog> {
     return AlertDialog(
       title: const Text("Seed Database?"),
       content: const Text(
-        "This will generate 5 fake users and 10 fake art posts. "
-            "This operation might take a few moments.",
+        "This will generate 5 fake users and 10 fake art posts.",
       ),
       actions: [
         TextButton(

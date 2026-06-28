@@ -123,8 +123,7 @@ class ResponsiveScaffold extends StatelessWidget {
     if (location.startsWith('/personal_profile')) return 3;
     if (location.startsWith('/settings')) return 4;
 
-    // SAFEGUARD: If the URL is '/admin' but they aren't an admin, default to Home(0)
-    // This prevents the NavigationBar from crashing due to an OutOfBounds index!
+
     if (location.startsWith('/admin')) return isAdmin ? 5 : 0;
 
     return 0;

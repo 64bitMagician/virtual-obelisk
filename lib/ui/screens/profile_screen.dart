@@ -106,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StreamBuilder<Map<String, dynamic>?>(
       stream: _repository.getProfileStream(user!.uid),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) { // Loading Animation while fetching post list
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 

@@ -139,7 +139,6 @@ final GoRouter router = GoRouter(
           builder: (context, state) => CategoriesScreen(),
           routes: [
             GoRoute(
-              // NO leading slash here!
               // By nesting it, go_router automatically prepends '/categories/' to it.
               // So the full absolute URL becomes: /categories/feed/:categoryName
               path: 'feed/:category_name',

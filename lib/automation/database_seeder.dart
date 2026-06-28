@@ -5,7 +5,6 @@ import 'package:faker/faker.dart';
 import 'package:uuid/uuid.dart';
 
 class DatabaseSeeder {
-  // connection with Firestore Database to create users, usernames, and artposts
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   // Create Random First/Last Names and Sentences
   final Faker _faker = Faker();
@@ -14,7 +13,6 @@ class DatabaseSeeder {
   // Used for random number generators
   final Random _random = Random();
 
-  // The categories defined in constants.dart
   final List<String> _categories = artCategories;
 
   Future<void> runSeed() async {
@@ -23,9 +21,8 @@ class DatabaseSeeder {
     try {
       List<Map<String, dynamic>> generatedUsers = await _seedUsers(5);
       await _seedPosts(10, generatedUsers);
-      // Optional: You can write a _seedFollows() method here later!
 
-      print("SEED COMPLETE! Your database is now full of fake data.");
+      print("SEED COMPLETE! Database is now full of fake data.");
     } catch (e) {
       print("SEED FAILED: $e");
     }
@@ -63,7 +60,6 @@ class DatabaseSeeder {
         "followers": 0,
         "hasActivePosts": false,
         "lastUploadAt": null,
-        // Robohash generates a unique robot/monster avatar based on the text you pass it within link
         "rank": 'rankless',
         "posts": 0,
         "username": username,

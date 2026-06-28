@@ -5,7 +5,6 @@ class RankProgressBar extends StatelessWidget {
 
   const RankProgressBar({super.key, required this.artistPoints});
 
-  // We define the thresholds in a structured list so it's easy to change later
   static const List<Map<String, dynamic>> ranks = [
     {'name': 'Novice', 'min': 0, 'max': 500, 'color': Colors.grey},
     {'name': 'Apprentice', 'min': 500, 'max': 1500, 'color': Colors.green},
@@ -18,17 +17,15 @@ class RankProgressBar extends StatelessWidget {
 
   Map<String, dynamic> _getCurrentRankInfo() {
     for (int i = 0; i < ranks.length; i++) {
-      // If we are at the max rank, just return it
       if (i == ranks.length - 1 && artistPoints >= ranks[i]['max']) {
         return ranks.last;
       }
 
-      // Find the tier where the user's points fit
       if (artistPoints >= ranks[i]['min'] && artistPoints < ranks[i]['max']) {
         return ranks[i];
       }
     }
-    return ranks.first; // Fallback
+    return ranks.first;
   }
 
   @override
@@ -39,7 +36,6 @@ class RankProgressBar extends StatelessWidget {
     final int maxPoints = rankInfo['max'];
     final Color rankColor = rankInfo['color'];
 
-    // The Math: Calculate progress purely within the current tier
     double progress = 1.0;
     if (maxPoints > minPoints && artistPoints < maxPoints) {
       progress = (artistPoints - minPoints) / (maxPoints - minPoints);
@@ -69,7 +65,6 @@ class RankProgressBar extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // The visual progress bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(

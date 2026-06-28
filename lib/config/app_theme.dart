@@ -1,33 +1,21 @@
 import 'package:flutter/material.dart';
 
-/// [AppTheme] defines the theme (Visual Aspects: colors, fonts, etc...) for our application
 class AppTheme {
-  // ---------------------------------------------------------------------------
-  // 1. Color Palette (Soft Sage Green & Earthy Tones)
-  // ---------------------------------------------------------------------------
-
-  // Primary "Soft" Color
   static const Color _seedColor = Color(0xFF6A8E7F);
 
-  // Light Mode Colors
   static const Color _lightBackground = Color(0xFFF8FAF9);
   static const Color _lightSurface = Color(0xFFFFFFFF);
   static const Color _lightOnSurface = Color(0xFF1E2F28);
 
-  // Dark Mode Colors
   static const Color _darkBackground = Color(0xFF181C1A);
   static const Color _darkSurface = Color(0xFF222825);
   static const Color _darkOnSurface = Color(0xFFE2EBE6);
 
-  // ---------------------------------------------------------------------------
-  // 2. Light Theme
-  // ---------------------------------------------------------------------------
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
 
-      // Auto-generate a harmonious palette from our seed color
       colorScheme: ColorScheme.fromSeed(
         seedColor: _seedColor,
         brightness: Brightness.light,
@@ -38,14 +26,12 @@ class AppTheme {
 
       scaffoldBackgroundColor: _lightBackground,
 
-      // --- Typography ---
       textTheme: _textTheme(Colors.black87),
 
-      // --- Component Themes ---
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         backgroundColor: _lightBackground,
-        scrolledUnderElevation: 0, // Prevents color change on scroll
+        scrolledUnderElevation: 0,
         iconTheme: IconThemeData(color: Colors.black87),
         titleTextStyle: TextStyle(
           color: Colors.black87,
@@ -61,9 +47,7 @@ class AppTheme {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 3. Dark Theme
-  // ---------------------------------------------------------------------------
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -79,10 +63,8 @@ class AppTheme {
 
       scaffoldBackgroundColor: _darkBackground,
 
-      // --- Typography ---
       textTheme: _textTheme(_darkOnSurface),
 
-      // --- Component Themes ---
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         backgroundColor: _darkBackground,
@@ -102,11 +84,6 @@ class AppTheme {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 4. Shared Styles (DRY Principle)
-  // ---------------------------------------------------------------------------
-
-  // Custom Text Theme
   static TextTheme _textTheme(Color baseColor) {
     return TextTheme(
       displayLarge: TextStyle(color: baseColor, fontWeight: FontWeight.bold),
@@ -120,17 +97,15 @@ class AppTheme {
     );
   }
 
-  // Modern Button Style
   static final ElevatedButtonThemeData _elevatedButtonThemeData = ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      elevation: 0, // Flat design is more modern
+      elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
     ),
   );
 
-  // Modern Input Fields (Outlined)
   static InputDecorationTheme _inputDecorationTheme(Color borderColor, Color fillColor) {
     return InputDecorationTheme(
       filled: true,
@@ -151,11 +126,10 @@ class AppTheme {
     );
   }
 
-  // Card Style
   static CardTheme _cardTheme(Color color) {
     return CardTheme(
       color: color,
-      elevation: 0, // Flat style with outline is popular
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),

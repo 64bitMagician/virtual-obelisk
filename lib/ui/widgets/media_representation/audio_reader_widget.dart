@@ -32,7 +32,6 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
 
   Future<void> _initAudio() async {
     try {
-      // Tell the player to load the audio from your Firebase URL
       await _audioPlayer.setUrl(widget.audioUrl);
     } catch (e) {
       print("Error loading audio: $e");
@@ -44,7 +43,7 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
 
   @override
   void dispose() {
-    // ! Stop the audio and free up resources when the widget is destroyed
+    // Stop the audio and free up resources when the widget is destroyed
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -70,10 +69,6 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 32),
-
-          // 1. SQUARE COVER ART (Responsive)
-          // Wrapping it in Expanded forces it to shrink on smaller screens
-          // instead of pushing the play buttons off the bottom of the screen.
           Expanded(
             child: AspectRatio(
               aspectRatio: 1.0,
@@ -104,7 +99,6 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
 
           const SizedBox(height: 32),
 
-          // PROGRESS BAR & TIME LABELS
           StreamBuilder<Duration>(
             stream: _audioPlayer.positionStream,
             builder: (context, snapshot) {
@@ -118,7 +112,6 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
 
               return Column(
                 children: [
-                  // The Draggable Slider
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 4.0,
@@ -133,13 +126,11 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
                       max: sliderMax > 0 ? sliderMax : 1.0,
                       value: sliderValue,
                       onChanged: (value) {
-                        // Allows the user to drag the progress bar to seek!
                         _audioPlayer.seek(Duration(milliseconds: value.toInt()));
                       },
                     ),
                   ),
 
-                  // The mm:ss Time Labels
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Row(

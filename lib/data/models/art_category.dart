@@ -6,7 +6,7 @@ class ArtCategory {
   final String categoryName;
   final IconData icon;
   final Color themeColor;
-  final String imageAsset; // If you want background images
+  final String imageAsset;
 
   ArtCategory({
     required this.title,
@@ -21,7 +21,6 @@ class ArtCategory {
 
 
 // ! The order and indexing is very important. It must coincide with 'artCategories' List's order (from constants.dart).
-// Data Source
 List<ArtCategory> appCategories = [
   ArtCategory(title: artCategoriesDisplayName["ascii_art"]!, categoryName: artCategories[0], icon: Icons.data_object_outlined, themeColor: Colors.grey),
   ArtCategory(title: artCategoriesDisplayName["dance"]!, categoryName: artCategories[1], icon: Icons.radio, themeColor: Colors.deepPurple),

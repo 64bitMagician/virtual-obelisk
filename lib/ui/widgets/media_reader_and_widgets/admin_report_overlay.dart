@@ -21,9 +21,9 @@ class AdminReportOverlay extends StatelessWidget {
       child: IgnorePointer(
         ignoring: !isVisible,
         child: Container(
-          width: 300, // Fixed width so it doesn't take over the whole screen
+          width: 300,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.75), // Dark glass effect
+            color: Colors.black.withOpacity(0.75),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
           ),
@@ -43,7 +43,6 @@ class AdminReportOverlay extends StatelessWidget {
               ),
               const Divider(color: Colors.white30, height: 24),
 
-              // The Scrollable list of reports
               Expanded(
                 child: StreamBuilder<List<Map<String, dynamic>>>(
                   stream: repo.getReportsForPost(artworkId),

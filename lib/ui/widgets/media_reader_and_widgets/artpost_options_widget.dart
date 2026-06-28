@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 class ArtPostOptions extends StatelessWidget {
   final ArtPost post;
   final bool isVisible;
-  final VoidCallback onUserInteracted; // To reset fade timer
+  final VoidCallback onUserInteracted;
   final DatabaseRepository _repo = DatabaseRepository();
 
 
@@ -19,13 +19,11 @@ class ArtPostOptions extends StatelessWidget {
     required this.onUserInteracted,
   });
 
-  // Checks if the logged-in user is an admin
   Future<bool> _checkIfAdmin(String uid) async {
     final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
     return doc.data()?['role'] == 'admin';
   }
 
-  // The actual Report Dialog
   void _showReportDialog(BuildContext context) {
     final reasonController = TextEditingController();
 
@@ -42,7 +40,7 @@ class ArtPostOptions extends StatelessWidget {
             TextField(
               controller: reasonController,
               decoration: const InputDecoration(
-                hintText: "e.g., Spam, Inappropriate, Copyright...",
+                hintText: "EX: AI-Generated, Spam, Copyright...",
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -60,10 +58,9 @@ class ArtPostOptions extends StatelessWidget {
               final reason = reasonController.text.trim();
               if (reason.isEmpty) return;
 
-              Navigator.pop(context); // Close dialog immediately
+              Navigator.pop(context);
 
               try {
-                // Call the backend function we just built
                 await _repo.submitReport(
                     artworkId: post.id,
                     reason: reason
@@ -89,7 +86,6 @@ class ArtPostOptions extends StatelessWidget {
     );
   }
 
-  // Delete Confirmation Dialog
   void _showDeleteDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -104,7 +100,7 @@ class ArtPostOptions extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
+              Navigator.pop(context);
               try {
                 final userDoc = await FirebaseFirestore.instance.collection('users').doc(post.userId).get();
                 final currentPostCount = userDoc.data()?['posts'] ?? 0;
@@ -129,14 +125,12 @@ class ArtPostOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
 
-    // Fading animation controlled by MediaReader's timer
     return AnimatedOpacity(
       opacity: isVisible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 300),
       child: IgnorePointer(
         ignoring: !isVisible,
         child: FutureBuilder<bool>(
-          // We check if the user is an admin so we can show them special tools
           future: currentUid != null ? _checkIfAdmin(currentUid) : Future.value(false),
           builder: (context, snapshot) {
             final isAdmin = snapshot.data ?? false;
@@ -145,9 +139,9 @@ class ArtPostOptions extends StatelessWidget {
             return PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: Colors.white, size: 30),
               color: Colors.grey[900],
-              onOpened: onUserInteracted, // Keeps UI visible while menu is open
+              onOpened: onUserInteracted,
               onSelected: (value) async {
-                onUserInteracted(); // Reset timer after selection
+                onUserInteracted();
 
                 if (value == 'report') {
                   _showReportDialog(context);
@@ -168,7 +162,6 @@ class ArtPostOptions extends StatelessWidget {
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  // 1. OWNER OPTIONS
                   if (isOwner || isAdmin) ...[
                     const PopupMenuItem(
                       value: 'edit',
@@ -180,7 +173,6 @@ class ArtPostOptions extends StatelessWidget {
                     ),
                   ],
 
-                  // 2. VIEWER OPTIONS
                   if (!isOwner) ...[
                     const PopupMenuItem(
                       value: 'report',
@@ -188,18 +180,15 @@ class ArtPostOptions extends StatelessWidget {
                     ),
                   ],
 
-                  // 3. ADMIN MODERATION CONTROLS
                   if (isAdmin) ...[
                     const PopupMenuDivider(),
 
-                    // If post is live, show "Take Down"
                     if (!post.isDeactivated)
                       const PopupMenuItem(
                         value: 'admin_deactivate',
                         child: Row(children: [Icon(Icons.gavel, color: Colors.red, size: 20), SizedBox(width: 8), Text("ADMIN: Force Takedown", style: TextStyle(color: Colors.red))]),
                       ),
 
-                    // If post is deactivated (in the queue), show "Reactivate"
                     if (post.isDeactivated)
                       const PopupMenuItem(
                         value: 'admin_reactivate',

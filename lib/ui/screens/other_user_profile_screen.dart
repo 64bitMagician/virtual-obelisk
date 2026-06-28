@@ -8,7 +8,7 @@ import 'package:art_platform/data/models/art_post.dart';
 import '../../data/repositories/database_repository.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
-  final String username; // We now accept the username from the Web URL!
+  final String username;
 
   const OtherUserProfileScreen({
     super.key,
@@ -25,7 +25,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<Map<String, dynamic>?>(
-      // Search the database by the username!
       stream: _repository.getProfileStreamByUsername(widget.username),
       builder: (context, snapshot) {
 
@@ -35,7 +34,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
 
         final data = snapshot.data;
 
-        // If someone types a bad username in the URL
         if (data == null) {
           return Scaffold(
             appBar: AppBar(title: const Text("User Not Found")),
@@ -43,7 +41,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
           );
         }
 
-        // WE EXTRACT THE UID FROM THE DATABASE RESULT
         final String otherProfileUid = data['uid'];
 
         final Map<String, dynamic> headerMap = {
@@ -60,7 +57,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
           'artist_points': data?['artist_points'] ?? -1,
         };
 
-        // get current user
         final currentUid = FirebaseAuth.instance.currentUser?.uid;
 
         return Scaffold(
@@ -83,8 +79,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
 
                     const SizedBox(height: 16),
 
-                    // THE FOLLOW BUTTON
-                    // We only show it if the user is logged in and they aren't looking at their own profile!
                     if (currentUid != null && currentUid != otherProfileUid)
                       FollowButton(targetUid: otherProfileUid),
 
@@ -95,9 +89,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                     const Icon(Icons.grid_on, color: Colors.deepPurple),
                     const SizedBox(height: 16),
 
-                    // The Posts Gallery
                     StreamBuilder<List<ArtPost>>(
-                      // WE PASS THE HIDDEN UID TO FETCH THE POSTS
                       stream: _repository.getUserPosts(otherProfileUid),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -126,7 +118,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                           itemBuilder: (context, index) {
                             final post = posts[index];
                             return GestureDetector(
-                              // Update routing to use the username!
                               onTap: () => context.push("/user_profile/${widget.username}/media_reader/$index", extra: otherProfileUid),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),

@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 /// It has animation to dissapear. It gets triggered whenever [isVisible] becomes flase.
 class ExitReaderButton extends StatelessWidget {
   final bool isVisible;
-  final double top; // distance from top
-  final double right; // distance from right
+  final double top;
+  final double right;
   final Color backgroundColor;
   final Color iconColor;
   final double size;
@@ -19,10 +19,10 @@ class ExitReaderButton extends StatelessWidget {
     required this.isVisible,
     this.top = 40,
     this.right = 16,
-    this.backgroundColor = const Color(0x80000000), // semi-transparent black
+    this.backgroundColor = const Color(0x80000000),
     this.iconColor = Colors.white,
     this.size = 28,
-    this.animationDuration = const Duration(milliseconds: 600), // retraction animation duration;
+    this.animationDuration = const Duration(milliseconds: 600),
     super.key,
   });
 
@@ -30,8 +30,8 @@ class ExitReaderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedPositioned(
       duration: animationDuration,
-      top: isVisible ? top : -100, // at top defined position, or out of view (-100 px)
-      right: right, // at right defined position, or out of view (-100 px)
+      top: isVisible ? top : -100,
+      right: right,
       child: AnimatedOpacity(
         duration: animationDuration,
         opacity: isVisible ? 0.6 : 0.0, // the fading goes to 0 when ui is no longer visible

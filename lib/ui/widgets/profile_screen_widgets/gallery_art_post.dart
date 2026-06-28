@@ -8,7 +8,6 @@ class GalleryArtPost extends StatelessWidget {
 
   const GalleryArtPost({required this.post, super.key});
 
-  // Getters
   MediaType get postType => post.mediaType;
 
   @override

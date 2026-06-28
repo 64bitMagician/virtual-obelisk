@@ -51,9 +51,9 @@ class StorageRepository {
 
     UploadTask task;
     try {
-      // Branch the logic based on the platform!
+      // Branch the logic based on the platform
       if (kIsWeb) { // if we are on web
-        // WEB: We MUST use bytes. Browsers handle memory differently, so this is safe.
+        // WEB: We must use bytes. Browsers handle memory differently, so this is safe.
         final Uint8List fileBytes = await file.readAsBytes();
         // We also need to explicitly tell Firebase what the MIME type is on Web,
         // otherwise it might save as 'application/octet-stream'
@@ -62,7 +62,6 @@ class StorageRepository {
         task = ref.putData(fileBytes, metadata);
       } else {
         // MOBILE: We use the physical File path.
-        // This streams the file from the hard drive to Firebase, saving RAM!
         task = ref.putFile(File(file.path));
       }
 
