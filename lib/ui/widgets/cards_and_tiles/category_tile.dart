@@ -5,7 +5,7 @@ class CategoryTile extends StatelessWidget {
   final ArtCategory category;
   final VoidCallback onTap;
 
-  const CategoryTile({required this.category, required this.onTap});
+  const CategoryTile({super.key, required this.category, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +15,13 @@ class CategoryTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: [category.themeColor.withOpacity(0.7), category.themeColor],
+            colors: [category.themeColor.withValues(alpha: 0.7), category.themeColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: category.themeColor.withOpacity(0.3),
+              color: category.themeColor.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),

@@ -4,6 +4,8 @@ import 'package:art_platform/data/models/art_category.dart';
 import 'package:go_router/go_router.dart';
 
 class CategoriesScreen extends StatelessWidget {
+  const CategoriesScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     // get width of user's screen

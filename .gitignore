@@ -46,3 +46,22 @@ app.*.map.json
 
 # Security
 .env
+.env.*
+*.local
+# Firebase Admin SDK / Google Cloud service account keys. Never commit these.
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+# Signing keys
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log

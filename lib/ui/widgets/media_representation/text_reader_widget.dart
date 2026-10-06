@@ -53,7 +53,7 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
         List<String> lines = decodedText.split('\n');
         for (int i = 0; i < lines.length; i++) {
           if (lines[i].trim().isNotEmpty && lines[i].startsWith(RegExp(r'[ \t]+'))) {
-            lines[i] = '    ' + lines[i].trimLeft();
+            lines[i] = '    ${lines[i].trimLeft()}';
           }
         }
         decodedText = lines.join('\n');
@@ -68,7 +68,7 @@ class _TextReaderWidgetState extends State<TextReaderWidget> {
         throw Exception("Failed to load text.");
       }
     } catch (e) {
-      print("Error fetching text: $e");
+      debugPrint("Error fetching text: $e");
       if (mounted) {
         setState(() {
           _isError = true;

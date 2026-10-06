@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:mime/mime.dart';
 
@@ -6,10 +7,11 @@ import 'package:mime/mime.dart';
 /// I believe it determines the MIME type based on the format at the end of file name (EX: .png, .was, .mp3 ...)
 /// Which means that having a file format at the end is required...
 MediaType determineMediaTypeFromFile(String? fileName, List<int> bytes) {
-  if(fileName == null)
+  if(fileName == null) {
     throw Exception("fileName provided is 'null");
+  }
 
-  print("ATTEMPTING TO GET THE MIME TYPE OF FILE...");
+  debugPrint("ATTEMPTING TO GET THE MIME TYPE OF FILE...");
   // lookupMimeType returns a string like 'image/png' or 'audio/mp3'
   final mimeType = lookupMimeType(fileName, headerBytes: bytes);
 
@@ -25,9 +27,9 @@ MediaType determineMediaTypeFromFile(String? fileName, List<int> bytes) {
     return MediaType.video;
   } else if (mimeType.startsWith('audio/')) {
     return MediaType.audio;
-  } else if (mimeType.startsWith('text/'))
+  } else if (mimeType.startsWith('text/')) {
     return MediaType.text;
-    else {
+  } else {
     throw Exception('File type not allowed for art posts.');
   }
 }

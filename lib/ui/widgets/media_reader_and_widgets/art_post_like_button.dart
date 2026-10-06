@@ -44,7 +44,7 @@ class _ArtPostLikeButtonState extends State<ArtPostLikeButton> {
           children: [
             StreamBuilder<bool>(
               stream: _currentUid != null
-                  ? _repo.hasUserLikedPost(widget.post.id, _currentUid!)
+                  ? _repo.hasUserLikedPost(widget.post.id, _currentUid)
                   : Stream.value(false),
               builder: (context, snapshot) {
                 final hasLiked = snapshot.data ?? false;

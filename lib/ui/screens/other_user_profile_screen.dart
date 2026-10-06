@@ -45,16 +45,16 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
 
         final Map<String, dynamic> headerMap = {
           'uid': otherProfileUid,
-          'username': data?['username'] ?? 'Unknown User',
-          'displayName': data?['displayName'] ?? "Artist",
-          'bio': data?['bio'] ?? "No bio yet...",
-          'avatarUrl': data?['avatarUrl'] ?? "default",
-          'rank': data?['rank'] ?? 'rankless',
-          'posts': data?['posts'] ?? -1,
-          'followers': data?['followers'] ?? -1,
-          'following': data?['following'] ?? -1,
+          'username': data['username'] ?? 'Unknown User',
+          'displayName': data['displayName'] ?? "Artist",
+          'bio': data['bio'] ?? "No bio yet...",
+          'avatarUrl': data['avatarUrl'] ?? "default",
+          'rank': data['rank'] ?? 'rankless',
+          'posts': data['posts'] ?? -1,
+          'followers': data['followers'] ?? -1,
+          'following': data['following'] ?? -1,
           'likes': data['likes'] ?? 0,
-          'artist_points': data?['artist_points'] ?? -1,
+          'artist_points': data['artist_points'] ?? -1,
         };
 
         final currentUid = FirebaseAuth.instance.currentUser?.uid;

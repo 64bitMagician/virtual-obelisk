@@ -6,7 +6,7 @@ enum Ranks {novice, apprentice, artisan, master, virtuoso, visionary, legend}
 // used in upload_dialog.dart
 enum FolderPathEnum {artworks, coverart, thumbnail, avatars}
 
-enum MediaReaderConfiguration {HOME_FEED, CATEGORY_FEED, PROFILE_FEED, REPORTED_ARTPOSTS_FEED, CHAIN_NODE_FEED}
+enum MediaReaderConfiguration {homeFeed, categoryFeed, profileFeed, reportedArtpostsFeed, chainNodeFeed}
 
 // ! DO NOT CHANGE ORDER, IT WILL AFFECT APPLICATION. IF CHANGING ORTHER ALSO CHANGE TO art_category.dart
 // ! IF YOU WANT TO ADD A NEW ART CATEGORY, YOU MUST ALSO PROVIDE THE DISPLAY NAME IN THE MAP OBJECT TYPE BELLOW
@@ -44,10 +44,10 @@ const Map<String, String> artCategoriesDisplayName = {
 };
 
 // Artist Point Reward Values:
-const int upload_artpost_artist_points_reward = 200;
-const int gain_follower_artist_points_reward = 100;
-const int get_like_artist_points_reward = 50;
+const int uploadArtpostArtistPointsReward = 200;
+const int gainFollowerArtistPointsReward = 100;
+const int getLikeArtistPointsReward = 50;
 
 // Posts per day limit
-const int posts_per_day_allowed = 2;
+const int postsPerDayAllowed = 2;
 

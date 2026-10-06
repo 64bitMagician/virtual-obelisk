@@ -36,7 +36,7 @@ class _FollowButtonState extends State<FollowButton> {
         });
       }
     } catch (e) {
-      print("Error checking follow state: $e");
+      debugPrint("Error checking follow state: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -62,7 +62,7 @@ class _FollowButtonState extends State<FollowButton> {
         });
       }
     } catch (e) {
-      print("Error toggling follow: $e");
+      debugPrint("Error toggling follow: $e");
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(

@@ -15,35 +15,38 @@ class GalleryArtPost extends StatelessWidget {
     // determine icon post type
     IconData? icon = _determineIconToUseOnPost();
 
-    String gallery_image;
+    String galleryImage;
     FetchType fetchType;
     // Getting multiple values from function through Record Dart Feature
-    (fetchType, gallery_image) = _determineFetchTypeAndImageAssetToUpload();
+    (fetchType, galleryImage) = _determineFetchTypeAndImageAssetToUpload();
 
-    if (fetchType == FetchType.local) // if gallery image received localy
-      return _createLocalGalleryImage(gallery_image, icon: icon);
-    else if (fetchType == FetchType.network) // if gallery image received from network
-      return _createNetworkGalleryImage(gallery_image, icon: icon);
+    if (fetchType == FetchType.local) {
+      // if gallery image received localy
+      return _createLocalGalleryImage(galleryImage, icon: icon);
+    } else if (fetchType == FetchType.network) {
+      // if gallery image received from network
+      return _createNetworkGalleryImage(galleryImage, icon: icon);
+    }
 
     // in case something bad happens
     return Image.asset("assets/icons/error_image.png");
   }
 
   Widget _createLocalGalleryImage(String localImageUrl, {IconData? icon}) {
-    bool chain_icon = _checkIfChainPost();
+    bool chainIcon = _checkIfChainPost();
 
     return Stack(
         fit: StackFit.expand,
         children: [
           Image.asset(localImageUrl, fit: BoxFit.cover),
-          if (chain_icon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
+          if (chainIcon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
           if (icon != null) Positioned(bottom: 5, right: 5, child: getMediaTypeIconWidget(icon)),
         ]
     );
   }
 
   Widget _createNetworkGalleryImage(String imageUrl, {IconData? icon}) {
-    bool chain_icon = _checkIfChainPost();
+    bool chainIcon = _checkIfChainPost();
 
     return Stack(
       fit: StackFit.expand,
@@ -71,7 +74,7 @@ class GalleryArtPost extends StatelessWidget {
           // We will simply display a broken image icon
           errorBuilder: (context, err, stack) => const Icon(Icons.broken_image),
         ),
-        if (chain_icon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
+        if (chainIcon) Positioned(bottom: 5, left: 5, child: getChainIcon()),
         if (icon != null) Positioned(bottom: 5, right: 5, child: getMediaTypeIconWidget(icon)),
       ],
     );
@@ -79,34 +82,38 @@ class GalleryArtPost extends StatelessWidget {
 
   // determine the icon to use depending on post type
   IconData? _determineIconToUseOnPost() {
-    if (postType == MediaType.audio) // audio -> audio icon
+    if (postType == MediaType.audio) {
+      // audio -> audio icon
       return Icons.music_note_outlined;
-    else if (postType == MediaType.video) // video -> video icon
+    } else if (postType == MediaType.video) {
+      // video -> video icon
       return Icons.movie_outlined;
-    else if (postType == MediaType.text)
+    } else if (postType == MediaType.text) {
       return Icons.text_snippet_outlined; // text -> text icon
-    else if (postType == MediaType.image)
+    } else if (postType == MediaType.image) {
       return Icons.image_outlined;
+    }
 
     return null;
   }
 
   // This method checks if the artpost belongs to a chain
   bool _checkIfChainPost() {
-    if (post.chainId != null)
+    if (post.chainId != null) {
       return true;
+    }
 
     return false;
   }
 
   // This function Returns a record (multiple values)
   (FetchType, String) _determineFetchTypeAndImageAssetToUpload() {
-    String? gallery_image;
+    String? galleryImage;
     FetchType? fetchType;
 
     if (post.mediaType==MediaType.image) // if an image, no additionalMediaUrl, we take it directly from network
     {
-      gallery_image = post.mediaUrl;
+      galleryImage = post.mediaUrl;
       fetchType = FetchType.network;
     }
     else if (postType == MediaType.audio) // if an audio post
@@ -114,44 +121,44 @@ class GalleryArtPost extends StatelessWidget {
       // if no additional asset provided, we provide the default one locally
       if (post.additionalMediaUrl == "default") {
         fetchType = FetchType.local;
-        gallery_image = "assets/icons/default-audio-coverart.png";
+        galleryImage = "assets/icons/default-audio-coverart.png";
       } else // if additional asset has been provided, we provide the url to it
       {
         fetchType = FetchType.network;
-        gallery_image = post.additionalMediaUrl;
+        galleryImage = post.additionalMediaUrl;
       }
     } else if (postType == MediaType.video) // if an video post
     {
       // if no additional asset provided, we provide the default one locally
       if (post.additionalMediaUrl == "default") {
         fetchType = FetchType.local;
-        gallery_image = "assets/icons/default-video-gallery-asset.png";
+        galleryImage = "assets/icons/default-video-gallery-asset.png";
       } else // if additional asset has been provided, we provide the url to it
       {
         fetchType = FetchType.network;
-        gallery_image = post.additionalMediaUrl;
+        galleryImage = post.additionalMediaUrl;
       }
     } else if (postType == MediaType.text) // if an text post
     {
       // if no additional asset provided, we provide the default one locally
       if (post.additionalMediaUrl == "default") {
         fetchType = FetchType.local;
-        gallery_image = "assets/icons/default-text-gallery-asset.png";
+        galleryImage = "assets/icons/default-text-gallery-asset.png";
       } else // if additional asset has been provided, we provide the url to it
       {
         fetchType = FetchType.network;
-        gallery_image = post.additionalMediaUrl;
+        galleryImage = post.additionalMediaUrl;
       }
     }
 
-    return (fetchType!, gallery_image!);
+    return (fetchType!, galleryImage!);
   }
 
   Widget getMediaTypeIconWidget(IconData icon) {
-    return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 20));
+    return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), shape: BoxShape.circle), child: Icon(icon, color: Colors.white, size: 20));
   }
 
   Widget getChainIcon() {
-    return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: Icon(Icons.link_outlined, color: Colors.white, size: 20));
+    return Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), shape: BoxShape.circle), child: Icon(Icons.link_outlined, color: Colors.white, size: 20));
   }
 }

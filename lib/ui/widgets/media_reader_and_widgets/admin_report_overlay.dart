@@ -23,9 +23,9 @@ class AdminReportOverlay extends StatelessWidget {
         child: Container(
           width: 300,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.75),
+            color: Colors.black.withValues(alpha: 0.75),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -72,7 +72,7 @@ class AdminReportOverlay extends StatelessWidget {
                         return Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(

@@ -3,6 +3,7 @@ import 'package:art_platform/ui/screens/admin_dashboard_screen.dart';
 import 'package:art_platform/ui/screens/categories_screen.dart';
 import 'package:art_platform/ui/screens/other_user_profile_screen.dart';
 import 'package:art_platform/ui/widgets/media_reader_and_widgets/media_reader.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -107,7 +108,7 @@ final GoRouter router = GoRouter(
                 // Extract the variable from the URL path
                 final int postIndex = int.parse(state.pathParameters['post_index']!);
                 // Pass it to the screen
-                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true, profileUid: FirebaseAuth.instance.currentUser?.uid ?? null);
+                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.profileFeed, profilePostIndex: postIndex, exitButton: true, profileUid: FirebaseAuth.instance.currentUser?.uid);
               }
             )
           ]
@@ -129,7 +130,7 @@ final GoRouter router = GoRouter(
                     // Extract the variable from the URL path
                     final int postIndex = int.parse(state.pathParameters['post_index']!);
                     // Pass it to the screen
-                    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.PROFILE_FEED, profilePostIndex: postIndex, exitButton: true, profileUid: profileUid,);
+                    return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.profileFeed, profilePostIndex: postIndex, exitButton: true, profileUid: profileUid,);
                   }
               )
             ]
@@ -146,7 +147,7 @@ final GoRouter router = GoRouter(
                 // Extract the variable from the URL path
                 final String categoryName = state.pathParameters['category_name']!;
                 // Pass it to the screen
-                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.CATEGORY_FEED, category: categoryName, exitButton: true);
+                return MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.categoryFeed, category: categoryName, exitButton: true);
               },
             )
           ],
@@ -157,12 +158,20 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/admin',
+          // Non-admin users who type '/admin' into the URL bar are sent back to the home screen.
+          // This only guards the UI. The actual protection of admin data is done by the Firestore Security Rules.
+          redirect: (context, state) async {
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            if (uid == null) return '/';
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+            return userDoc.data()?['role'] == 'admin' ? null : '/';
+          },
           builder: (context, state) => const AdminDashboardScreen(),
             routes: [
               // Reported Artposts Feed Media Reader
               GoRoute(
                   path: 'media_reader',
-                  builder: (context, state) => MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED, exitButton: true,),
+                  builder: (context, state) => MediaReader(mediaReaderConfiguration: MediaReaderConfiguration.reportedArtpostsFeed, exitButton: true,),
               ),
               // Create Chain Screen
               GoRoute(

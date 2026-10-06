@@ -18,7 +18,7 @@ class AuthGate extends StatelessWidget {
   final Widget child;
 
   // get connection with database_repository <--> Firestore
-  DatabaseRepository _db = DatabaseRepository();
+  final DatabaseRepository _db = DatabaseRepository();
 
   /// Requires a [Widget] to be passed within the [child] property
   /// The widget will get stored within the [child] variable of the [AuthGate] class
@@ -85,7 +85,7 @@ class AuthGate extends StatelessWidget {
             }
             catch (e)
             {
-              throw e;
+              rethrow;
             }
           },
         );

@@ -26,8 +26,6 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int userPoints = userData['artist_points'] ?? -1;
-    // store the rank of user in a variable, otherwise the rank will be automatically set to "No rank"
-    final String rank = userData['rank'] ?? 'rankless';
     // store the avatarUrl of user in a variable, otherwise get a unique avatar url from robohash.org
     final String avatarUrl = userData['avatarUrl'] ?? "default";
 

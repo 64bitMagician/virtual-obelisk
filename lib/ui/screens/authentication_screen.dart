@@ -26,9 +26,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   // bool if the user is currently logging in (signing in), or signing up
   bool _isLogin = true;
 
-  // bool for after the user manages to signUp, we want to use this to create logic for
-  // displaying the widgets required for the user to enter profile data
-  bool _userHasSignedUp = false;
 
   // custom dispose method, for when the object is removed from the tree
   // the object will be removed as default
@@ -44,8 +41,9 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     // This method gets called whenever the authenticate button gets pressed
 
     // text fields are not completed, so we display a message to user and return nothing
-    if(_checkCompletionOfAllTextFields()==false)
+    if(_checkCompletionOfAllTextFields()==false) {
       return;
+    }
 
     // we rebuild the screen with a new state that will make the UI indicate that the process of
     // Authentication is undergoing...
@@ -138,7 +136,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                           'https://picsum.photos/id/1015/1000/1000',
                           // As small as possible while still covering the entire target box.
                           fit: BoxFit.cover,
-                          color: Colors.black.withOpacity(0.6), // Darken it slightly
+                          color: Colors.black.withValues(alpha: 0.6), // Darken it slightly
                           colorBlendMode: BlendMode.darken,
                         ),
                         const Center(

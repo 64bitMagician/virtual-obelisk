@@ -144,7 +144,7 @@ class _CreateChainScreenState extends State<CreateChainScreen> {
                         ),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _chainNodes[index],
+                            initialValue: _chainNodes[index],
                             decoration: const InputDecoration(
                               labelText: "Select Category",
                               border: OutlineInputBorder(),

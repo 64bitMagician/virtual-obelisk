@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:art_platform/data/models/art_post.dart';
@@ -33,7 +34,7 @@ class DatabaseRepository {
     }
 
     try {
-      print("IT TRIES TO UPLOAD!!!!!!!");
+      debugPrint("IT TRIES TO UPLOAD!!!!!!!");
       final profile = await getUserProfileData(user.uid); // fetch data of the current user Map<String, dynamic>
       // profile? can return null if profile is null (we user ? cause otherwise it would crash)
       // if not null, we return value of the displayName key
@@ -78,7 +79,7 @@ class DatabaseRepository {
       // Gain Artist Points (AP) as reward for uploading
       addArtistPointsForUploading(user.uid);
       // SIGNAL SUCCESS
-      print("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
+      debugPrint("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
     } on FirebaseException catch (e) { // Something went wrong while trying to upload to Firestore database
       // Catch the specific bouncer rejection (for time traveling exploit in chains <=> Uploading even tough chain is closed)
       if (e.code == 'permission-denied') {
@@ -153,7 +154,7 @@ class DatabaseRepository {
       // we return just only the data of the document: Map<String, dynamic>
       return doc.data();
     } catch (e) { // Something went wrong while trying to fetch User Profile. We return null in that case.
-      print("Error fetching profile: $e");
+      debugPrint("Error fetching profile: $e");
       return null; // we return null in this case
     }
   }
@@ -209,9 +210,9 @@ class DatabaseRepository {
         await batch.commit(); // We commit the changes within all of the updated/changed docs
       }
 
-      print("Profile updated successfully.");
+      debugPrint("Profile updated successfully.");
     } catch (e) {
-      print("Error during profile update/sync: $e");
+      debugPrint("Error during profile update/sync: $e");
       throw Exception("Failed to update profile and synchronize posts.");
     }
   }
@@ -274,7 +275,7 @@ class DatabaseRepository {
     // Also reward him artist points (AP) as reward for gaining one follower
     await _db.collection('users').doc(targetUid).update({
       'followers': FieldValue.increment(1),
-      'artist_points': FieldValue.increment(gain_follower_artist_points_reward),
+      'artist_points': FieldValue.increment(gainFollowerArtistPointsReward),
     });
   }
 
@@ -292,7 +293,7 @@ class DatabaseRepository {
     // Decrease the target user's "followers" count and deduct the points
     await _db.collection('users').doc(targetUid).update({
       'followers': FieldValue.increment(-1),
-      'artist_points': FieldValue.increment(-gain_follower_artist_points_reward), // Deducting the exact reward amount
+      'artist_points': FieldValue.increment(-gainFollowerArtistPointsReward), // Deducting the exact reward amount
     });
   }
 
@@ -309,7 +310,7 @@ class DatabaseRepository {
 
   Future<void> addArtistPointsForUploading(String targetUid) async {
     await _db.collection('users').doc(targetUid).update({
-      'artist_points': FieldValue.increment(upload_artpost_artist_points_reward)
+      'artist_points': FieldValue.increment(uploadArtpostArtistPointsReward)
     });
   }
 
@@ -401,10 +402,10 @@ class DatabaseRepository {
         }
       });
 
-      print("Report successfully submitted!");
+      debugPrint("Report successfully submitted!");
 
     } catch (e) {
-      print("REPORT ERROR: $e");
+      debugPrint("REPORT ERROR: $e");
       throw Exception("Failed to submit report.");
     }
   }
@@ -441,7 +442,7 @@ class DatabaseRepository {
       await batch.commit();
 
       await _db.collection('users').doc(ownerUid).update({
-        'artist_points': FieldValue.increment(-upload_artpost_artist_points_reward),
+        'artist_points': FieldValue.increment(-uploadArtpostArtistPointsReward),
         'posts': FieldValue.increment(-1),
         'hasActivePosts': (currentPostCount - 1) > 0,
       });
@@ -545,7 +546,7 @@ class DatabaseRepository {
           transaction.update(artworkRef, {'likes': currentLikes - 1});
           // Deduct the point(s) from the owner
           transaction.update(ownerRef, {
-            'artist_points': FieldValue.increment(-get_like_artist_points_reward)
+            'artist_points': FieldValue.increment(-getLikeArtistPointsReward)
           });
         } else {
           // LIKE SCENARIO
@@ -553,7 +554,7 @@ class DatabaseRepository {
           transaction.update(artworkRef, {'likes': currentLikes + 1});
           // Reward the point(s) to the owner
           transaction.update(ownerRef, {
-            'artist_points': FieldValue.increment(get_like_artist_points_reward)
+            'artist_points': FieldValue.increment(getLikeArtistPointsReward)
           });
         }
       });
@@ -641,7 +642,7 @@ class DatabaseRepository {
   }
 
   /// Checks if the user has reached their daily upload limit
-  Future<bool> canUserUploadToday(String uid, {int dailyLimit = posts_per_day_allowed}) async {
+  Future<bool> canUserUploadToday(String uid, {int dailyLimit = postsPerDayAllowed}) async {
     try {
       final now = DateTime.now();
       final midnight = DateTime(now.year, now.month, now.day); // today, but midnight, because no further data provided at construction
@@ -655,7 +656,7 @@ class DatabaseRepository {
       // Return true if they haven't hit the limit yet
       return querySnapshot.docs.length < dailyLimit;
     } catch (e) {
-      print("Error checking upload limit: $e");
+      debugPrint("Error checking upload limit: $e");
       return false;
     }
   }

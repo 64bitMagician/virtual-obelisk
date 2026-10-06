@@ -64,7 +64,7 @@ class ChainDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: chain.isClosed ? Colors.grey.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                            color: chain.isClosed ? Colors.grey.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: chain.isClosed ? Colors.grey : Colors.green),
                           ),
@@ -142,7 +142,7 @@ class ChainDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 32),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
@@ -180,7 +180,7 @@ class ChainDetailScreen extends StatelessWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => MediaReader(
-                                          mediaReaderConfiguration: MediaReaderConfiguration.CHAIN_NODE_FEED,
+                                          mediaReaderConfiguration: MediaReaderConfiguration.chainNodeFeed,
                                           chainId: chainId,
                                           category: categoryKey,
                                           profilePostIndex: i,

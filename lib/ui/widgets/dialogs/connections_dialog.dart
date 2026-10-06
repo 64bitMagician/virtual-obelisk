@@ -67,7 +67,7 @@ class ConnectionsDialog extends StatelessWidget {
                     final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
 
                     final String username = userData!['username'] ?? 'ERROR: UNKNOWN USER';
-                    final String avatarUrl = userData!['avatarUrl'] ?? 'default';
+                    final String avatarUrl = userData['avatarUrl'] ?? 'default';
 
                     return ListTile(
                       leading: CircleAvatar(

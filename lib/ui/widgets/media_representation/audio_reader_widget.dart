@@ -34,7 +34,7 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
     try {
       await _audioPlayer.setUrl(widget.audioUrl);
     } catch (e) {
-      print("Error loading audio: $e");
+      debugPrint("Error loading audio: $e");
       if (mounted) {
         setState(() => _isError = true);
       }
@@ -77,7 +77,7 @@ class _AudioReaderWidgetState extends State<AudioReaderWidget> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       spreadRadius: 2,
                       blurRadius: 15,
                       offset: const Offset(0, 8),

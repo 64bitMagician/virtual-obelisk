@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:art_platform/core/constants.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -28,8 +27,9 @@ class StorageRepository {
   ///
   /// So to prevent this, we will use [kIsWeb] to check wether we are on web or not.
   Future<String> uploadMedia(XFile? file, {required FolderPathEnum folderPath, void Function(double progress)? onProgress}) async {
-    if(file == null)
+    if(file == null) {
       throw Exception("'file' is null...");
+    }
 
     // name of file
     String fileName = file.name;
@@ -40,10 +40,11 @@ class StorageRepository {
 
     // get MIME file type
     final String? fileMIMEtype = lookupMimeType(fileName);
-    if(fileMIMEtype==null)
-        throw Exception("ERROR | MIME type of file to upload is 'null'...");
-    else
-        print("SUCCESS: FILE TYPE IS: $fileMIMEtype");
+    if(fileMIMEtype==null) {
+      throw Exception("ERROR | MIME type of file to upload is 'null'...");
+    } else {
+      debugPrint("SUCCESS: FILE TYPE IS: $fileMIMEtype");
+    }
 
     // Reference to the documents within the artworks collection on Firebase Storage
     // It also creates a new document with the given name if one does not exist
@@ -76,11 +77,11 @@ class StorageRepository {
       // WAIT UNTIL FINISHED
       final TaskSnapshot snapshot = await task;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
-      print("Uploaded successfully to: $downloadUrl");
+      debugPrint("Uploaded successfully to: $downloadUrl");
       // We return the downloadUrl
       return downloadUrl;
     } catch (e) {
-      print("UPLOAD FAILED (See Network Tab for details)");
+      debugPrint("UPLOAD FAILED (See Network Tab for details)");
       throw Exception("Upload failed. Check the browser console.");
     }
   }

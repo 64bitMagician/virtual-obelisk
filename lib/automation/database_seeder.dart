@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:art_platform/core/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,22 +17,22 @@ class DatabaseSeeder {
   final List<String> _categories = artCategories;
 
   Future<void> runSeed() async {
-    print("STARTING DATABASE SEED...");
+    debugPrint("STARTING DATABASE SEED...");
 
     try {
       List<Map<String, dynamic>> generatedUsers = await _seedUsers(5);
       await _seedPosts(10, generatedUsers);
 
-      print("SEED COMPLETE! Database is now full of fake data.");
+      debugPrint("SEED COMPLETE! Database is now full of fake data.");
     } catch (e) {
-      print("SEED FAILED: $e");
+      debugPrint("SEED FAILED: $e");
     }
   }
 
 
   // return [count] generated users
   Future<List<Map<String, dynamic>>> _seedUsers(int count) async {
-    print("Generating $count fake users...");
+    debugPrint("Generating $count fake users...");
     // store users data in 'users' list.
     List<Map<String, dynamic>> users = [];
     // WriteBatch - can accumulate a series of write operations to be performed on Firestore Database
@@ -82,7 +83,7 @@ class DatabaseSeeder {
     // Commit all users to Firestore at once
     await batch.commit();
 
-    print("Users seeded.");
+    debugPrint("Users seeded.");
 
     return users;
   }
@@ -91,7 +92,7 @@ class DatabaseSeeder {
   // Generates [count] fake artposts for the given [users]. It takes the users randomly.
   // So some users may have more or none posts assigned to them.
   Future<void> _seedPosts(int count, List<Map<String, dynamic>> users) async {
-    print("Generating $count fake art posts...");
+    debugPrint("Generating $count fake art posts...");
     // Initialise WriteBatch
     WriteBatch batch = _db.batch();
 
@@ -131,12 +132,12 @@ class DatabaseSeeder {
         'hasActivePosts': true,
         'lastUploadAt': FieldValue.serverTimestamp(), // mark the moment of upload
         'posts': FieldValue.increment(1),
-        'artist_points': FieldValue.increment(upload_artpost_artist_points_reward),
+        'artist_points': FieldValue.increment(uploadArtpostArtistPointsReward),
       });
     }
 
     // commit requests
     await batch.commit();
-    print("Posts seeded.");
+    debugPrint("Posts seeded.");
   }
 }

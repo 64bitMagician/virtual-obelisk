@@ -28,8 +28,6 @@ class ArtPostRepresentation extends StatelessWidget {
         innerWidget = AudioReaderWidget(post: post, postInformationVisible: postInformationVisible);
       case MediaType.text:
         innerWidget = TextReaderWidget(post: post, postInformationVisible: postInformationVisible, callStartHideTimer: callStartHideTimer,);
-      default:
-        return const Center(child: Text("Unsupported format"));
     }
 
     return innerWidget;

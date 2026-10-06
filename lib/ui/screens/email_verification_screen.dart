@@ -34,7 +34,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       final user = FirebaseAuth.instance.currentUser!;
       await user.sendEmailVerification();
     } catch (e) {
-      print("Error sending email: $e");
+      debugPrint("Error sending email: $e");
     }
   }
 

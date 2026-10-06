@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/data/models/art_post.dart';
-import 'package:art_platform/core/mimeFileDetector.dart';
+import 'package:art_platform/core/mime_file_detector.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -118,12 +118,13 @@ class _UploadDialogState extends State<UploadDialog> {
       final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
 
       IconData icon = Icons.question_mark;
-      if (newMediaType == MediaType.audio)
+      if (newMediaType == MediaType.audio) {
         icon = Icons.audio_file_outlined;
-      else if (newMediaType == MediaType.video)
+      } else if (newMediaType == MediaType.video) {
         icon = Icons.video_file_outlined;
-      else if (newMediaType == MediaType.text)
+      } else if (newMediaType == MediaType.text) {
         icon = Icons.text_snippet_outlined;
+      }
 
       setState(() {
         _fileInstance = file;
@@ -157,7 +158,7 @@ class _UploadDialogState extends State<UploadDialog> {
     String? additionalMediaDownloadUrl;
 
     try {
-      print("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
+      debugPrint("ATTEMPTING TO UPLOAD FILE AT FIREBASE CLOUD BUCKET...");
 
       mainFileDownloadUrl = await _storageRepo.uploadMedia(
         _fileInstance,
@@ -170,7 +171,7 @@ class _UploadDialogState extends State<UploadDialog> {
           }
         }
       );
-      print("Main File uploaded to $mainFileDownloadUrl");
+      debugPrint("Main File uploaded to $mainFileDownloadUrl");
 
       // If there is additional media to be uploaded, [additionalMediaDownloadUrl] will hold the
       // string Url to that Media.
@@ -178,7 +179,7 @@ class _UploadDialogState extends State<UploadDialog> {
       additionalMediaDownloadUrl = await uploadAdditionalMediaIfItIsTheCase();
 
 
-      print("Attempting to upload Data Document of Main Uploaded File to Firestore...");
+      debugPrint("Attempting to upload Data Document of Main Uploaded File to Firestore...");
       // So far we uploaded the raw content of the post
       // We also need to upload to Firestore the Document which represents the Post.
       // This Document contains all the information related to the Post.
@@ -193,7 +194,7 @@ class _UploadDialogState extends State<UploadDialog> {
         additionalMediaUrl: additionalMediaDownloadUrl,
         chainId: widget.chainId,
       );
-      print("Main File Data saved to Firestore");
+      debugPrint("Main File Data saved to Firestore");
 
       if (mounted) {
         context.pop(); // Close the dialog
@@ -214,7 +215,7 @@ class _UploadDialogState extends State<UploadDialog> {
       }
 
       if (mounted) {
-        print("UPLOAD ERROR: $e");
+        debugPrint("UPLOAD ERROR: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Failed to post. Check Console for details."),
@@ -236,20 +237,21 @@ class _UploadDialogState extends State<UploadDialog> {
       String? additionalMediaDownloadUrl;
       // check to see to which directory to upload additionalMedia based on main file type
       FolderPathEnum? folderPath;
-      if(_mediaType == MediaType.video)
+      if(_mediaType == MediaType.video) {
         folderPath = FolderPathEnum.thumbnail;
-      else if (_mediaType == MediaType.audio)
+      } else if (_mediaType == MediaType.audio) {
         folderPath = FolderPathEnum.coverart;
-      else
+      } else {
         throw Exception("Additional Media has been provided, but it is not suited for the main art uploaded, or, _mediaType may be null");
+      }
 
-      print("---- ATTEMPTING TO UPLOAD ADDITIONAL MEDIA...");
+      debugPrint("---- ATTEMPTING TO UPLOAD ADDITIONAL MEDIA...");
       additionalMediaDownloadUrl = await _storageRepo.uploadMedia(_additionalMediaInstance, folderPath: folderPath);
-      print("---- ADDITIONAL MEDIA UPLOADED SUCCESFULLY");
+      debugPrint("---- ADDITIONAL MEDIA UPLOADED SUCCESFULLY");
       return additionalMediaDownloadUrl;
     }
     else {
-      print("INFO: No Additional Media has been picked for uploading...");
+      debugPrint("INFO: No Additional Media has been picked for uploading...");
       return null;
     }
   }
@@ -290,7 +292,7 @@ class _UploadDialogState extends State<UploadDialog> {
                           height: 125,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                             border: Border.all(color: Colors.grey),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -336,7 +338,7 @@ class _UploadDialogState extends State<UploadDialog> {
                             height: 100,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Colors.grey.withValues(alpha: 0.1),
                               border: Border.all(color: Colors.grey, style: BorderStyle.none),
                               borderRadius: BorderRadius.circular(12),
                             ),

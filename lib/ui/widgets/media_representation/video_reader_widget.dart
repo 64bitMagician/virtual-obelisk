@@ -42,7 +42,7 @@ class _VideoReaderWidgetState extends State<VideoReaderWidget> {
         _controller.play();
       }
     } catch (e) {
-      print("Error loading video: $e");
+      debugPrint("Error loading video: $e");
       if (mounted) setState(() => _isError = true);
     }
   }

@@ -65,8 +65,11 @@ class _PostInfoState extends State<PostInfo> {
                   padding: const EdgeInsets.only(left: 16.0, bottom: 16.0),
                   child: GestureDetector(
                     onVerticalDragUpdate: (details) {
-                      if (details.delta.dy < -2 && !_isExpanded) _toggleExpand();
-                      else if (details.delta.dy > 2 && _isExpanded) _toggleExpand();
+                      if (details.delta.dy < -2 && !_isExpanded) {
+                        _toggleExpand();
+                      } else if (details.delta.dy > 2 && _isExpanded) {
+                        _toggleExpand();
+                      }
                     },
                     child: InkWell(
                       onTap: _toggleExpand,

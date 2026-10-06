@@ -14,8 +14,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _usernameController = TextEditingController();
   final _profileNameController = TextEditingController();
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -76,12 +76,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
         // Document does not exist, so we create it. The name of Document is the actual username
         // it only contains the user id (unique hash value) associated with it
-        await transaction.set(usernameRef, {
+        transaction.set(usernameRef, {
           "uid": uid,
         });
 
         // Create new Document representing the data of the Authenticated User
-        await transaction.set(userRef, {
+        transaction.set(userRef, {
           "artist_points": 0,
           "avatarUrl": "default",
           "bio": "No bio yet...",
@@ -110,11 +110,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         context.go("/");
       }
       return;
-
-      dispose();
-      return;
     } catch (e) {
-      print("TRANSACTION ERROR: $e");
+      debugPrint("TRANSACTION ERROR: $e");
     }
   }
 

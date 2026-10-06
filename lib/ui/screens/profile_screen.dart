@@ -33,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ImagePicker picker = ImagePicker();
     // opens up your local machine's storage, such that you can upload a local image
     final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+    if (!mounted) return;
 
     if (image != null && user != null) {
       try {
@@ -92,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ElevatedButton(
                 onPressed: () async {
                   await _repository.updateUserData(uid: user!.uid, displayName: _nameController.text, bio: _bioController.text);
-                  if (mounted) context.pop();
+                  if (context.mounted) context.pop();
                 },
                 child: const Text("Save"),
               ),

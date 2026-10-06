@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:art_platform/data/models/art_post.dart';
@@ -17,7 +18,7 @@ class FeedEngine {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // List for storing the fetched users:
-  List<UserModel> _userPool = [];
+  final List<UserModel> _userPool = [];
 
   // Keep a marker to the current last user document in the user pool
   // Because the query is sorted by lastUploadAt, _lastUserDoc knows exactly what its lastUploadAt timestamp is,
@@ -98,7 +99,7 @@ class FeedEngine {
       // append to pool of users
       _userPool.addAll(fetchedUsers);
     } catch (e) {
-      print("Error fetching user pool and mapping it to list: $e");
+      debugPrint("Error fetching user pool and mapping it to list: $e");
     }
   }
 
@@ -110,7 +111,7 @@ class FeedEngine {
   /// If category not provided, will not pick excluded users for home feed
   UserModel? _pickWeightedUser(String? category) {
     String contextKey = category ?? 'HOME'; // if no category provided, we will consider the HOME FEED to filter the ineligible users
-    // we get the set of all ineligible users that are excluded from being displayed by the algorithm for the given [category/HOME_FEED]
+    // we get the set of all ineligible users that are excluded from being displayed by the algorithm for the given [category/homeFeed]
     Set<String> currentlyIneligible = _ineligibleUsersMap[contextKey] ?? {};
 
     // Make a list of available users. Available users are users that are not part of the currentlyIneligible list.
@@ -129,8 +130,8 @@ class FeedEngine {
     // sum gets returned in the end
     // we use max(1, user.artistPoints); because of the implementation bellow, of finding our lucky user
     // cause if more users had 0, and 0 was used, then we would not be able to identify the user
-    int totalWeight = availableUsers.fold(0, (sum, user) {
-      return sum + max(1, user.artistPoints);
+    int totalWeight = availableUsers.fold(0, (total, user) {
+      return total + max(1, user.artistPoints);
     });
 
     // get rendom int from totalWeight -> this is the spin the wheel step
@@ -139,8 +140,10 @@ class FeedEngine {
     // Because we used the max() method earlier, each user is considered to have at least 1 AP (even tough in the actual reality data it has 0 AP)
     // So we we need to get a random value to select a user from this range: [1, totalWeight]
     int randomVal = 0;
-    while(randomVal==0) // make sure we do not get value 0, because the range is [1, totalWeight]
+    while(randomVal==0) {
+      // make sure we do not get value 0, because the range is [1, totalWeight]
       randomVal = _random.nextInt(totalWeight+1); // nextInt is right-exclusive, so to get totalWeight we need to pass totgalWeight + 1
+    }
 
     // now we need to find the lucky user.
     // So we have the lucky number associated with the lucky user
@@ -186,9 +189,10 @@ class FeedEngine {
 
       // if user has no artposts for a given category (if category has been provided),
       // or if the user has no active artposts at all:
-      if (snapshotOfAllLuckyUserArtPosts.docs.isEmpty==true)
+      if (snapshotOfAllLuckyUserArtPosts.docs.isEmpty==true) {
         // we return null to signal the future exclusion of the user, mark user ineligible
         return null;
+      }
 
       // if the user has the corresponding active artposts (of a given category or not):
 
@@ -201,16 +205,18 @@ class FeedEngine {
 
       // If there are available active posts, but they've already been processed/displayed/seen
       // (they belong to the seenedPosts list):
-      if (availablePosts.isEmpty)
+      if (availablePosts.isEmpty) {
         // we return null to signal the future exclusion of the users, mark user ineligible
         return null;
+      }
 
       // Just as before, we calculate the total ammount of likes from all available posts of user
-      int totalWeight = availablePosts.fold(0, (sum, post) => sum + max(1, post.likes));
+      int totalWeight = availablePosts.fold(0, (total, post) => total + max(1, post.likes));
       // Spin the wheel to find who will be the lucky post | Also make sure the range is [1, totalWeight]
       int randomVal = 0;
-      while(randomVal==0)
+      while(randomVal==0) {
         randomVal = _random.nextInt(totalWeight+1);
+      }
 
       // actually get the instance of the lucky post
       for (var post in availablePosts) {
@@ -223,7 +229,7 @@ class FeedEngine {
       // If anything wrong happens we return null
       return null;
     } catch (e) {
-      print("Error fetching posts for user '$userId': $e");
+      debugPrint("Error fetching posts for user '$userId': $e");
       return null;
     }
   }

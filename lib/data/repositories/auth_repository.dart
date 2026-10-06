@@ -1,5 +1,4 @@
 import 'package:art_platform/auth_gate.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 /// A static class. It can check for current state of users (logged in or not).
@@ -9,8 +8,6 @@ class AuthRepository {
   // This is the only class meant to define the communication with the Firebase Authentication SDK.
   // Thus we mark the _auth variable as private through the use of '_'
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  // Establish connection with Firestore
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Synchronous (Instant) Getter
   // Can fetch the current user authenticated instantly
@@ -44,7 +41,7 @@ class AuthRepository {
     {
       // create user account | if succesful, it also authenticates the user, also assigning the User to
       // [Firebase.instance.currentUser]
-      final cred = await FirebaseAuth.instance
+      await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -106,7 +103,7 @@ class AuthRepository {
         return 'Too many attempts. Please try again later.';
 
       default:
-        return '${e.message ?? "Unknown error"}';
+        return e.message ?? "Unknown error";
     }
   }
 }

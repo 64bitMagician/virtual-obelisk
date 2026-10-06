@@ -19,7 +19,6 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: _seedColor,
         brightness: Brightness.light,
-        background: _lightBackground,
         surface: _lightSurface,
         onSurface: _lightOnSurface,
       ),
@@ -56,7 +55,6 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: _seedColor,
         brightness: Brightness.dark,
-        background: _darkBackground,
         surface: _darkSurface,
         onSurface: _darkOnSurface,
       ),
@@ -93,7 +91,7 @@ class AppTheme {
       headlineSmall: TextStyle(color: baseColor, fontWeight: FontWeight.w600),
       titleLarge: TextStyle(color: baseColor, fontWeight: FontWeight.w600),
       bodyLarge: TextStyle(color: baseColor), // Standard text
-      bodyMedium: TextStyle(color: baseColor.withOpacity(0.8)), // Subtitles
+      bodyMedium: TextStyle(color: baseColor.withValues(alpha: 0.8)), // Subtitles
     );
   }
 
@@ -117,7 +115,7 @@ class AppTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: borderColor.withOpacity(0.5)),
+        borderSide: BorderSide(color: borderColor.withValues(alpha: 0.5)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -126,13 +124,13 @@ class AppTheme {
     );
   }
 
-  static CardTheme _cardTheme(Color color) {
-    return CardTheme(
+  static CardThemeData _cardTheme(Color color) {
+    return CardThemeData(
       color: color,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: 1),
       ),
       margin: const EdgeInsets.all(8),
     );

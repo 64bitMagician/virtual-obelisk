@@ -12,20 +12,20 @@ import 'artpost_options_widget.dart';
 import 'package:art_platform/core/feed_engine.dart';
 
 /// [MediaReader] is required to have one of the five configurations available:
-/// [MediaReaderConfiguration.HOME_FEED],[MediaReaderConfiguration.PROFILE_FEED], [MediaReaderConfiguration.CATEGORY_FEED]
-/// , [MediaReaderConfiguration.CHAIN_NODE_FEED] or [MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED].
+/// [MediaReaderConfiguration.homeFeed],[MediaReaderConfiguration.profileFeed], [MediaReaderConfiguration.categoryFeed]
+/// , [MediaReaderConfiguration.chainNodeFeed] or [MediaReaderConfiguration.reportedArtpostsFeed].
 /// They are passed to the required [mediaReaderConfiguration] parameter...
 ///
 /// Since it is an enum, only one configuration is possible at a time.
 /// Depending on which Configuration you choose, there are additional parameters you need to fill.
 /// Here is a list with each Configuration and what additional parameters in requires.
-/// HOME_FEED: no additional parameters required.
-/// PROFILE_FEED: [profilePostIndex] - determines the art asset that will be initially displayed. Very useful
+/// homeFeed: no additional parameters required.
+/// profileFeed: [profilePostIndex] - determines the art asset that will be initially displayed. Very useful
 /// when used in conjunction with a GridView, that can detect the index of objects interacted with user gestures.
 /// This combination creates the behaviour of "you see what you clicked on..."
-/// CATEGORY_FEED: [category] - it will configure [MediaReader] to fetch only ArtPost of the passed category.
-/// CHAIN_NODE_FEED: ...
-/// REPORTED_ARTPOSTS_FEED: ...
+/// categoryFeed: [category] - it will configure [MediaReader] to fetch only ArtPost of the passed category.
+/// chainNodeFeed: ...
+/// reportedArtpostsFeed: ...
 ///
 /// There is also an optional parameter [exitButton]. If set to true, it will add an exit button that will redirect
 /// the user to the previous page. If set to false or not set at all, the button simply won't show up.
@@ -36,7 +36,7 @@ class MediaReader extends StatefulWidget {
   final int profilePostIndex;
   final String? category;
   final bool? exitButton;
-  /// required to not be null if mediaReaderConfiguration == PROFILE_FEED
+  /// required to not be null if mediaReaderConfiguration == profileFeed
   final String? profileUid;
   final String? chainId;
 
@@ -87,23 +87,24 @@ class _MediaReaderState extends State<MediaReader> {
 
   // the initial state of the HomeScreen Widget
   // We use it to configure stuff...
+  @override
   void initState() {
     super.initState();
     // Configure it to start at received index from constructor
     _pageController = PageController(initialPage: widget.profilePostIndex);
 
     // Assign the right feed depending on MediaReader Configuration
-    if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
-        widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+    if (widget.mediaReaderConfiguration == MediaReaderConfiguration.homeFeed ||
+        widget.mediaReaderConfiguration == MediaReaderConfiguration.categoryFeed) {
       // These two configurations worh with the Feed Algorithm, in Batches of Future objects. It does not work on Streams
 
-      // If CATEGORY_FEED configuration is selected, the category must also be provided
-      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED && widget.category == null) {
+      // If categoryFeed configuration is selected, the category must also be provided
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.categoryFeed && widget.category == null) {
         throw Exception("MediaReader is configured for Category Feed. But at construction of MediaReader, no value has been passed for category parameter...");
       }
 
-      // Otherwise, if HOME_FEED configuration is selected, category must be null
-      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED && widget.category != null) {
+      // Otherwise, if homeFeed configuration is selected, category must be null
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.homeFeed && widget.category != null) {
         throw Exception("MediaReader is configured for Home Feed. But at construction of MediaReader, a category has been provided, which is not allowed for Home Feed Configuration");
       }
 
@@ -114,17 +115,17 @@ class _MediaReaderState extends State<MediaReader> {
     } else { // these feeds do not work based on the Algorithm and do not use Batches of Future objects, rather Streams
       Stream<List<ArtPost>> stream; // declare stream
 
-      // IF PROFILE_FEED CONFIGURATION => Configure stream to return posts of given [widget.profileUid] user
-      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.PROFILE_FEED) {
+      // IF profileFeed CONFIGURATION => Configure stream to return posts of given [widget.profileUid] user
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.profileFeed) {
         if (widget.profileUid == null) throw Exception("ERROR: COULD NOT FETCH THE USER ID OF THE PROFILE YOU ARE TRYING TO ACCESS");
         stream = _repository.getUserPosts(widget.profileUid!);
       }
-      // IF REPORTED_ARTPOSTS_FEED CONFIGURATION => Configure stream to return all deactivated artworks
-      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED){
+      // IF reportedArtpostsFeed CONFIGURATION => Configure stream to return all deactivated artworks
+      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.reportedArtpostsFeed){
         stream = _repository.getDeactivatedPosts();
       }
-      // // IF CHAIN_NODE_FEED CONFIGURATION => Configure stream to return all artposts for the given node (category), in the given chain
-      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CHAIN_NODE_FEED) {
+      // // IF chainNodeFeed CONFIGURATION => Configure stream to return all artposts for the given node (category), in the given chain
+      else if (widget.mediaReaderConfiguration == MediaReaderConfiguration.chainNodeFeed) {
         // [chainId] and [category] must be provided
         if (widget.chainId == null || widget.category == null) throw Exception("Chain ID or Category is missing.");
         stream = _repository.getChainNodePosts(chainId: widget.chainId!, category: widget.category!);
@@ -161,7 +162,7 @@ class _MediaReaderState extends State<MediaReader> {
   Future<void> _loadMoreFeed() async {
     // of _feedEngine has not been instantiated
     // or if we are are already _currentlyFetchingMore artposts (the process is already undergoing) (or something wrong is happening)
-    // or if _hasReachedEnd => we can no longer fetch any artposts for the given category (may be null for HOME_FEED CONFIGURATION)
+    // or if _hasReachedEnd => we can no longer fetch any artposts for the given category (may be null for homeFeed CONFIGURATION)
     if (_feedEngine == null || _currentlyFetchingMore || _hasReachedEnd) return;
 
     // if media reader is still in widget tree => we mark that we are currently fetching more
@@ -171,7 +172,7 @@ class _MediaReaderState extends State<MediaReader> {
 
     try {
       // fetch a generated feed batch for the given category
-      // if category is null, it fetches from all existing artposts (for HOME_FEED CONFIGURATION)
+      // if category is null, it fetches from all existing artposts (for homeFeed CONFIGURATION)
       final newPosts = await Future.delayed(
           const Duration(seconds: 0),
               () => _feedEngine!.generateFeedBatch(category: widget.category)
@@ -265,7 +266,7 @@ class _MediaReaderState extends State<MediaReader> {
 
     // Reveal the hidden Firebase error if there are any
     if (_error != null) {
-      print("STREAM/FUTURE ERROR: $_error");
+      debugPrint("STREAM/FUTURE ERROR: $_error");
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -277,8 +278,8 @@ class _MediaReaderState extends State<MediaReader> {
     // _hasReachedEnd only is true for HOME/CATEGORY FEEDS:
     // if there are no loaded posts and we were not able to fetch any
     if (_posts.isEmpty && _hasReachedEnd) {
-      // If the MediaReader was configured for CATEGORY_FEED => Display Custom Message
-      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+      // If the MediaReader was configured for categoryFeed => Display Custom Message
+      if (widget.mediaReaderConfiguration == MediaReaderConfiguration.categoryFeed) {
         return const Center(
           child: Text(
             "No artpost of this category exists yet",
@@ -322,8 +323,8 @@ class _MediaReaderState extends State<MediaReader> {
             _startHideTimer();
 
             // If we on HOME/CATEGORY FEED, when we are 2 artposts away from end of loaded posts, start loading the next batch to save time
-            if (widget.mediaReaderConfiguration == MediaReaderConfiguration.HOME_FEED ||
-                widget.mediaReaderConfiguration == MediaReaderConfiguration.CATEGORY_FEED) {
+            if (widget.mediaReaderConfiguration == MediaReaderConfiguration.homeFeed ||
+                widget.mediaReaderConfiguration == MediaReaderConfiguration.categoryFeed) {
               if (index >= _posts.length - 2) {
                 _loadMoreFeed();
               }
@@ -399,7 +400,7 @@ class _MediaReaderState extends State<MediaReader> {
 
                 // The Admin Report Panel
                 // It only renders if we are in the Moderation Queue (ADMIN DASHBOARD -> REPORT FEED SECTION)
-                if (widget.mediaReaderConfiguration == MediaReaderConfiguration.REPORTED_ARTPOSTS_FEED)
+                if (widget.mediaReaderConfiguration == MediaReaderConfiguration.reportedArtpostsFeed)
                   Positioned(
                     top: 80,
                     right: 16,
