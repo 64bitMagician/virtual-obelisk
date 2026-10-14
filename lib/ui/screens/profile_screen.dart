@@ -218,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text("You cannot upload more than 2 artworks a day.\nNote: This does not apply when uploading artworks for chains."),
+                    content: const Text("You cannot upload more than 2 artworks in 24 hours.\nNote: This does not apply when uploading artworks for chains."),
                     backgroundColor: Colors.orange.shade800,
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

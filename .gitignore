@@ -61,6 +61,8 @@ key.properties
 
 # Firebase CLI
 .firebase/
+# Local Firebase Emulator data (fake test data, see README)
+emulator-data/
 firebase-debug.log
 firebase-debug.*.log
 firestore-debug.log

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:art_platform/core/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -50,20 +51,24 @@ class StorageRepository {
     // It also creates a new document with the given name if one does not exist
     final Reference ref = _storage.ref().child('${folderPath.name}/$uniqueFileName');
 
+    // We explicitly tell Firebase what the MIME type is, otherwise it might save as 'application/octet-stream'.
+    // 'ownerUid' marks who uploaded the file. The Storage Security Rules require it on upload,
+    // and use it to make sure only the uploader (or an admin) can delete the file.
+    final metadata = SettableMetadata(
+      contentType: fileMIMEtype,
+      customMetadata: {'ownerUid': FirebaseAuth.instance.currentUser!.uid},
+    );
+
     UploadTask task;
     try {
       // Branch the logic based on the platform
       if (kIsWeb) { // if we are on web
         // WEB: We must use bytes. Browsers handle memory differently, so this is safe.
         final Uint8List fileBytes = await file.readAsBytes();
-        // We also need to explicitly tell Firebase what the MIME type is on Web,
-        // otherwise it might save as 'application/octet-stream'
-        final metadata = SettableMetadata(contentType: fileMIMEtype);
-
         task = ref.putData(fileBytes, metadata);
       } else {
         // MOBILE: We use the physical File path.
-        task = ref.putFile(File(file.path));
+        task = ref.putFile(File(file.path), metadata);
       }
 
       // LISTEN TO PROGRESS

@@ -464,7 +464,8 @@ class _UploadDialogState extends State<UploadDialog> {
 
     const int maxTitleLength = 100;
     const int maxDescriptionLength = 1000;
-    const int maxFileSizeBytes = 4000 * 1024 * 1024; // 4 GB
+    // Must match the size limit for 'artworks' in storage.rules
+    const int maxFileSizeBytes = 500 * 1024 * 1024; // 500 MB
 
     if (_titleController.text.trim().isEmpty) {
       return "Please enter a title.";
@@ -493,7 +494,7 @@ class _UploadDialogState extends State<UploadDialog> {
     }
 
     if (_fileAsBytes != null && _fileAsBytes!.length > maxFileSizeBytes) {
-      return "File is too large. Maximum size is 4GB.";
+      return "File is too large. Maximum size is 500MB.";
     }
 
     if (_additionalMediaInstance != null &&

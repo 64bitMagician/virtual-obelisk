@@ -1,4 +1,8 @@
 import 'package:art_platform/config/app_theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'config/routes.dart';
@@ -21,8 +25,28 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Only when started with: flutter run --dart-define=USE_EMULATORS=true
+  // the app talks to the local Firebase Emulators instead of the real Firebase project.
+  if (const bool.fromEnvironment('USE_EMULATORS')) {
+    await _connectToFirebaseEmulators();
+  }
+
   // The method responsible for kickstarting our application (rendering)
   runApp(const ArtApp()); // The first thing to be rendered will be the ArtApp Widget defined bellow
+}
+
+/// Connects Authentication, Firestore and Storage to the Firebase Emulator Suite running on this computer
+/// (started with 'firebase emulators:start'). Used for testing the Security Rules without touching real data.
+/// The ports must match the "emulators" section in firebase.json.
+Future<void> _connectToFirebaseEmulators() async {
+  // The Android emulator reaches the computer it runs on through 10.0.2.2, not localhost
+  final String host = (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ? '10.0.2.2' : 'localhost';
+
+  await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+  FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+  await FirebaseStorage.instance.useStorageEmulator(host, 9199);
+
+  debugPrint("USING FIREBASE EMULATORS ON $host");
 }
 
 /// The root widget of our application. The central unit from which everything begins.

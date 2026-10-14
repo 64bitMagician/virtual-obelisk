@@ -52,12 +52,18 @@ class DatabaseRepository {
       // profile avatar on their profile set
       final String avatarUrl = profile?['avatarUrl'];
 
-      // Initialize a variable to reference the artworks collection on Firestore
-      final CollectionReference artworksRef = _db.collection('artworks');
+      // Reference to the new document in the artworks collection (the ID is generated now, so we can also
+      // store it in the user document below)
+      final DocumentReference artworkRef = _db.collection('artworks').doc();
+
+      // The post and the update of the user document are written together in one batch (all or nothing).
+      // The Firestore Security Rules check both at the same time, to enforce the daily upload limit and
+      // to make sure the upload Artist Points are only given for a real upload.
+      final WriteBatch batch = _db.batch();
 
       // we add a new document to the artworks collection | Data type: Map<String, dynamic>
       // this document represents the post we are uploading
-      await artworksRef.add({
+      batch.set(artworkRef, {
         'additionalMediaUrl': additionalMediaUrl ?? "default",
         'authorAvatar': avatarUrl, // fetched from the authenticated user's document data on Firestore
         'authorName': authorName, // fetched from the authenticated user's document data on Firestore
@@ -74,16 +80,30 @@ class DatabaseRepository {
         'title': title, // received as method parameter
         'userId': user.uid, // the user id of the authenticated user
       });
-      // Increase Posts count at user document
-      incrementUserPostCounter(user.uid);
-      // Gain Artist Points (AP) as reward for uploading
-      addArtistPointsForUploading(user.uid);
+
+      batch.update(_db.collection('users').doc(user.uid), {
+        // Increase Posts count at user document
+        'posts': FieldValue.increment(1),
+        // He just uploaded, so this guarantees the he has at least one active post
+        'hasActivePosts': true,
+        // Gain Artist Points (AP) as reward for uploading
+        'artist_points': FieldValue.increment(uploadArtpostArtistPointsReward),
+        // We keep the times of the last 2 uploads. The rules only allow a new upload if the older one
+        // ('prevUploadAt') is more than 24 hours ago => max 2 uploads in 24 hours (postsPerDayAllowed)
+        'prevUploadAt': profile?['lastUploadAt'],
+        'lastUploadAt': FieldValue.serverTimestamp(),
+        // Lets the rules check that this user document update belongs to a real new post
+        'lastUploadedArtwork': artworkRef.id,
+      });
+
+      await batch.commit();
       // SIGNAL SUCCESS
       debugPrint("UPLOAD TO FIRESTORE 'ARTWORKS' DOCUMENT SUCCESFUL!");
     } on FirebaseException catch (e) { // Something went wrong while trying to upload to Firestore database
-      // Catch the specific bouncer rejection (for time traveling exploit in chains <=> Uploading even tough chain is closed)
+      // Catch the specific bouncer rejection (daily upload limit reached, or the time traveling exploit in
+      // chains <=> Uploading even tough chain is closed)
       if (e.code == 'permission-denied') {
-        throw Exception("Upload rejected: This chain is closed or has expired.");
+        throw Exception("Upload rejected: You reached the daily upload limit, or this chain is closed.");
       }
       throw Exception("Database error: ${e.message}");
     } catch (e) {
@@ -252,66 +272,60 @@ class DatabaseRepository {
   }
 
   /// Follows a user (creates a document in a subcollection)
+  ///
+  /// All 4 writes happen together in one batch (all or nothing). The Firestore Security Rules only allow
+  /// the target's "followers" count to go up if the matching 'followers' document is created in the same batch.
   Future<void> followUser(String currentUid, String targetUid) async {
+    final WriteBatch batch = _db.batch();
+
     // Add to current user's "following"
-    await _db.collection('users').doc(currentUid)
+    batch.set(_db.collection('users').doc(currentUid)
     // now going into the 'following' subfolder of the authenticated user's document
-        .collection('following').doc(targetUid).set({'timestamp': FieldValue.serverTimestamp()});
+        .collection('following').doc(targetUid), {'timestamp': FieldValue.serverTimestamp()});
 
     // Add to target user's "followers"
-    await _db.collection('users').doc(targetUid)
-    // now going into the 'following' subfolder of the targeted user's document
-        .collection('followers').doc(currentUid).set({'timestamp': FieldValue.serverTimestamp()});
+    batch.set(_db.collection('users').doc(targetUid)
+    // now going into the 'followers' subfolder of the targeted user's document
+        .collection('followers').doc(currentUid), {'timestamp': FieldValue.serverTimestamp()});
 
-    // SECURELY INCREMENT COUNTERS (queues the requests to follow such that there won't be two users
-    // calling the follow function at the same time, which would result to unexpected behaviour)
+    // SECURELY INCREMENT COUNTERS (FieldValue.increment is applied on the server, such that two users
+    // calling the follow function at the same time won't result in unexpected behaviour)
 
     // Increase the current user's "following" count by 1
-    await _db.collection('users').doc(currentUid).update({
+    batch.update(_db.collection('users').doc(currentUid), {
       'following': FieldValue.increment(1)
     });
 
     // Increase the target user's "followers" count by 1
     // Also reward him artist points (AP) as reward for gaining one follower
-    await _db.collection('users').doc(targetUid).update({
+    batch.update(_db.collection('users').doc(targetUid), {
       'followers': FieldValue.increment(1),
       'artist_points': FieldValue.increment(gainFollowerArtistPointsReward),
     });
+
+    await batch.commit();
   }
 
-  /// Unfollows a user
+  /// Unfollows a user (all 4 writes happen together in one batch, see [followUser])
   Future<void> unfollowUser(String currentUid, String targetUid) async {
-    await _db.collection('users').doc(currentUid).collection('following').doc(targetUid).delete();
-    await _db.collection('users').doc(targetUid).collection('followers').doc(currentUid).delete();
+    final WriteBatch batch = _db.batch();
+
+    batch.delete(_db.collection('users').doc(currentUid).collection('following').doc(targetUid));
+    batch.delete(_db.collection('users').doc(targetUid).collection('followers').doc(currentUid));
 
     // SECURELY DECREMENT COUNTERS
     // Decrease the current user's "following" count by 1 (using -1)
-    await _db.collection('users').doc(currentUid).update({
+    batch.update(_db.collection('users').doc(currentUid), {
       'following': FieldValue.increment(-1)
     });
 
     // Decrease the target user's "followers" count and deduct the points
-    await _db.collection('users').doc(targetUid).update({
+    batch.update(_db.collection('users').doc(targetUid), {
       'followers': FieldValue.increment(-1),
       'artist_points': FieldValue.increment(-gainFollowerArtistPointsReward), // Deducting the exact reward amount
     });
-  }
 
-  /// Increment the user's 'posts' field. Also update the 'lastUploadAt' and 'hasActivePosts' fields
-  Future<void> incrementUserPostCounter(String targetUid) async {
-    await _db.collection('users').doc(targetUid).update({
-      'posts': FieldValue.increment(1),
-      // Save last time the user has uploaded
-      'lastUploadAt': FieldValue.serverTimestamp(),
-      // He just uploaded, so this guarantees the he has at least one active post:
-      'hasActivePosts': true,
-    });
-  }
-
-  Future<void> addArtistPointsForUploading(String targetUid) async {
-    await _db.collection('users').doc(targetUid).update({
-      'artist_points': FieldValue.increment(uploadArtpostArtistPointsReward)
-    });
+    await batch.commit();
   }
 
 
@@ -327,8 +341,10 @@ class DatabaseRepository {
 
     // reference to reported artpost document in 'artworks' collection
     final DocumentReference artworkRef = _db.collection('artworks').doc(artworkId);
-    // reference to generated report document associated to the artpost. ID is autogenerated.
-    final DocumentReference reportRef = _db.collection('reports').doc();
+    // reference to the report document associated to the artpost.
+    // The ID is '<artworkId>_<reporterUid>', so every user can report a specific artpost only once
+    // (the Firestore Security Rules reject a second report with the same ID)
+    final DocumentReference reportRef = _db.collection('reports').doc('${artworkId}_${currentUser.uid}');
 
     try {
       await _db.runTransaction((transaction) async {
@@ -348,11 +364,14 @@ class DatabaseRepository {
 
         // THE THRESHOLD: If it hits 5 reports, auto-deactivate
         final bool shouldDeactivate = newReportCount >= 5;
+        // Only the report that actually deactivates the post changes the owner's post count
+        // (more reports on an already deactivated post must not decrease it again)
+        final bool isBeingDeactivatedNow = shouldDeactivate && !(data['isDeactivated'] ?? false);
 
         DocumentSnapshot? userSnapshot;
         DocumentReference? userRef;
 
-        if (shouldDeactivate) {
+        if (isBeingDeactivatedNow) {
           // get User Document of Reported User
           userRef = _db.collection('users').doc(data['userId']);
           // read the document
@@ -389,7 +408,7 @@ class DatabaseRepository {
         // If the post is about to get deactivated, and we have the User Document of the Reported User
         // And we have also have the read data from the document in 'userSnapshot':
         // We store the userData, and store the current number of active posts of user
-        if (shouldDeactivate && userRef != null && userSnapshot != null) {
+        if (isBeingDeactivatedNow && userRef != null && userSnapshot != null) {
           final userData = userSnapshot.data() as Map<String, dynamic>?;
           final int currentPosts = userData?['posts'] ?? 0;
 
@@ -398,12 +417,20 @@ class DatabaseRepository {
           transaction.update(userRef, {
             'posts': FieldValue.increment(-1),
             'hasActivePosts': (currentPosts - 1) > 0,
+            // Lets the rules check that this post really gets deactivated in this same transaction
+            'lastDeactivatedArtwork': artworkId,
           });
         }
       });
 
       debugPrint("Report successfully submitted!");
 
+    } on FirebaseException catch (e) {
+      debugPrint("REPORT ERROR: $e");
+      if (e.code == 'permission-denied') {
+        throw Exception("You have already reported this post.");
+      }
+      throw Exception("Failed to submit report.");
     } catch (e) {
       debugPrint("REPORT ERROR: $e");
       throw Exception("Failed to submit report.");
@@ -545,16 +572,20 @@ class DatabaseRepository {
           transaction.delete(likeRef);
           transaction.update(artworkRef, {'likes': currentLikes - 1});
           // Deduct the point(s) from the owner
+          // ('lastPointsSource' lets the rules check that a like on this post really is being removed)
           transaction.update(ownerRef, {
-            'artist_points': FieldValue.increment(-getLikeArtistPointsReward)
+            'artist_points': FieldValue.increment(-getLikeArtistPointsReward),
+            'lastPointsSource': artworkId,
           });
         } else {
           // LIKE SCENARIO
           transaction.set(likeRef, {'timestamp': FieldValue.serverTimestamp()});
           transaction.update(artworkRef, {'likes': currentLikes + 1});
           // Reward the point(s) to the owner
+          // ('lastPointsSource' lets the rules check that a like on this post really is being added)
           transaction.update(ownerRef, {
-            'artist_points': FieldValue.increment(getLikeArtistPointsReward)
+            'artist_points': FieldValue.increment(getLikeArtistPointsReward),
+            'lastPointsSource': artworkId,
           });
         }
       });
@@ -641,20 +672,18 @@ class DatabaseRepository {
         .map((snapshot) => snapshot.docs.map((doc) => ArtPost.fromFirestore(doc)).toList());
   }
 
-  /// Checks if the user has reached their daily upload limit
-  Future<bool> canUserUploadToday(String uid, {int dailyLimit = postsPerDayAllowed}) async {
+  /// Checks if the user has reached their daily upload limit ([postsPerDayAllowed] uploads in 24 hours).
+  ///
+  /// The user document keeps the times of the last 2 uploads ('prevUploadAt' and 'lastUploadAt').
+  /// If the older one is more than 24 hours ago, the user can upload again.
+  /// This is the same check the Firestore Security Rules do, so the user gets the message before uploading.
+  Future<bool> canUserUploadToday(String uid) async {
     try {
-      final now = DateTime.now();
-      final midnight = DateTime(now.year, now.month, now.day); // today, but midnight, because no further data provided at construction
+      final userData = (await _db.collection('users').doc(uid).get()).data();
+      final Timestamp? prevUploadAt = userData?['prevUploadAt'];
 
-      // Query the database for posts by this user created after midnight
-      final querySnapshot = await _db.collection('artworks')
-          .where('userId', isEqualTo: uid)
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(midnight))
-          .get();
-
-      // Return true if they haven't hit the limit yet
-      return querySnapshot.docs.length < dailyLimit;
+      if (prevUploadAt == null) return true;
+      return DateTime.now().difference(prevUploadAt.toDate()) >= const Duration(hours: 24);
     } catch (e) {
       debugPrint("Error checking upload limit: $e");
       return false;

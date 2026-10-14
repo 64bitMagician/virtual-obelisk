@@ -74,7 +74,8 @@ class ArtPostOptions extends StatelessWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Failed to submit report."), backgroundColor: Colors.red),
+                    // Shows the reason from submitReport() (Ex: "You have already reported this post.")
+                    SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: Colors.red),
                   );
                 }
               }

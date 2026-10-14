@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "art-platform-878d0"
-  }
+  },
+  "targets": {
+    "art-platform-878d0": {
+      "storage": {
+        "main": [
+          "art-platform-878d0"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

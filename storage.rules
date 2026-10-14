@@ -1,0 +1,78 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ---------------------------
+    // HELPER FUNCTIONS
+    // ---------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Looks up the user's Firestore document to see if they are an admin (same check as in firestore.rules)
+    function isAdmin() {
+      return isSignedIn() &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin';
+    }
+
+    function isUnderMB(mb) {
+      return request.resource.size < mb * 1024 * 1024;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isArtMedia() {
+      return request.resource.contentType.matches('(image|video|audio|text)/.*');
+    }
+
+    // storage_repository.dart stores the uploader's uid in the file's custom metadata
+    function isTaggedWithUploader() {
+      return request.resource.metadata.ownerUid == request.auth.uid;
+    }
+
+    function isUploader() {
+      return resource.metadata.ownerUid == request.auth.uid;
+    }
+
+    // ---------------------------
+    // ART POSTS (main media file)
+    // ---------------------------
+    // Anyone can view a single file, but nobody can list the whole folder.
+    // Files can only be created, never overwritten. Max size must match upload_dialog.dart
+    match /artworks/{fileName} {
+      allow get: if true;
+      allow create: if isSignedIn() && isTaggedWithUploader() && isArtMedia() && isUnderMB(500);
+      allow delete: if isSignedIn() && (isUploader() || isAdmin());
+    }
+
+    // ---------------------------
+    // ADDITIONAL MEDIA (cover art for audio, thumbnail for video)
+    // ---------------------------
+    match /coverart/{fileName} {
+      allow get: if true;
+      allow create: if isSignedIn() && isTaggedWithUploader() && isImage() && isUnderMB(20);
+      allow delete: if isSignedIn() && (isUploader() || isAdmin());
+    }
+
+    match /thumbnail/{fileName} {
+      allow get: if true;
+      allow create: if isSignedIn() && isTaggedWithUploader() && isImage() && isUnderMB(20);
+      allow delete: if isSignedIn() && (isUploader() || isAdmin());
+    }
+
+    // ---------------------------
+    // AVATARS
+    // ---------------------------
+    // Every user has exactly one avatar file, named after their uid. Only they can change it.
+    match /avatars/{fileName} {
+      allow get: if true;
+      allow create, update: if isSignedIn() && fileName == request.auth.uid + '.jpg' && isImage() && isUnderMB(5);
+      allow delete: if isSignedIn() && (fileName == request.auth.uid + '.jpg' || isAdmin());
+    }
+
+    // Anything outside of the folders above is not allowed
+  }
+}

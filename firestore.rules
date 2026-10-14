@@ -1,0 +1,374 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------
+    // HELPER FUNCTIONS
+    // ---------------------------
+
+		// Checks if the artwork is part of a chain. 
+    // If it is, it ensures the server's exact time is still BEFORE the chain's expiration date.
+    function isChainOpen(chainId) {
+      return chainId == null || 
+             get(/databases/$(database)/documents/chains/$(chainId)).data.expiresAt > request.time;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // THE SMART ADMIN CHECK
+    // Looks up the logged-in user's document to see if they are an admin
+    function isAdmin() {
+      return isSignedIn() && 
+             // We use .get('role', 'user') so it defaults to 'user' if the field is missing, preventing crashes!
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Limit text length helper
+    function validLength(field, max) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() <= max;
+    }
+
+    // By how much a number field changes in this write (missing fields count as 0)
+    function delta(field) {
+      return request.resource.data.get(field, 0) - resource.data.get(field, 0);
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Artist Point amounts used in the app (see constants.dart)
+    // upload = 200 | gain follower = 100 | get like = 50
+
+    function artworkPath(artworkId) {
+      return /databases/$(database)/documents/artworks/$(artworkId);
+    }
+
+    function likePath(artworkId, uid) {
+      return /databases/$(database)/documents/artworks/$(artworkId)/likes/$(uid);
+    }
+
+    function reportPath(artworkId, uid) {
+      return /databases/$(database)/documents/reports/$(artworkId + '_' + uid);
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    // True if a document did not exist before this write, and exists after it (it is being created in the same batch)
+    function isBeingCreated(path) {
+      return !exists(path) && existsAfter(path);
+    }
+
+    // True if a document existed before this write, and does not exist after it (it is being deleted in the same batch)
+    function isBeingDeleted(path) {
+      return exists(path) && !existsAfter(path);
+    }
+
+    // The user document update that goes together with a new post (uploadMedia() in database_repository.dart):
+    // +1 post, +200 points, the upload times move forward, and the post mentioned in 'lastUploadedArtwork'
+    // is really being created by this user in the same batch
+    function isUploadUpdate(userId) {
+      let newArtworkId = request.resource.data.lastUploadedArtwork;
+      return delta('posts') == 1
+             && delta('artist_points') == 200
+             && request.resource.data.lastUploadAt == request.time
+             && request.resource.data.get('prevUploadAt', null) == resource.data.get('lastUploadAt', null)
+             && isBeingCreated(artworkPath(newArtworkId))
+             && getAfter(artworkPath(newArtworkId)).data.userId == userId;
+    }
+
+    // Max 2 uploads in 24 hours (postsPerDayAllowed in constants.dart). Uploads to chains are not limited.
+    // The user document keeps the times of the last 2 uploads. The older one must be more than 24h ago.
+    // The same batch must also update the user document (see isUploadUpdate), so the upload times can't be skipped.
+    function isWithinUploadLimit(artworkId) {
+      let userBefore = get(userPath(request.auth.uid)).data;
+      let userAfter = getAfter(userPath(request.auth.uid)).data;
+      return userAfter.get('lastUploadedArtwork', '') == artworkId
+             && (
+               request.resource.data.get('chainId', null) != null
+               || userBefore.get('prevUploadAt', null) == null
+               || userBefore.prevUploadAt < request.time - duration.value(24, 'h')
+             );
+    }
+
+    // ---------------------------
+    // USERS COLLECTION
+    // ---------------------------
+    match /users/{userId} {
+
+      allow read: if isSignedIn();
+
+      // A new user always starts as a normal 'user' with 0 points. Nobody can sign up as an admin.
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == request.auth.uid
+                    && validLength("username", 30)
+                    && validLength("displayName", 50)
+                    && request.resource.data.get('role', 'user') == 'user'
+                    && request.resource.data.get('artist_points', 0) == 0
+                    && request.resource.data.get('followers', 0) == 0;
+
+      allow update: if
+        // SCENARIO A: The owner is editing their own profile (or their own following/points stats)
+        // They can never change their own role, username or followers.
+        // Points and the post counter can only go UP together with a real new post (isUploadUpdate).
+        // Otherwise they can only go down (deleting a post: -1 post, -200 points)
+        (
+          isOwner(userId)
+          && request.resource.data.uid == resource.data.uid
+          && !changedKeys().hasAny(['role', 'username', 'followers'])
+          && (
+            isUploadUpdate(userId)
+            ||
+            (
+              !changedKeys().hasAny(['lastUploadAt', 'prevUploadAt', 'lastUploadedArtwork'])
+              && delta('artist_points') in [0, -200]
+              && delta('posts') in [0, -1]
+            )
+          )
+          && validLength("displayName", 50)
+          && validLength("bio", 300)
+        )
+        ||
+        // SCENARIO B: Someone is following/unfollowing this profile (followUser()/unfollowUser())
+        // The counter only changes if their 'followers' document is created/deleted in the same batch
+        (
+          isSignedIn()
+          && changedKeys().hasOnly(['followers', 'artist_points'])
+          && (
+            (delta('followers') == 1 && delta('artist_points') == 100
+              && isBeingCreated(/databases/$(database)/documents/users/$(userId)/followers/$(request.auth.uid)))
+            ||
+            (delta('followers') == -1 && delta('artist_points') == -100
+              && isBeingDeleted(/databases/$(database)/documents/users/$(userId)/followers/$(request.auth.uid)))
+          )
+        )
+        ||
+        // SCENARIO C: Someone is liking/unliking one of this user's posts (toggleLike())
+        // 'lastPointsSource' names the post. The points only change if their like on that post
+        // is created/deleted in the same transaction
+        (
+          isSignedIn()
+          && changedKeys().hasOnly(['artist_points', 'lastPointsSource'])
+          && get(artworkPath(request.resource.data.lastPointsSource)).data.userId == userId
+          && (
+            (delta('artist_points') == 50
+              && isBeingCreated(likePath(request.resource.data.lastPointsSource, request.auth.uid)))
+            ||
+            (delta('artist_points') == -50
+              && isBeingDeleted(likePath(request.resource.data.lastPointsSource, request.auth.uid)))
+          )
+        )
+        ||
+        // SCENARIO D: The 5th report on one of this user's posts deactivates it (submitReport())
+        // 'lastDeactivatedArtwork' names the post. It must belong to this user, and really
+        // go from active to deactivated in the same transaction
+        (
+          isSignedIn()
+          && changedKeys().hasOnly(['posts', 'hasActivePosts', 'lastDeactivatedArtwork'])
+          && delta('posts') == -1
+          && get(artworkPath(request.resource.data.lastDeactivatedArtwork)).data.userId == userId
+          && get(artworkPath(request.resource.data.lastDeactivatedArtwork)).data.isDeactivated == false
+          && getAfter(artworkPath(request.resource.data.lastDeactivatedArtwork)).data.isDeactivated == true
+        );
+
+      allow delete: if false;
+
+
+      // ---------------------------------------------------------
+      // 'FOLLOWING' SUBCOLLECTION
+      // ---------------------------------------------------------
+      match /following/{targetId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(userId);
+      }
+
+      // ---------------------------------------------------------
+      // 'FOLLOWERS' SUBCOLLECTION
+      // ---------------------------------------------------------
+      match /followers/{followerId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn() && request.auth.uid == followerId;
+      }
+    }
+
+
+    // ---------------------------
+    // USERNAME REGISTRY
+    // ---------------------------
+    match /usernames/{username} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && username.size() >= 3
+                    && username.size() <= 30;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+
+    // ---------------------------
+    // ARTWORKS COLLECTION
+    // ---------------------------
+    match /artworks/{artworkId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.keys().hasAll([
+                      'userId',
+                      'mediaUrl',
+                      'title',
+                      'createdAt'
+                    ])
+                    && validLength("title", 100)
+                    && (!('description' in request.resource.data)
+                        || request.resource.data.description.size() <= 1000)
+                    && isChainOpen(request.resource.data.chainId)
+                    // A new post starts with no likes, no reports, and active
+                    && request.resource.data.get('likes', 0) == 0
+                    && request.resource.data.get('reportCount', 0) == 0
+                    && request.resource.data.get('isDeactivated', false) == false
+                    && isWithinUploadLimit(artworkId);
+
+			// Update artwork only by owner, OR allow users to report/like it!
+      allow update: if
+        // SCENARIO A: The owner is editing their own post
+        // (they cannot touch the likes, the reports, or reactivate a post that got deactivated)
+        (
+          isSignedIn()
+          && request.auth.uid == resource.data.userId
+          && !changedKeys().hasAny(['userId', 'likes', 'reportCount', 'isDeactivated'])
+          && validLength("title", 100)
+          && (!('description' in request.resource.data) || request.resource.data.description.size() <= 1000)
+        )
+        ||
+        // SCENARIO B: Someone is liking/unliking the post
+        // The like counter can only go up by 1 if their like document is being created in the same write,
+        // and down by 1 if it is being deleted. So nobody can fake likes.
+        (
+          isSignedIn()
+          && changedKeys().hasOnly(['likes'])
+          && (
+            (delta('likes') == 1 && isBeingCreated(likePath(artworkId, request.auth.uid)))
+            ||
+            (delta('likes') == -1 && isBeingDeleted(likePath(artworkId, request.auth.uid)))
+          )
+        )
+        ||
+        // SCENARIO C: Someone is reporting the post
+        // Each report adds exactly 1, and the post gets deactivated exactly when it reaches 5 reports.
+        // Their report document ('<artworkId>_<uid>') must be created in the same transaction,
+        // so every user can only report a post once
+        (
+          isSignedIn()
+          && changedKeys().hasOnly(['reportCount', 'isDeactivated'])
+          && delta('reportCount') == 1
+          && request.resource.data.isDeactivated == (request.resource.data.reportCount >= 5)
+          && isBeingCreated(reportPath(artworkId, request.auth.uid))
+        );
+
+      allow delete: if isSignedIn()
+                    && request.auth.uid == resource.data.userId;
+    }
+    
+    // ---------------------------
+    // CHAINS COLLECTION
+    // ---------------------------
+    match /chains/{chainId} {
+      // Allow anyone to view the chains in the feed
+      allow read: if true; 
+      
+      // If you already have an isAdmin() helper function, use it here.
+      // Otherwise, you can lock down writes from the client entirely if your Admin 
+      // is creating them via a server/cloud function, or keep your existing write logic.
+      allow write: if false; // Update this based on how your Admin writes to the DB
+    }
+
+
+    // ---------------------------
+    // LIKES SYSTEM
+    // ---------------------------
+    match /artworks/{artworkId}/likes/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId);
+      // The owner of the post can also delete the likes (needed when deleting the whole post, see deletePost())
+      allow delete: if isOwner(userId)
+                    || (isSignedIn() && get(/databases/$(database)/documents/artworks/$(artworkId)).data.userId == request.auth.uid);
+      allow update: if false;
+    }
+
+
+    // ---------------------------
+    // COMMENTS SYSTEM
+    // ---------------------------
+    match /artworks/{artworkId}/comments/{commentId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && validLength("text", 500);
+
+      allow update: if isSignedIn()
+                    && request.auth.uid == resource.data.userId
+                    && validLength("text", 500);
+
+      allow delete: if isSignedIn()
+                    && request.auth.uid == resource.data.userId;
+    }
+
+
+    // ---------------------------
+    // FOLLOW SYSTEM
+    // ---------------------------
+    match /follows/{followId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+                    && request.resource.data.followerId == request.auth.uid;
+      allow delete: if isSignedIn()
+                    && resource.data.followerId == request.auth.uid;
+      allow update: if false;
+    }
+
+
+    // ---------------------------
+    // GLOBAL ADMIN BYPASS & DEFAULT DENY
+    // ---------------------------
+    match /{document=**} {
+      // If you are an Admin, you can read/write absolutely anything anywhere.
+      // If you are NOT an admin, this acts as the standard "Default Deny".
+      allow read, write: if isAdmin();
+    }
+    
+    // ---------------------------
+    // REPORTS COLLECTION
+    // ---------------------------
+    match /reports/{reportId} {
+      // Only Admins can view the reports!
+      allow read: if isAdmin();
+      
+      // Anyone logged in can create a report, but they cannot forge the reporterUid.
+      // The ID must be '<artworkId>_<reporterUid>', so every user can report a specific post only once
+      // (a second report would be an update, which only admins can do)
+      allow create: if isSignedIn()
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && reportId == request.resource.data.artworkId + '_' + request.auth.uid;
+      
+      // Only Admins can update a report (e.g., changing status to 'resolved')
+      // Only Admins can delete a report
+      allow update, delete: if isAdmin();
+    }
+    
+  }
+}
