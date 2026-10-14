@@ -4,14 +4,10 @@ A social platform for artists of every kind, from painters and photographers to 
 built with **Flutter** and **Firebase**. Artists share their work, grow an audience, climb a rank ladder, and
 create art together in community "chains".
 
-> 🎓 Built as my **Bachelor's thesis project**. <!-- TODO: university, faculty, year -->
+> 🎓 Built as my **Bachelor's thesis project**.
 >
 > 📦 **Archived.** The live deployment is offline. You can still run the full app locally with the
 > Firebase Emulators (see [Running locally](#running-locally)).
-
-<!-- TODO: demo video. Example for a YouTube link:
-[![Watch the demo](docs/screenshots/video-thumbnail.png)](https://www.youtube.com/watch?v=VIDEO_ID)
--->
 
 ## Screenshots
 
@@ -213,6 +209,7 @@ Because of this:
 
 ## Credits
 
-<!-- TODO: credit the artwork, music, video and text shown in the screenshots (once their sources are confirmed) -->
+- Some of the images and videos shown in the screenshots are from [Pixabay](https://pixabay.com/), used under the
+  [Pixabay Content License](https://pixabay.com/service/license-summary/). All accounts shown are fictional test accounts.
 - Default user avatar icon: [UXWing](https://uxwing.com/user-profile-icon/)
 - Pixel art animation video by [u_zys3fy54t3](https://pixabay.com/users/u_zys3fy54t3-36732626/) from [Pixabay](https://pixabay.com/)
