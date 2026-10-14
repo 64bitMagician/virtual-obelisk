@@ -1,11 +1,11 @@
 {
-    "name": "art_platform",
-    "short_name": "art_platform",
+    "name": "Virtual Obelisk",
+    "short_name": "Virtual Obelisk",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A social platform for artists to share images, video, audio and writing.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

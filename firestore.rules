@@ -30,6 +30,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // True if an admin has banned the logged-in user ('role': 'banned', see ban_user_dialog.dart).
+    // Uses exists() first, so it also works during sign up, before the user document is created.
+    function isBanned() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'banned';
+    }
+
+    // Signed in and not banned. Every write (except creating your own profile) requires this.
+    function isActiveUser() {
+      return isSignedIn() && !isBanned();
+    }
+
     // Limit text length helper
     function validLength(field, max) {
       return request.resource.data[field] is string &&
@@ -124,6 +136,7 @@ service cloud.firestore {
         // Otherwise they can only go down (deleting a post: -1 post, -200 points)
         (
           isOwner(userId)
+          && !isBanned()
           && request.resource.data.uid == resource.data.uid
           && !changedKeys().hasAny(['role', 'username', 'followers'])
           && (
@@ -142,7 +155,7 @@ service cloud.firestore {
         // SCENARIO B: Someone is following/unfollowing this profile (followUser()/unfollowUser())
         // The counter only changes if their 'followers' document is created/deleted in the same batch
         (
-          isSignedIn()
+          isActiveUser()
           && changedKeys().hasOnly(['followers', 'artist_points'])
           && (
             (delta('followers') == 1 && delta('artist_points') == 100
@@ -157,7 +170,7 @@ service cloud.firestore {
         // 'lastPointsSource' names the post. The points only change if their like on that post
         // is created/deleted in the same transaction
         (
-          isSignedIn()
+          isActiveUser()
           && changedKeys().hasOnly(['artist_points', 'lastPointsSource'])
           && get(artworkPath(request.resource.data.lastPointsSource)).data.userId == userId
           && (
@@ -173,7 +186,7 @@ service cloud.firestore {
         // 'lastDeactivatedArtwork' names the post. It must belong to this user, and really
         // go from active to deactivated in the same transaction
         (
-          isSignedIn()
+          isActiveUser()
           && changedKeys().hasOnly(['posts', 'hasActivePosts', 'lastDeactivatedArtwork'])
           && delta('posts') == -1
           && get(artworkPath(request.resource.data.lastDeactivatedArtwork)).data.userId == userId
@@ -189,7 +202,7 @@ service cloud.firestore {
       // ---------------------------------------------------------
       match /following/{targetId} {
         allow read: if isSignedIn();
-        allow write: if isOwner(userId);
+        allow write: if isOwner(userId) && !isBanned();
       }
 
       // ---------------------------------------------------------
@@ -197,7 +210,7 @@ service cloud.firestore {
       // ---------------------------------------------------------
       match /followers/{followerId} {
         allow read: if isSignedIn();
-        allow write: if isSignedIn() && request.auth.uid == followerId;
+        allow write: if isActiveUser() && request.auth.uid == followerId;
       }
     }
 
@@ -208,7 +221,7 @@ service cloud.firestore {
     match /usernames/{username} {
       allow read: if true;
 
-      allow create: if isSignedIn()
+      allow create: if isActiveUser()
                     && request.resource.data.uid == request.auth.uid
                     && username.size() >= 3
                     && username.size() <= 30;
@@ -224,7 +237,7 @@ service cloud.firestore {
     match /artworks/{artworkId} {
       allow read: if true;
 
-      allow create: if isSignedIn()
+      allow create: if isActiveUser()
                     && request.resource.data.userId == request.auth.uid
                     && request.resource.data.keys().hasAll([
                       'userId',
@@ -247,7 +260,7 @@ service cloud.firestore {
         // SCENARIO A: The owner is editing their own post
         // (they cannot touch the likes, the reports, or reactivate a post that got deactivated)
         (
-          isSignedIn()
+          isActiveUser()
           && request.auth.uid == resource.data.userId
           && !changedKeys().hasAny(['userId', 'likes', 'reportCount', 'isDeactivated'])
           && validLength("title", 100)
@@ -258,7 +271,7 @@ service cloud.firestore {
         // The like counter can only go up by 1 if their like document is being created in the same write,
         // and down by 1 if it is being deleted. So nobody can fake likes.
         (
-          isSignedIn()
+          isActiveUser()
           && changedKeys().hasOnly(['likes'])
           && (
             (delta('likes') == 1 && isBeingCreated(likePath(artworkId, request.auth.uid)))
@@ -272,14 +285,14 @@ service cloud.firestore {
         // Their report document ('<artworkId>_<uid>') must be created in the same transaction,
         // so every user can only report a post once
         (
-          isSignedIn()
+          isActiveUser()
           && changedKeys().hasOnly(['reportCount', 'isDeactivated'])
           && delta('reportCount') == 1
           && request.resource.data.isDeactivated == (request.resource.data.reportCount >= 5)
           && isBeingCreated(reportPath(artworkId, request.auth.uid))
         );
 
-      allow delete: if isSignedIn()
+      allow delete: if isActiveUser()
                     && request.auth.uid == resource.data.userId;
     }
     
@@ -302,10 +315,10 @@ service cloud.firestore {
     // ---------------------------
     match /artworks/{artworkId}/likes/{userId} {
       allow read: if true;
-      allow create: if isOwner(userId);
+      allow create: if isOwner(userId) && !isBanned();
       // The owner of the post can also delete the likes (needed when deleting the whole post, see deletePost())
-      allow delete: if isOwner(userId)
-                    || (isSignedIn() && get(/databases/$(database)/documents/artworks/$(artworkId)).data.userId == request.auth.uid);
+      allow delete: if (isOwner(userId) && !isBanned())
+                    || (isActiveUser() && get(/databases/$(database)/documents/artworks/$(artworkId)).data.userId == request.auth.uid);
       allow update: if false;
     }
 
@@ -316,15 +329,15 @@ service cloud.firestore {
     match /artworks/{artworkId}/comments/{commentId} {
       allow read: if true;
 
-      allow create: if isSignedIn()
+      allow create: if isActiveUser()
                     && request.resource.data.userId == request.auth.uid
                     && validLength("text", 500);
 
-      allow update: if isSignedIn()
+      allow update: if isActiveUser()
                     && request.auth.uid == resource.data.userId
                     && validLength("text", 500);
 
-      allow delete: if isSignedIn()
+      allow delete: if isActiveUser()
                     && request.auth.uid == resource.data.userId;
     }
 
@@ -334,9 +347,9 @@ service cloud.firestore {
     // ---------------------------
     match /follows/{followId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn()
+      allow create: if isActiveUser()
                     && request.resource.data.followerId == request.auth.uid;
-      allow delete: if isSignedIn()
+      allow delete: if isActiveUser()
                     && resource.data.followerId == request.auth.uid;
       allow update: if false;
     }
@@ -361,7 +374,7 @@ service cloud.firestore {
       // Anyone logged in can create a report, but they cannot forge the reporterUid.
       // The ID must be '<artworkId>_<reporterUid>', so every user can report a specific post only once
       // (a second report would be an update, which only admins can do)
-      allow create: if isSignedIn()
+      allow create: if isActiveUser()
                     && request.resource.data.reporterUid == request.auth.uid
                     && reportId == request.resource.data.artworkId + '_' + request.auth.uid;
       

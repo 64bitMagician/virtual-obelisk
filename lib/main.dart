@@ -59,7 +59,7 @@ class ArtApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Art Platform',
+      title: 'Virtual Obelisk',
       debugShowCheckedModeBanner: false, // get rid of top left ribbon on screen
       theme: AppTheme.lightTheme, // Assign the Light Theme
       darkTheme: AppTheme.darkTheme, // Assign the Dark Theme

@@ -16,6 +16,13 @@ service firebase.storage {
              firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin';
     }
 
+    // Signed in and not banned by an admin (same check as in firestore.rules). Required for every upload.
+    function isActiveUser() {
+      return isSignedIn() &&
+             !(firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+               && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'banned');
+    }
+
     function isUnderMB(mb) {
       return request.resource.size < mb * 1024 * 1024;
     }
@@ -44,7 +51,7 @@ service firebase.storage {
     // Files can only be created, never overwritten. Max size must match upload_dialog.dart
     match /artworks/{fileName} {
       allow get: if true;
-      allow create: if isSignedIn() && isTaggedWithUploader() && isArtMedia() && isUnderMB(500);
+      allow create: if isActiveUser() && isTaggedWithUploader() && isArtMedia() && isUnderMB(500);
       allow delete: if isSignedIn() && (isUploader() || isAdmin());
     }
 
@@ -53,13 +60,13 @@ service firebase.storage {
     // ---------------------------
     match /coverart/{fileName} {
       allow get: if true;
-      allow create: if isSignedIn() && isTaggedWithUploader() && isImage() && isUnderMB(20);
+      allow create: if isActiveUser() && isTaggedWithUploader() && isImage() && isUnderMB(20);
       allow delete: if isSignedIn() && (isUploader() || isAdmin());
     }
 
     match /thumbnail/{fileName} {
       allow get: if true;
-      allow create: if isSignedIn() && isTaggedWithUploader() && isImage() && isUnderMB(20);
+      allow create: if isActiveUser() && isTaggedWithUploader() && isImage() && isUnderMB(20);
       allow delete: if isSignedIn() && (isUploader() || isAdmin());
     }
 
@@ -69,7 +76,7 @@ service firebase.storage {
     // Every user has exactly one avatar file, named after their uid. Only they can change it.
     match /avatars/{fileName} {
       allow get: if true;
-      allow create, update: if isSignedIn() && fileName == request.auth.uid + '.jpg' && isImage() && isUnderMB(5);
+      allow create, update: if isActiveUser() && fileName == request.auth.uid + '.jpg' && isImage() && isUnderMB(5);
       allow delete: if isSignedIn() && (fileName == request.auth.uid + '.jpg' || isAdmin());
     }
 

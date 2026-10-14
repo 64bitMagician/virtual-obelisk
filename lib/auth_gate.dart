@@ -1,3 +1,4 @@
+import 'package:art_platform/ui/screens/banned_account_screen.dart';
 import 'package:art_platform/ui/screens/email_verification_screen.dart';
 import 'package:art_platform/ui/screens/profile_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,11 +60,11 @@ class AuthGate extends StatelessWidget {
           return const EmailVerificationScreen();
         }
 
-        // A future builder will determine what to display while the fetching of seeing if the
-        // user has profile is occuring
+        // A future builder will determine what to display while the fetching of the user's profile is occuring
         // This is to check if the user has a profile made, if not, we will return him to the profile setup screen
-        return FutureBuilder<bool>(
-          future: _db.hasProfile(snapshotUser.data!.uid),
+        // It also checks if the user has been banned by an admin
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: _db.getUserProfileData(snapshotUser.data!.uid),
           builder: (context, profileSnapshot) {
             try
             {
@@ -76,8 +77,14 @@ class AuthGate extends StatelessWidget {
 
               // if the snapshot came empty (no data, failed to know if the user profile actually exists)
               // or if the snapshot came with data, and the data sugested that the user profile does not exist
-              if (!profileSnapshot.hasData || profileSnapshot.data == false) {
+              if (!profileSnapshot.hasData || profileSnapshot.data == null) {
                 return const ProfileSetupScreen();
+              }
+
+              // the user has been banned by an admin, he cannot enter the app
+              // (the Firestore Security Rules also reject any write from a banned user)
+              if (profileSnapshot.data!['role'] == 'banned') {
+                return const BannedAccountScreen();
               }
 
               // user has profile, he can enter the app

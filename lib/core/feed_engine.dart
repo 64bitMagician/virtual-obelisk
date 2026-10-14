@@ -4,6 +4,38 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/data/models/user_model.dart';
 
+/// "Spin the wheel": picks one of the [items] at random, where the chance of each item is proportional
+/// to its weight ([weightOf]). Used by [FeedEngine] to pick users (weighted by Artist Points)
+/// and posts (weighted by likes). Returns null if [items] is empty.
+///
+/// Every item counts as having at least weight 1, so items with 0 (or negative) weight
+/// still have a small chance of being picked.
+///
+/// How it works: imagine all weights laid out one after another on a line from 1 to totalWeight,
+/// so every item owns a range as long as its weight:
+/// [item 1: 1..w1][item 2: w1+1..w1+w2] ... [item N: ..totalWeight]
+/// We pick a random number in [1, totalWeight], then walk through the items, subtracting each weight.
+/// The item whose weight brings the number down to 0 or below is the one whose range contains the number.
+T? pickWeighted<T>(List<T> items, int Function(T item) weightOf, Random random) {
+  if (items.isEmpty) return null;
+
+  // Calculate the total "weight" (Ex: sum of all Artist Points)
+  final int totalWeight = items.fold(0, (total, item) => total + max(1, weightOf(item)));
+
+  // Random number in [1, totalWeight] (nextInt is right-exclusive, so nextInt(totalWeight) gives [0, totalWeight - 1])
+  int randomVal = random.nextInt(totalWeight) + 1;
+
+  for (final item in items) {
+    randomVal -= max(1, weightOf(item));
+    if (randomVal <= 0) {
+      return item;
+    }
+  }
+
+  // Can't be reached, because the weights add up to totalWeight
+  return null;
+}
+
 /// The core of the Home Feed and Category Feed.
 /// This is a algorithm that rewards user involvement on the platform.
 /// The more you are involved on the platform, the more chances of
@@ -122,51 +154,10 @@ class FeedEngine {
     List<UserModel> availableUsers = _userPool.where((user) => !currentlyIneligible.contains(user.uid)).toList();
 
     // if availableUsers is empty, it means that there are no more avaiable users for the given category/home_feed
-    // so we need new users to the pool, if there are any
-    if (availableUsers.isEmpty) return null;
+    // so we need new users to the pool, if there are any (pickWeighted returns null for an empty list)
 
-    // Calculate the total "weight" (Sum of all Artist Points)
-    // We use fold to surf through all users and add their artist points to the sum
-    // sum gets returned in the end
-    // we use max(1, user.artistPoints); because of the implementation bellow, of finding our lucky user
-    // cause if more users had 0, and 0 was used, then we would not be able to identify the user
-    int totalWeight = availableUsers.fold(0, (total, user) {
-      return total + max(1, user.artistPoints);
-    });
-
-    // get rendom int from totalWeight -> this is the spin the wheel step
-    // So we have sum of all AP of all Users
-    // totalWeight = [USER_1_AP]+[USER_2_AP]+ ... +[USER_N_AP]
-    // Because we used the max() method earlier, each user is considered to have at least 1 AP (even tough in the actual reality data it has 0 AP)
-    // So we we need to get a random value to select a user from this range: [1, totalWeight]
-    int randomVal = 0;
-    while(randomVal==0) {
-      // make sure we do not get value 0, because the range is [1, totalWeight]
-      randomVal = _random.nextInt(totalWeight+1); // nextInt is right-exclusive, so to get totalWeight we need to pass totgalWeight + 1
-    }
-
-    // now we need to find the lucky user.
-    // So we have the lucky number associated with the lucky user
-    // We iteratively (in order) added AP to totalWeight, so there is a AP range associated for each user
-    // By substracting from randomVal (the lucky number) the AP of each user in the same iterative order,
-    // we will eventually hit this range:
-    // [lucky_user_start_AP_range=================randomVal-(First initialized)=================lucky_user_end_AP_range]
-    // which because of substraction is actually:
-    // [1=================randomVal=================lucky_user_AP]
-    // And now we also substract the AP of the lucky_user, and we either hit randomVal=0, (if randomVal==lucky_user_AP)
-    // or randomVal < 0
-    // Which means that, when we hit randomVal <=0, we have just substracted the AP of the lucky_user, which means:
-    // the 'user' variable is actually our lucky user | We have found our lucky user, and return it
-    for (var user in availableUsers) {
-      randomVal -= max(1, user.artistPoints);
-
-      if (randomVal <= 0) {
-        return user;
-      }
-    }
-
-    // If something went wrong, we return null
-    return null;
+    // Spin the wheel: the more Artist Points a user has, the higher the chance of being picked
+    return pickWeighted(availableUsers, (user) => user.artistPoints, _random);
   }
 
   /// Spin the Wheel to pick a Post belonging to the Lucky User.
@@ -210,24 +201,8 @@ class FeedEngine {
         return null;
       }
 
-      // Just as before, we calculate the total ammount of likes from all available posts of user
-      int totalWeight = availablePosts.fold(0, (total, post) => total + max(1, post.likes));
-      // Spin the wheel to find who will be the lucky post | Also make sure the range is [1, totalWeight]
-      int randomVal = 0;
-      while(randomVal==0) {
-        randomVal = _random.nextInt(totalWeight+1);
-      }
-
-      // actually get the instance of the lucky post
-      for (var post in availablePosts) {
-        randomVal -= max(1, post.likes);
-        if (randomVal <= 0) {
-          return post;
-        }
-      }
-
-      // If anything wrong happens we return null
-      return null;
+      // Spin the wheel to find the lucky post: the more likes a post has, the higher the chance of being picked
+      return pickWeighted(availablePosts, (post) => post.likes, _random);
     } catch (e) {
       debugPrint("Error fetching posts for user '$userId': $e");
       return null;

@@ -1,5 +1,7 @@
 import 'package:art_platform/data/repositories/auth_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -9,10 +11,28 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDarkMode = false;
-  bool _notificationsEnabled = true;
-
   final AuthRepository _authRepo = AuthRepository();
+
+  /// Sends a Firebase password reset email to the signed in user's email address
+  Future<void> _sendPasswordResetEmail() async {
+    final String? email = FirebaseAuth.instance.currentUser?.email;
+    if (email == null) return;
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Password reset email sent to $email"), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not send the password reset email. Try again later."), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,59 +58,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Profile'),
             subtitle: const Text('Update your personal details'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-            },
+            // name, bio and avatar are edited on the profile screen
+            onTap: () => context.go('/personal_profile'),
           ),
           ListTile(
             leading: const Icon(Icons.security),
             title: const Text('Password & Security'),
+            subtitle: const Text('Send a password reset email'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-            },
-          ),
-
-          const Divider(),
-
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Text(
-              'Preferences',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.dark_mode),
-            title: const Text('Dark Mode'),
-            value: _isDarkMode,
-            onChanged: (bool value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-            },
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications),
-            title: const Text('Push Notifications'),
-            value: _notificationsEnabled,
-            onChanged: (bool value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Language'),
-            trailing: const Text(
-              'English',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-            onTap: () {
-            },
+            onTap: _sendPasswordResetEmail,
           ),
 
           const Divider(),
@@ -105,13 +81,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Colors.blue,
               ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.help_outline),
-            title: const Text('Help & Support'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-            },
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),
