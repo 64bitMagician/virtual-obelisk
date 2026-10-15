@@ -34,9 +34,12 @@ this together with a real follow record.
 
 ### Art chains
 
-| Active chains | A chain's timeline | Creating a chain (admin) |
-|:---:|:---:|:---:|
-| <img src="screenshots/Images/ChainsScreen.png" alt="Chains list" width="280"> | <img src="screenshots/Images/SpecificChainScreen.png" alt="Chain timeline" width="280"> | <img src="screenshots/Images/CreateChainScreen.png" alt="Create chain" width="280"> |
+| Active chains | A chain's timeline |
+|:---:|:---:|
+| <img src="screenshots/Images/ChainsScreen.png" alt="Chains list" width="420"> | <img src="screenshots/Images/SpecificChainScreen.png" alt="Chain timeline" width="420"> |
+
+<p align="center"><b>Creating a chain (admin)</b><br>
+<img src="screenshots/Images/CreateChainScreen.png" alt="Create chain" width="860"></p>
 
 ### Categories, reporting and moderation
 
@@ -212,4 +215,3 @@ Because of this:
 - Some of the images and videos shown in the screenshots are from [Pixabay](https://pixabay.com/), used under the
   [Pixabay Content License](https://pixabay.com/service/license-summary/). All accounts shown are fictional test accounts.
 - Default user avatar icon: [UXWing](https://uxwing.com/user-profile-icon/)
-- Pixel art animation video by [u_zys3fy54t3](https://pixabay.com/users/u_zys3fy54t3-36732626/) from [Pixabay](https://pixabay.com/)
