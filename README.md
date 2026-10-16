@@ -136,8 +136,23 @@ the app. Some highlights:
     A request that tries to change a counter without that proof, such as "give this user +1 follower", is rejected.
 - **One report per user per post**, and posts are deactivated exactly at 5 reports.
 - **The daily upload limit is enforced on the server**, not just in the app.
-- **Storage:** only the uploader (or an admin) can delete a file, files are limited by type and size per folder,
-  and the bucket can't be listed.
+- **Storage:**
+  - **Only the uploader (or an admin) can delete a file.** Every uploaded file is tagged with its uploader's ID,
+    and the rules compare it with the user making the request.
+  - **Each folder only accepts certain file types, up to a maximum size.** Uploads to any other folder are refused.
+    This blocks abuse through direct requests, such as uploading huge files or files that aren't art.
+
+    | Folder | Holds | Allowed types | Max size |
+    |---|---|---|---|
+    | `artworks/` | the main file of a post | images, video, audio, text | 500 MB |
+    | `coverart/` | cover art for audio posts | images | 20 MB |
+    | `thumbnail/` | thumbnails for video posts | images | 20 MB |
+    | `avatars/` | profile pictures (one per user, named after their ID) | images | 5 MB |
+
+  - **Files can be opened, but the bucket can't be listed.** Opening a single file by its exact link is allowed,
+    since that's how the app shows posts: each post stores the link to its own file. Asking for a list of all files
+    in a folder is not allowed. Otherwise anyone could download every uploaded file, including files of deleted or
+    moderated posts that the app no longer links to.
 
 ## Project structure
 
