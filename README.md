@@ -206,7 +206,6 @@ Because of this:
 - `lib/firebase_options.dart` uses `storageBucket: 'art-platform-878d0'`.
   **If you ever re-run `flutterfire configure`, it will overwrite this with the old default bucket name, and
   uploads/downloads will break.** Change `storageBucket` back to `'art-platform-878d0'` for every platform afterwards.
-- Do not click "Get started" in the Storage section of the Firebase Console. It would create a new, empty default bucket.
 - In the Emulator UI, open the bucket directly at http://localhost:4000/storage/art-platform-878d0
   (the plain "Storage" tab opens the old default bucket and shows an error).
 
