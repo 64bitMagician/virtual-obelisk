@@ -1,7 +1,8 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:art_platform/core/constants.dart';
 import 'package:art_platform/data/models/art_post.dart';
 import 'package:art_platform/core/mime_file_detector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -32,11 +33,15 @@ class _UploadDialogState extends State<UploadDialog> {
   String? _selectedFileName;
   bool _isUploading = false;
   XFile? _fileInstance;
+  // Only on web: the bytes of the picked file (used for the image preview). On mobile/desktop this stays null,
+  // because there we never load the whole file into memory (see _toXFile)
   Uint8List? _fileAsBytes;
+  int? _fileSizeBytes;
   MediaType? _mediaType;
 
   XFile? _additionalMediaInstance;
-  Uint8List? _additionalMediaBytes;
+  Uint8List? _additionalMediaBytes; // only on web, same as _fileAsBytes
+  int? _additionalMediaSizeBytes;
   String? _additionalMediaFileName;
 
   String? _selectedCategory;
@@ -64,26 +69,42 @@ class _UploadDialogState extends State<UploadDialog> {
     super.dispose();
   }
 
+  /// Turns a picked file into an [XFile] that storage_repository.dart can upload.
+  ///
+  /// WEB: browsers don't let a web page read files from disk by path, so the picker gives us the file's bytes.
+  /// MOBILE/DESKTOP: we only keep the file's path. The file is never loaded into memory all at once,
+  /// and storage_repository.dart uploads it straight from disk, in chunks (putFile).
+  /// This way, a big video can't make the app run out of memory.
+  XFile _toXFile(PlatformFile pickedFile) {
+    if (kIsWeb) {
+      return XFile.fromData(pickedFile.bytes!, name: pickedFile.name);
+    }
+    return XFile(pickedFile.path!, name: pickedFile.name);
+  }
+
+  /// Shows a picked image. On web from its bytes, on mobile/desktop straight from the file on disk.
+  Widget _imagePreview(XFile file, Uint8List? webBytes, {double? width, double? height, BoxFit? fit}) {
+    if (webBytes != null) {
+      return Image.memory(webBytes, width: width, height: height, fit: fit);
+    }
+    return Image.file(File(file.path), width: width, height: height, fit: fit);
+  }
+
   Future<void> _pickThumbnail() async {
     FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.image,
-      withData: true,
+      withData: kIsWeb, // only load the whole file into memory on web (see _toXFile)
     );
 
     if (result != null) {
       PlatformFile pickedFile = result.files.first;
-      Uint8List bytesContent = pickedFile.bytes!;
-
-      XFile file = XFile.fromData(
-        bytesContent,
-        name: pickedFile.name,
-        path: pickedFile.path,
-      );
+      XFile file = _toXFile(pickedFile);
 
       setState(() {
         _additionalMediaInstance = file;
         _additionalMediaFileName = file.name;
-        _additionalMediaBytes = bytesContent;
+        _additionalMediaBytes = pickedFile.bytes; // null on mobile/desktop
+        _additionalMediaSizeBytes = pickedFile.size;
       });
     }
   }
@@ -102,20 +123,19 @@ class _UploadDialogState extends State<UploadDialog> {
         // Text
         'txt'
       ],
-      withData: true,
+      withData: kIsWeb, // only load the whole file into memory on web (see _toXFile)
     );
 
     if (result != null) {
       PlatformFile pickedFile = result.files.first;
-      Uint8List bytesContent = pickedFile.bytes!;
+      XFile file = _toXFile(pickedFile);
 
-      XFile file = XFile.fromData(
-        bytesContent,
-        name: pickedFile.name,
-        path: pickedFile.path,
-      );
+      // To detect the file type, only the first bytes of the file (its "header") are needed
+      final List<int> headerBytes = kIsWeb
+          ? pickedFile.bytes!.take(64).toList()
+          : await file.openRead(0, 64).expand((chunk) => chunk).toList();
 
-      final newMediaType = determineMediaTypeFromFile(file.name, bytesContent);
+      final newMediaType = determineMediaTypeFromFile(file.name, headerBytes);
 
       IconData icon = Icons.question_mark;
       if (newMediaType == MediaType.audio) {
@@ -129,7 +149,8 @@ class _UploadDialogState extends State<UploadDialog> {
       setState(() {
         _fileInstance = file;
         _selectedFileName = file.name;
-        _fileAsBytes = bytesContent;
+        _fileAsBytes = pickedFile.bytes; // null on mobile/desktop
+        _fileSizeBytes = pickedFile.size;
         // get MediaType of file
         _mediaType = newMediaType;
         suggestiveFileTypeIcon = icon;
@@ -137,6 +158,7 @@ class _UploadDialogState extends State<UploadDialog> {
           _additionalMediaInstance = null;
           _additionalMediaFileName = null;
           _additionalMediaBytes = null;
+          _additionalMediaSizeBytes = null;
       });
     }
   }
@@ -312,7 +334,7 @@ class _UploadDialogState extends State<UploadDialog> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(8),
                                   child: _mediaType == MediaType.image
-                                      ? Image.memory(_fileAsBytes!)
+                                      ? _imagePreview(_fileInstance!, _fileAsBytes)
                                       : Icon(suggestiveFileTypeIcon, size: 48,),
                                 ),
                               ),
@@ -355,7 +377,7 @@ class _UploadDialogState extends State<UploadDialog> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Image.memory(_additionalMediaBytes!, width: 80, height: 80, fit: BoxFit.cover),
+                                  child: _imagePreview(_additionalMediaInstance!, _additionalMediaBytes, width: 80, height: 80, fit: BoxFit.cover),
                                 ),
                                 Expanded(
                                   child: Text(
@@ -493,8 +515,14 @@ class _UploadDialogState extends State<UploadDialog> {
       return "Unsupported media type.";
     }
 
-    if (_fileAsBytes != null && _fileAsBytes!.length > maxFileSizeBytes) {
+    if (_fileSizeBytes != null && _fileSizeBytes! > maxFileSizeBytes) {
       return "File is too large. Maximum size is 500MB.";
+    }
+
+    // Must match the size limit for 'coverart' and 'thumbnail' in storage.rules
+    const int maxAdditionalMediaSizeBytes = 20 * 1024 * 1024; // 20 MB
+    if (_additionalMediaSizeBytes != null && _additionalMediaSizeBytes! > maxAdditionalMediaSizeBytes) {
+      return "Cover art / thumbnail is too large. Maximum size is 20MB.";
     }
 
     if (_additionalMediaInstance != null &&
