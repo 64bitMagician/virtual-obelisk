@@ -125,8 +125,15 @@ the app. Some highlights:
 - **No self-promotion to admin:** users can't change their own role.
 - **Banned accounts can't write anything**, even with direct API access.
 - **Counters must match real records:** likes, followers, Artist Points and post counts can only change by the
-  exact amounts the app uses. Each change must be made atomically, together with the record that justifies it
-  (the like, the follow, the new post). A rule checks that this record appears or disappears in the same write.
+  exact amounts the app uses, and only together with the document that proves the action happened.
+  - A single action consists of several database writes. Following someone, for example, creates a "following"
+    document for you and a "followers" document for them, and updates both users' counters and Artist Points.
+  - The app groups these writes into one **atomic** operation (a Firestore batch or transaction): it either
+    succeeds as a whole or fails as a whole. If any of the writes is rejected, or the connection drops halfway,
+    none of them are applied, so counters and documents never get out of sync.
+  - Because the writes arrive together, the Security Rules can check them together. A counter may only change if
+    the document that proves it (the like, the follow, the new post) is created or deleted in that same operation.
+    A request that tries to change a counter without that proof, such as "give this user +1 follower", is rejected.
 - **One report per user per post**, and posts are deactivated exactly at 5 reports.
 - **The daily upload limit is enforced on the server**, not just in the app.
 - **Storage:** only the uploader (or an admin) can delete a file, files are limited by type and size per folder,
