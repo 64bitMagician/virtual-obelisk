@@ -31,9 +31,11 @@ create art together in community "chains".
 
 ### Every kind of art, with its own reader
 
-| Audio, with cover art | Video |
-|:---:|:---:|
-| <img src="screenshots/Images/AudioSupport.png" alt="Audio player" width="420"> | <img src="screenshots/GIF/VideoSupport.gif" alt="Video player" width="420"> |
+<p align="center"><b>Audio, with cover art</b><br>
+<img src="screenshots/Images/AudioSupport.png" alt="Audio player" width="860"></p>
+
+<p align="center"><b>Video</b><br>
+<img src="screenshots/GIF/VideoSupport.gif" alt="Video player" width="460"></p>
 
 <p align="center"><b>Text, split into pages like a book</b><br>
 <img src="screenshots/GIF/TextSupport.gif" alt="Text reader" width="860"><br>
@@ -54,20 +56,34 @@ this together with a real follow record.
 
 ### Art chains
 
-| Active chains | A chain's timeline |
-|:---:|:---:|
-| <img src="screenshots/Images/ChainsScreen.png" alt="Chains list" width="420"> | <img src="screenshots/Images/SpecificChainScreen.png" alt="Chain timeline" width="420"> |
+<p align="center"><b>Active chains</b><br>
+<img src="screenshots/Images/ChainsScreen.png" alt="Chains list" width="860"><br>
+<sub>Each chain shows its required sequence of categories and the days left.</sub></p>
+
+<p align="center"><b>A chain's timeline</b><br>
+<img src="screenshots/Images/SpecificChainScreen.png" alt="Chain timeline" width="860"><br>
+<sub>Artists contribute to each step in order: here, a poem for the lyrics, then the song.</sub></p>
 
 <p align="center"><b>Creating a chain (admin)</b><br>
 <img src="screenshots/Images/CreateChainScreen.png" alt="Create chain" width="860"></p>
 
 ### Categories, reporting and moderation
 
-| Browsing categories | Reporting a post |
-|:---:|:---:|
-| <img src="screenshots/GIF/CategoryScreen.gif" alt="Categories" width="420"><br><sub>Opening a category and swiping through its feed, until every active artist has been shown.</sub> | <img src="screenshots/GIF/ReportingPost.gif" alt="Reporting a post" width="420"><br><sub>Any user can report a post with a reason. After 5 reports it's hidden automatically.</sub> |
-| **Admin dashboard** | **Moderation queue** |
-| <img src="screenshots/Images/AdminDashboard.png" alt="Admin dashboard" width="420"><br><sub>Only visible to accounts with the admin role.</sub> | <img src="screenshots/GIF/AdminModerationQueue.gif" alt="Moderation queue" width="420"><br><sub>Reviewing a hidden post and its report reasons, then restoring it.</sub> |
+<p align="center"><b>Browsing categories</b><br>
+<img src="screenshots/GIF/CategoryScreen.gif" alt="Categories" width="860"><br>
+<sub>Opening a category and swiping through its feed, until every active artist has been shown.</sub></p>
+
+<p align="center"><b>Reporting a post</b><br>
+<img src="screenshots/GIF/ReportingPost.gif" alt="Reporting a post" width="860"><br>
+<sub>Any user can report a post with a reason. After 5 reports it's hidden automatically.</sub></p>
+
+<p align="center"><b>Admin dashboard</b><br>
+<img src="screenshots/Images/AdminDashboard.png" alt="Admin dashboard" width="860"><br>
+<sub>Only visible to accounts with the admin role.</sub></p>
+
+<p align="center"><b>Moderation queue</b><br>
+<img src="screenshots/GIF/AdminModerationQueue.gif" alt="Moderation queue" width="860"><br>
+<sub>Reviewing a hidden post and its report reasons, then restoring it.</sub></p>
 
 ## Features
 
