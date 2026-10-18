@@ -1,7 +1,21 @@
-# Virtual Obelisk
+<h1 align="center">Virtual Obelisk</h1>
 
-A social platform for artists of every kind, from painters and photographers to musicians, poets and video artists,
-built with **Flutter** and **Firebase**. Artists share their work, grow an audience, climb a rank ladder, and
+<p align="center">
+  A social platform for artists of every kind, from painters and photographers to musicians, poets and video artists.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white" alt="Dart">
+  <img src="https://img.shields.io/badge/Firebase-DD2C00?logo=firebase&logoColor=white" alt="Firebase">
+  <img src="https://img.shields.io/badge/platforms-Web%20%7C%20Android-555555" alt="Platforms: Web and Android">
+</p>
+
+<p align="center">
+  <img src="screenshots/Images/ImageSupport.png" alt="An image post in the feed" width="860">
+</p>
+
+Built with **Flutter** and **Firebase**. Artists share their work, grow an audience, climb a rank ladder, and
 create art together in community "chains".
 
 > 🎓 Built as my **Bachelor's thesis project**.
@@ -9,15 +23,21 @@ create art together in community "chains".
 > 📦 **Archived.** The live deployment is offline. You can still run the full app locally with the
 > Firebase Emulators (see [Running locally](#running-locally)).
 
+**Contents:** [Screenshots](#screenshots) · [Features](#features) · [Tech stack](#tech-stack) ·
+[Security](#security) · [Project structure](#project-structure) · [Running locally](#running-locally) ·
+[Firebase notes](#firebase-notes) · [Credits](#credits)
+
 ## Screenshots
 
 ### Every kind of art, with its own reader
 
-| Images | Audio, with cover art |
+| Audio, with cover art | Video |
 |:---:|:---:|
-| <img src="screenshots/Images/ImageSupport.png" alt="Image post" width="420"> | <img src="screenshots/Images/AudioSupport.png" alt="Audio player" width="420"> |
-| **Video** | **Text, split into pages like a book** |
-| <img src="screenshots/GIF/VideoSupport.gif" alt="Video player" width="420"> | <img src="screenshots/GIF/TextSupport.gif" alt="Text reader" width="420"> |
+| <img src="screenshots/Images/AudioSupport.png" alt="Audio player" width="420"> | <img src="screenshots/GIF/VideoSupport.gif" alt="Video player" width="420"> |
+
+<p align="center"><b>Text, split into pages like a book</b><br>
+<img src="screenshots/GIF/TextSupport.gif" alt="Text reader" width="860"><br>
+<sub>Short texts fit on one page; longer ones, like this poem, are split into pages you can flip through.</sub></p>
 
 ### Profiles, following and ranks
 
@@ -30,7 +50,7 @@ this together with a real follow record.
 
 | Your profile | Uploading, with progress |
 |:---:|:---:|
-| <img src="screenshots/Images/ProfileScreen.png" alt="Own profile" width="420"> | <img src="screenshots/Images/UploadDialog.png" alt="Upload dialog" width="320"> |
+| <img src="screenshots/Images/ProfileScreen.png" alt="Own profile" width="420"><br><sub>Rank progress, stats and a gallery of all posts.</sub> | <img src="screenshots/Images/UploadDialog.png" alt="Upload dialog" width="320"><br><sub>An audio post with cover art, mid-upload.</sub> |
 
 ### Art chains
 
@@ -45,9 +65,9 @@ this together with a real follow record.
 
 | Browsing categories | Reporting a post |
 |:---:|:---:|
-| <img src="screenshots/GIF/CategoryScreen.gif" alt="Categories" width="420"> | <img src="screenshots/GIF/ReportingPost.gif" alt="Reporting a post" width="420"> |
+| <img src="screenshots/GIF/CategoryScreen.gif" alt="Categories" width="420"><br><sub>Opening a category and swiping through its feed, until every active artist has been shown.</sub> | <img src="screenshots/GIF/ReportingPost.gif" alt="Reporting a post" width="420"><br><sub>Any user can report a post with a reason. After 5 reports it's hidden automatically.</sub> |
 | **Admin dashboard** | **Moderation queue** |
-| <img src="screenshots/Images/AdminDashboard.png" alt="Admin dashboard" width="420"> | <img src="screenshots/GIF/AdminModerationQueue.gif" alt="Moderation queue" width="420"> |
+| <img src="screenshots/Images/AdminDashboard.png" alt="Admin dashboard" width="420"><br><sub>Only visible to accounts with the admin role.</sub> | <img src="screenshots/GIF/AdminModerationQueue.gif" alt="Moderation queue" width="420"><br><sub>Reviewing a hidden post and its report reasons, then restoring it.</sub> |
 
 ## Features
 
